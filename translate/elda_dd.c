@@ -1992,10 +1992,17 @@ int eld_next_ray()
 	   if (!dds->frib) {
 	      dds->frib = (struct field_radar_i *)malloc (sizeof (*frib));
 	   }
-	   memcpy (dds->frib, frib, sizeof (*frib));
+	   if(LittleEndian) {
+	     ddin_crack_frib(eld_next_block, dds->frib, (int)0);
+	   }
+	   else {
+	     memcpy (dds->frib, frib, sizeof (*frib));
+	   }
+	   dds->frib->field_radar_info_len = sizeof (*frib);
 	   str_terminate( frib_fname, frib->file_name
 			 , strlen(frib->file_name)); 
 	   strcpy (frib->file_name, frib_fname);
+
 	   strcpy( str, "FRIB.file_name:" );
 	   strcat( str, frib_fname );
 	   dd_append_cat_comment(str);

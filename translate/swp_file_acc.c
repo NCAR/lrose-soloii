@@ -235,11 +235,14 @@ int dd_absorb_header_info(dgi)
 	   if (!dds->frib) {
 	      dds->frib = (struct field_radar_i *)malloc (sizeof (*frib));
 	   }
-
-	   memcpy (dds->frib, dgi->in_next_block, sizeof (*frib));
-	   /* no swapping; all we want is the file name */
-	   frib = dds->frib;
+	   if(gottaSwap) {
+	     ddin_crack_frib(dgi->in_next_block, dds->frib, (int)0);
+	   }
+	   else {
+	     memcpy (dds->frib, dgi->in_next_block, sizeof (*frib));
+	   }
 	   dds->frib->field_radar_info_len = sizeof (*frib);
+	   frib = dds->frib;
 	   bc += gdsos;
 	}
 	else if(strncmp(dgi->in_next_block,"CFAC",4)==0 ) {
