@@ -66,6 +66,7 @@ static struct solo_list_mgmt *slm;
 static char preamble[24], postamble[64];
 static struct io_packet vol_dp;
 extern int LittleEndian;
+static char *acmrg=NULL;
 
 # ifdef obsolete
 
@@ -94,7 +95,7 @@ void ezascdmp();
 void dd_clear_dts();
 void gri_nab_input_filters();
 void dd_io_reset_offset();
-void eld_nimbus_fix_asib();
+char *eld_nimbus_fix_asib();
 void eld_gpro_fix_asib();
 void dd_dump_headers();
 void by_products();
@@ -1426,7 +1427,7 @@ void ddin_stuff_ray(dgi, current_time)
      *    headers
      *
      */
-    int ii, new_vol=NO, mark;
+    int ii, jj, nn, new_vol=NO, mark;
     static int count=0, trip=123;
     double d, dd_rotation_angle();
 
@@ -1436,6 +1437,7 @@ void ddin_stuff_ray(dgi, current_time)
     struct ray_i *ryib=dds->ryib;
     struct platform_i *asib=dds->asib;
     struct prev_rays *prs;
+    char *aa, str[256];
 
 
     count++;
@@ -1446,6 +1448,21 @@ void ddin_stuff_ray(dgi, current_time)
     if( dgi->new_vol ) {
 	if( dgi->num_parms != radd->num_parameter_des ) {
 	    /* Complain! */
+	}
+	if (acmrg) {
+	  nn = sizeof (dds->vold->proj_name);
+	  aa = dds->vold->proj_name;
+	  str_terminate (str, aa, nn);
+	  if (strstr (str, acmrg))
+	    { jj = 0; }
+	  else if (strlen (str) + strlen (acmrg) < nn ) {
+	    strcat (str, acmrg);
+	  }
+	  else {
+	    jj = nn-strlen (acmrg)-1;
+	    strcat (str+jj, acmrg);
+	  }
+	  strcpy (aa, str);
 	}
 	dd_dump_headers(dgi);
     }
@@ -1462,7 +1479,8 @@ void ddin_stuff_ray(dgi, current_time)
     /* merge ac data
      */
     if(dgi->time > time_for_nimbus) {
-	eld_nimbus_fix_asib(dgi->dds->dts, asib, dui->options, dgi->radar_num);
+	acmrg = eld_nimbus_fix_asib(dgi->dds->dts, asib, dui->options
+				 , dgi->radar_num);
     }
     else {
 	eld_gpro_fix_asib(dgi->dds->dts, asib, dui->options); 
