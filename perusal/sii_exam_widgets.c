@@ -446,7 +446,6 @@ void show_exam_widget (GtkWidget *text, gpointer data )
        { task = EXAM_EDT_HIST; }
 # endif
      sci->frame = frame_num;
-     sci->which_widget_button = xmd->equiv_solo_state[task];
      sxm_refresh_list (sci);
      se_update_exam_widgets (frame_num);
 
