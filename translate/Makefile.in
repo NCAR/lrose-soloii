@@ -76,7 +76,7 @@ SRCS = $(C_OBJS:.o=.c)
 
 PROGLIBS = $(DAPLIB) $(S2LIB)
 
-PROGS = xltrs ddex to_fb nx_reblock
+PROGS = xltrsii ddex to_fb nx_reblock
 
 all: $(PROGLIBS) $(PROGS)
 
@@ -90,9 +90,9 @@ $(DAPLB): $(DAPLIB_FOBJS) $(DAPLIB_COBJS)
 
 xlt:
 	../sii_build_date.pl
-	make xltrs
+	make xltrsii
 
-xltrs: ddmain.o $(S2LIB)
+xltrsii: ddmain.o $(S2LIB)
 	$(RM) $@
 	$(CC) $(CFLAGS) -o $@ ddmain.o $(LDOPTIONS) $(S2LIB) $(LIBS)
 
