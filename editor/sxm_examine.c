@@ -1651,6 +1651,8 @@ sxm_stat_line(dgi, verbosity, preamble, postamble, line)
     sprintf(aa+strlen(aa), "%s ", radar_name);
     aa += strlen(aa);
 
+
+# ifdef obsolete
     if(dds->radd->scan_mode == AIR || dds->radd->radar_type == AIR_LF ||
        dds->radd->radar_type == AIR_NOSE
 	) {
@@ -1660,10 +1662,11 @@ sxm_stat_line(dgi, verbosity, preamble, postamble, line)
 	sprintf(aa+strlen(aa), "rl:%5.1f ", dd_roll(dgi));
 	sprintf(aa+strlen(aa), "al:%6.3f ", dd_altitude(dgi));
     }    
-# ifdef obsolete
+# endif
     if(dds->radd->scan_mode == AIR) {
-	sprintf(aa+strlen(aa), "t:%5.1f ", asib->tilt);
-	sprintf(aa+strlen(aa), "rt:%6.1f ", asib->rotation_angle);
+	sprintf(aa+strlen(aa), "rt:%6.1f "
+		, FMOD360(dd_rotation_angle(dgi)));
+	sprintf(aa+strlen(aa), "t:%5.1f ", dd_tilt_angle (dgi));
 	sprintf(aa+strlen(aa), "rl:%5.1f ", asib->roll);
 	sprintf(aa+strlen(aa), "h:%6.1f ", asib->heading);
 	sprintf(aa+strlen(aa), "al:%6.3f ", asib->altitude_msl);
@@ -1675,7 +1678,6 @@ sxm_stat_line(dgi, verbosity, preamble, postamble, line)
 	sprintf(aa+strlen(aa), "rl:%5.1f ", dd_roll(dgi));
 	sprintf(aa+strlen(aa), "p:%5.1f ", dd_pitch(dgi));
     }
-# endif
     else {
 	sprintf(aa+strlen(aa), "fx:%6.1f ", swib->fixed_angle);
 	sprintf(aa+strlen(aa), "az:%6.1f ", dd_azimuth_angle(dgi));
