@@ -647,8 +647,6 @@ int sii_return_colors_filesel_wid() { return (SII_MAIN_COLORS_FILESEL); }
 
 /* c---------------------------------------------------------------------- */
 
-static GtkWidget *filesel;
-
 int sii_filesel_cb (GtkWidget *fs, gpointer data)
 {
    gchar *name, *aa, *bb, str[256], str2[256];
@@ -1205,7 +1203,7 @@ static GtkItemFactoryEntry menu_items[] = {
   { "/Help/Getting Started",   NULL,              NULL,	    0,  NULL },
 # endif
   { "/Help/Basics",            NULL, sii_menu_cb, SII_MAIN_HLP_BASIC,  NULL },
-  { "/Help/File",              NULL, sii_menu_cb, SII_MAIN_HLP_FILE,  NULL },
+  { "/Help/Files",              NULL, sii_menu_cb, SII_MAIN_HLP_FILE,  NULL },
   { "/Help/Zooming",           NULL, sii_menu_cb, SII_MAIN_HLP_ZOOM,  NULL },
   { "/Help/Centering",         NULL, sii_menu_cb, SII_MAIN_HLP_CTR,  NULL },
   { "/Help/Configuring",       NULL, sii_menu_cb, SII_MAIN_HLP_CONFIG,  NULL },
