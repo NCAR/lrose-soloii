@@ -119,6 +119,9 @@ enum {
   SII_MAIN_CTR_TOGGLE,
   SII_MAIN_XHAIRS_TOGGLE,
   SII_MAIN_PNG,
+  SII_MAIN_FILESEL_OK,
+  SII_MAIN_SWPFI_FILESEL,
+  SII_MAIN_CONFIG_FILESEL,
 
   SII_MAIN_EVENT_ENTER,
   SII_MAIN_EVENT_LEAVE,
@@ -185,7 +188,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi);
 gchar *sii_nab_line_from_text (const gchar *txt, guint position );
 void sii_png_image_prep (char *dir);
 gboolean sii_batch (gpointer argu);
-
+void sii_initialization_filesel (gint which_but, gchar * dirroot);
 /* c---------------------------------------------------------------------- */
 /* c...events */
 /* c---------------------------------------------------------------------- */
@@ -375,6 +378,13 @@ int sii_initialize_cb (GtkWidget *w, gpointer data)
 		       , edit_font, edit_fore, edit_back
 		       , cgs->str, -1);
       g_string_assign (gs_config_file_names, cgs->str);
+      break;
+
+    case SII_MAIN_SWPFI_FILESEL:
+    case SII_MAIN_CONFIG_FILESEL:
+      if (!(aa =getenv ("INIT_FILESEL")))
+	{ aa = "/"; }
+      sii_initialization_filesel (task, aa);
       break;
 
     case SII_MAIN_DIR:
@@ -626,6 +636,87 @@ int main( int argc,
 }
 
 /* c---------------------------------------------------------------------- */
+static GtkWidget *filesel;
+
+int sii_filesel_cb (GtkWidget *fs, gpointer data)
+{
+   gchar *name, *aa, *bb, str[256], str2[256];
+   GtkWidget *entry;
+   gint task, ii;
+   const GString *cgs;
+
+   task = (gint)gtk_object_get_data (GTK_OBJECT(fs), "task");
+   name = gtk_file_selection_get_filename ((GtkFileSelection *)fs);
+   strcpy (str, name);
+   strcpy (str2, name);
+   gtk_widget_destroy (fs);
+
+   switch (task) {
+    case SII_MAIN_SWPFI_FILESEL:
+      entry = (GtkWidget *)gtk_object_get_data
+	(GTK_OBJECT(main_config_window), "swpfi_dir");
+      gtk_entry_set_text (GTK_ENTRY (entry), str);
+      ii = sii_default_startup (str);
+      config_cb (0, (gpointer)22 ); /* 2x2 */
+      break;
+      
+   case SII_MAIN_CONFIG_FILESEL:
+      aa = str + strlen (str) -1; /* last char. */
+      bb = strrchr (str, '/');
+      *bb = '\0';
+      cgs = sii_return_config_files (str);
+      gtk_editable_delete_text (GTK_EDITABLE (main_config_text), 0, -1);
+      gtk_text_insert (GTK_TEXT (main_config_text)
+		       , edit_font, edit_fore, edit_back
+		       , cgs->str, -1);
+      g_string_assign (gs_config_file_names, cgs->str);
+      if (aa != bb) {		/* this is a full path name */
+	 bb++;
+	 ii = solo_absorb_window_info
+	   (str, bb, (sii_frame_count)? ignore_swpfi_info : 0);
+      }
+      entry = (GtkWidget *)gtk_object_get_data
+	(GTK_OBJECT(main_config_window), "config_dir");
+      gtk_entry_set_text (GTK_ENTRY (entry), str);
+      break;
+   }
+}
+
+/* c---------------------------------------------------------------------- */
+
+void sii_initialization_filesel (gint which_but, gchar * dirroot)
+{
+   GtkWidget *fs;
+   gchar str[256], *aa="/", *bb;
+   
+   bb = (which_but == SII_MAIN_SWPFI_FILESEL) ? "swpfi_dir" : "config_dir";
+   strcpy (str, bb);
+   strcat (str, " file selection dialog");
+   fs = gtk_file_selection_new (str);
+
+   gtk_file_selection_hide_fileop_buttons ((GtkFileSelection *)fs);
+   gtk_signal_connect_object (GTK_OBJECT(GTK_FILE_SELECTION(fs)->ok_button),
+			      "clicked",GTK_SIGNAL_FUNC(sii_filesel_cb),
+			      GTK_OBJECT (fs));
+   gtk_signal_connect_object (GTK_OBJECT(GTK_FILE_SELECTION(fs)->cancel_button),
+			      "clicked",GTK_SIGNAL_FUNC(gtk_widget_destroy),
+			      GTK_OBJECT (fs));
+   g_string_truncate (gen_gs, 0);
+   if (dirroot && strlen (dirroot)) {
+      g_string_append (gen_gs, dirroot);
+   }
+   else
+     { g_string_append (gen_gs, "/"); }
+   g_string_append (gen_gs, "/");
+   gtk_file_selection_set_filename ((GtkFileSelection *)fs, gen_gs->str);
+   gtk_object_set_data (GTK_OBJECT(fs)
+			, "task", (gpointer)which_but);
+   
+   gtk_widget_show (fs);
+  
+}
+
+/* c---------------------------------------------------------------------- */
 
 void sii_initialization_widget()
 {
@@ -738,6 +829,15 @@ and then click on the desired file name."
   gtk_table_attach (GTK_TABLE (table), label, 0, 1, row, row+1,
 		    xoptions, yoptions, xpadding, ypadding );
 
+  button = gtk_button_new_with_label (" Swpfi File Select ");
+  gtk_table_attach (GTK_TABLE (table), button, 3, 5, row, row+1,
+		    xoptions, yoptions, xpadding, ypadding );
+  gtk_signal_connect (GTK_OBJECT(button)
+		      ,"clicked"
+		      , (GtkSignalFunc)sii_initialize_cb
+		      , (gpointer)SII_MAIN_SWPFI_FILESEL
+		      );
+
   row++;
   label = gtk_label_new ( " Config Dir " );
   gtk_table_attach (GTK_TABLE (table), label, 0, 1, row, row+1,
@@ -795,6 +895,15 @@ and then click on the desired file name."
   ignore_swpfi_info = 0;
   gtk_object_set_data (GTK_OBJECT(window)
 		       , "ignore", (gpointer)button);
+
+  button = gtk_button_new_with_label (" Config File Select ");
+  gtk_table_attach (GTK_TABLE (table), button, 3, 5, row, row+1,
+		    xoptions, yoptions, xpadding, ypadding );
+  gtk_signal_connect (GTK_OBJECT(button)
+		      ,"clicked"
+		      , (GtkSignalFunc)sii_initialize_cb
+		      , (gpointer)SII_MAIN_CONFIG_FILESEL
+		      );
 
 
 
@@ -967,7 +1076,7 @@ static GtkItemFactoryEntry menu_items[] = {
   { "/File/Exit",              NULL,     gtk_main_quit,	    0,  NULL },
   { "/File/sep2",              NULL,              NULL,	    0,  "<Separator>" },
 # ifdef obsolete
-  { "/File/Test",             NULL, sii_menu_cb, SII_MAIN_PNG,  NULL },
+  { "/File/Test",              NULL,  sii_filesel_test,     0,  NULL },
 # endif
   { "/File/Set Source Dir",    NULL,    show_solo_init,	    0,  NULL },
   { "/File/Config Files",      NULL,    show_solo_init,	    0,  NULL },
