@@ -17,6 +17,7 @@ static const char * nex_sites_ptrs[] = {
 "#",
 "     0  KOUN  Norman                   OK      35 14 10   -97 27 48   381.3  -999     0     0",
 "     1  RCWF  ROC                      TW      25 04 22   121 46 21   757.0  -999     0     0",
+"     1  TJUA  San_Juan                 PR      18 06 56   -66 04 41   851.8  -999     0     0",
 "# Last updated 23 July 97",
 "#",
 " 14929  KABR  Aberdeen                 SD      45 27 21   -98 24 47   416.9  -999     0     0",
