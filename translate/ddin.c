@@ -236,8 +236,9 @@ void ddin_dd_conv(interactive)
 	    mark=0;
 	}
 	dgi = dui->dgi;
+# ifdef obsolete
 	difs_terminators(dgi, difs, dd_stats);
-
+# endif
 	if(difs->stop_flag &&
 	   (difs->abrupt_start_stop || dgi->new_sweep))
 	      break;
