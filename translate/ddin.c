@@ -527,6 +527,7 @@ int ddin_next_ray()
     int ryib_flag=NO, mark, final_bad_count;
     int num_rdats=0, zeros_rec=0, nmax, pn;
     char *aa, *bb, *dts_print(), *str_terminate(), *strstr(), *cfac_id;
+    char radar_name[16];
     short *ss;
     double d, dorade_time_stamp(), fudge, scale, rcp_scale, bias;
 
@@ -782,8 +783,9 @@ int ddin_next_ray()
 	    num_rdats = 0;
 	    ryib_flag = NO;
 	    swib = (struct sweepinfo_d *)ddin_next_block;
+	    str_terminate(radar_name, swib->radar_name, 8);
 	    dui->dgi = dgi =
-		  dd_get_structs(dd_assign_radar_num(swib->radar_name));
+		  dd_get_structs(dd_assign_radar_num(radar_name));
 	    dds = dgi->dds;
 	    dgi->new_sweep = YES;
 	    drn = dgi->radar_num;
@@ -836,7 +838,8 @@ int ddin_next_ray()
 	   gotta_celv = NO;
 	    radd = (struct radar_d *)ddin_next_block;
 	    /* set structs for subsequent descriptors */
-	    dgi = dd_get_structs(dd_assign_radar_num(radd->radar_name));
+	    str_terminate(radar_name, radd->radar_name, 8);
+	    dgi = dd_get_structs(dd_assign_radar_num(radar_name));
 	    dds = dgi->dds;
 	    diri = dui->diri[dgi->radar_num];
 	    diri->dgi = dgi;
