@@ -1059,6 +1059,9 @@ int solo_set_view_info(pvi, lwi, cwi)
 	      pvi->ts_magnification : 1.0;
 	changed = YES;
     }
+    if (pvi->angular_fill_pct >= 0 && pvi->angular_fill_pct <= 500.) {
+       wwptr->view->angular_fill_pct = pvi->angular_fill_pct;
+    }
     if(FABS(wwptr->view->ts_ctr_km - pvi->ts_ctr_km) > .001) {
 	wwptr->view->ts_ctr_km = pvi->ts_ctr_km;
     }
