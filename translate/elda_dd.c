@@ -2596,11 +2596,12 @@ int ts_xml_out (struct dd_general_info *dgi, FILE *strm
   static int count = 0, bsize=0, mxbsize=0, esize;
   static char *buf = 0, *str;
   static RTIME rtime;
-  char *aa, *ele;
-  char *acts="acft:TimeSeries";
-  char *iqs="acft:IQs";
-  char *apos="acft:Antenna_position";
-  char *ardr="acft:Radar";
+  char *aa, ele[32], name[32];
+  static char *ns = "acft:";
+  static char acts[32];
+  static char iqs[32];
+  static char apos[32];
+  static char ardr[32];
   int empty_element = NO;
   int nipps=dds->radd->num_ipps_trans, nfreqs=dds->radd->num_freq_trans;
   int ii, jj, kk, mark, ipp, freq, gg, nsamp;
@@ -2618,6 +2619,15 @@ int ts_xml_out (struct dd_general_info *dgi, FILE *strm
     mxbsize = 64 * 1024;
     buf = (char *)malloc (mxbsize);
     str = (char *)malloc (512);
+    ns = "";
+    strcpy (acts, ns);
+    strcat (acts, "TimeSeries");
+    strcpy (iqs, ns);
+    strcat (iqs, "IQs");
+    strcpy (apos, ns);
+    strcat (apos, "Antenna_position");
+    strcpy (ardr, ns);
+    strcat (ardr, "Radar");
   }
   nsamp = dds->parm[0]->num_samples;
 
@@ -2646,17 +2656,22 @@ int ts_xml_out (struct dd_general_info *dgi, FILE *strm
     xml_append_attribute (buf, &bsize, "num_samples", str);
     xml_end_attributes (buf, &bsize, empty_element=NO);
 
-    xml_open_element (buf, &bsize, "acft:Naming_Conventions");
+
+
+    strcpy (name, ns); strcat (name, "Naming_Conventions");
+    xml_open_element (buf, &bsize, name);
     xml_append_attribute (buf, &bsize, "I", "real part of the autocorrelation function");
     xml_append_attribute (buf, &bsize, "Q", "imaginary part");
     xml_append_attribute (buf, &bsize, "Pnorm", "sum(I^2+Q^2)/num_samples");
     xml_end_attributes (buf, &bsize, empty_element = YES);
 
-    xml_open_element (buf, &bsize, "acft:Velocity_calculation");
+    strcpy (name, ns); strcat (name, "Velocity_calculation");
+    xml_open_element (buf, &bsize, name);
     xml_append_attribute (buf, &bsize, "V", "3.0/(4.0*PI*freq*20.0)*2000/ipp*atan(Q/I)");
     xml_end_attributes (buf, &bsize, empty_element = YES);
 
-    xml_open_element (buf, &bsize, "acft:Reflectivity_calculation");
+    strcpy (name, ns); strcat (name, "Reflectivity_calculation");
+    xml_open_element (buf, &bsize, name);
     xml_append_attribute (buf, &bsize, "dBZ", "10.0*log10(Pnorm)-conversion_gain-receiver_gain-radar_const+20.0*log10(range_km)");
     xml_end_attributes (buf, &bsize, empty_element = YES);
     xml_end_attributes (buf, &bsize, empty_element = NO);
@@ -2677,7 +2692,8 @@ int ts_xml_out (struct dd_general_info *dgi, FILE *strm
   xml_append_attribute (buf, &bsize, "x_band_gain", str);
   xml_end_attributes (buf, &bsize, empty_element = NO);
   
-  xml_open_element (buf, &bsize, "acft:AntennaPosition");
+  strcpy (name, ns); strcat (name, "AntennaPosition");
+  xml_open_element (buf, &bsize, name);
   
   sprintf (str, f2, dd_rotation_angle(dgi));
   xml_append_attribute (buf, &bsize, "rotation_angle_deg", str);
@@ -2749,7 +2765,8 @@ int ts_xml_out (struct dd_general_info *dgi, FILE *strm
 	xml_end_attributes (buf, &bsize, empty_element = NO);
 
 	fvals = (float *)((char *)tmsr +offs);
-	ele = "acft:I";
+	strcpy (name, ns); strcat (name, "I");
+
 
 	for (kk=0; kk < 2; kk++) { /* do the I and Q values */
 	   aa = str;
@@ -2762,10 +2779,10 @@ int ts_xml_out (struct dd_general_info *dgi, FILE *strm
 	      aa += strlen (aa);
 	   }
 	   *(aa-1) = '\0';	/* knock off the last comma */
-	   xml_open_element (buf, &bsize, ele);
+	   xml_open_element (buf, &bsize, name);
 	   xml_append_attribute (buf, &bsize, "values", str);
 	   xml_end_attributes (buf, &bsize, empty_element = YES);
-	   ele = "acft:Q";
+	   strcpy (name, ns); strcat (name, "Q");
 	}
 	esize = xml_close_element (buf, &bsize, iqs);
 	offs += len;
