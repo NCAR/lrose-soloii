@@ -52,11 +52,8 @@ struct piraq_useful_items {
     double time_correction;
     double range_correction;
     double rconst_correction;
-    double phase_offset_corr;
     double zdr_offset_corr;
     double ldr_offset_corr;
-    double time_drift_reference;
-    double time_drift_coeff;
 
     double az_diff_sum;
     double el_diff_sum;
@@ -146,27 +143,11 @@ struct piraq_useful_items {
     struct piraq_swp_que *swp_que;
     struct piraq_swp_que *vol_start;
     FILE *sl;
-    struct scan_list_struct *sls;
-
     char * raw_data;
     float * Noise_lut;
     float * hNoise_lut;
     float * vNoise_lut;
     float * cNoise_lut;
-};
-
-struct scan_list_struct {
-    double start_time;
-    double stop_time;
-    float start_angle;
-    float stop_angle;
-    float prf;
-    float atp;
-    float fixed_angle;
-    int scan_mode;
-    int new_vol;
-    int ignore_this_sweep;
-    int select_count;
 };
 
 struct piraq_ray_que {
@@ -268,8 +249,10 @@ static double min_fxdang_diff = .15;
 static double new_vol_thr = 1.5;
 static double rhi_az_tol = 1.5;
 static double ppi_el_tol = .77;
+# ifdef obsolete
 static double sweep_time_tol=2.0;
 static double rotang_tol=1.5;
+# endif
 static double Default_Range0 = 150;
 static double Improve_rconst_corr = 0;
 static int Improve_range0_offset = 6;
@@ -645,75 +628,6 @@ pui_next_block()
 }
 /* c------------------------------------------------------------------------ */
 
-int
-fof_sl_next_entry(stream, sls)
-  FILE *stream;
-  struct scan_list_struct *sls;
-{
-    char line[256], *ptrs[32],  *ptrz[4], *ptrs_vms[4];
-    static char vms_date[16];
-    int nt, dd_tokens(), dd_tokenz(), mark;
-    DD_TIME dts;
-    double d, fof_crack_vms_date();
-    float f1, f2;
-
-    for(;;) {
-	if(!fgets(line, sizeof(line), stream)) {
-	    return((int)0);
-	}
-	if(strlen(line) < 11) {
-	    continue;
-	}
-	if((nt = dd_tokens(line, ptrs)) < 5) {
-	    continue;
-	}
-	if(strstr(line, "VOL#")) {
-	    sls->scan_mode = dd_get_scan_mode(ptrs[3]);
-	    strcpy(vms_date, ptrs[4]);
-	    sls->new_vol = YES;
-	    continue;
-	}
-	if(!strstr(ptrs[0], ")")) {
-	    continue;
-	}
-	nt = dd_tokenz(ptrs[1], ptrz, "-");
-	ptrs_vms[0] = vms_date;
-	ptrs_vms[1] = ptrz[0];
-	if((d = fof_crack_vms_date(ptrs_vms, 2, &dts)) > sls->start_time) {
-	    sls->start_time = d;
-	}
-	else {
-	}
-	ptrs_vms[1] = ptrz[1];
-	if((d = fof_crack_vms_date(ptrs_vms, 2, &dts)) > sls->start_time) {
-	    sls->stop_time = d;
-	}
-	else {
-	}
-	if(sls->stop_time < sls->start_time) {
-	    /* assume we've crossed midnight */
-	    sls->stop_time += SECONDS_PER_DAY;
-	}
-	if((2 == sscanf(ptrs[4], "%f-%f", &f1, &f2))) {
-	    sls->start_angle = f1;
-	    sls->stop_angle = f2;
-	}
-	else {
-	}
-	if((1 == sscanf(ptrs[3], "%f", &f1))) {
-	    sls->fixed_angle = f1;
-	}
-	if((1 == sscanf(ptrs[11], "%f", &f1))) {
-	    sls->atp = f1;
-	}
-	if((1 == sscanf(ptrs[12], "%f", &f1))) {
-	    sls->prf = f1;
-	}
-	return((int)1);
-    }
-}
-/* c------------------------------------------------------------------------ */
-
 void
 piraq_dd_conv(interactive_mode)
   int interactive_mode;
@@ -814,9 +728,6 @@ piraq_isa_new_vol()
        }
        return(NO);
     }
-    if(pui->options & SCAN_LIST) {
-       return(NO);
-    }
     if(sq->rcvr_pulsewidth > 0 && sq->last->rcvr_pulsewidth > 0 &&
        fabs(sq->rcvr_pulsewidth - sq->last->rcvr_pulsewidth) > 1.e-7) {
 	return(YES);
@@ -856,7 +767,6 @@ piraq_isa_new_sweep()
     double daz, avgDaz=0, ddaz, dddaz, del, avgDel=0, ddel, halfMad;
     double sumDaz=0, sumDel=0, short_sum_az_diffs, short_sum_el_diffs;
     double short_avg_az, short_avg_az_diff, short_avg_el, short_avg_el_diff;
-    struct scan_list_struct *sls=pui->sls;
     float rotang;
     struct piraq_ray_que *rq;
     DD_TIME dts;
@@ -945,7 +855,7 @@ piraq_isa_new_sweep()
 		short_avg_running_sum( pui->az_diff_rs ); /* NUM_SHORT_AVG */
 
 	    if(fabs(short_avg_az_diff) > min_az_diff) { /* MIN_AZ_DIFF */
-		/* moving in azimuth hopeGfully to the next rhi */
+		/* moving in azimuth hopefully to the next rhi */
 		return(NO);
 	    }
 	    short_avg_el =
@@ -1410,17 +1320,6 @@ piraq_ini()
 	pui->altitude = 
 	      d = atof(aa);
     }
-    if(aa=get_tagged_string("TIME_DRIFT")) {
-	if(d = atof(aa))
-	      pui->time_drift_coeff = d;
-    }
-    if(aa=get_tagged_string("DRIFT_REFERENCE_TIME")) {
-       dd_clear_dts(&dts);
-	if((ii = dd_crack_datime(aa, strlen(aa), &dts)))
-	      pui->time_drift_reference = dts.time_stamp;
-	printf("Drift ref time %s %.3f\n"
-	       , dts_print(d_unstamp_time(&dts)), dts.time_stamp);
-    }
     if(aa=get_tagged_string("IMPROVE_HZO_RCONST_CORR")) {
 	Improve_rconst_corr = atof(aa);
     }
@@ -1428,11 +1327,6 @@ piraq_ini()
 	pui->rconst_correction = atof(aa);
     }
     printf( "rconst correction: %.3f\n", pui->rconst_correction);
-
-    if(aa=get_tagged_string("PHASE_OFFSET")) {
-	pui->phase_offset_corr = atof(aa);
-    }
-    printf( "phase_offset: %.3f\n", pui->phase_offset_corr);
 
     if(aa=get_tagged_string("ZDR_BIAS")) {
 	pui->zdr_offset_corr = atof(aa);
@@ -1454,12 +1348,6 @@ piraq_ini()
     }
     printf( "Time correction: %.3f seconds\n", pui->time_correction);
 
-    if(aa=get_tagged_string("ROTATION_ANGLE_TOLERANCE")) {
-	rotang_tol = atof(aa);
-    }
-    if(aa=get_tagged_string("SWEEP_TIME_TOLERANCE")) {
-       sweep_time_tol = atof(aa);
-    }
     if(aa=get_tagged_string("MIN_AZ_DIFF")) {
        d = atof(aa);
        if(d > .01) min_az_diff = d;
@@ -1517,20 +1405,6 @@ piraq_ini()
     if(aa=get_tagged_string("RENAME")) {
 	piraq_name_aliases(aa, &top_ren);
     }
-    if(aa=get_tagged_string("SCAN_LIST")) {
-	/* open the scan list and suck in first entry */
-	printf("Opening %s\n", aa);
-	if(!(pui->sl = fopen(aa, "r"))) {
-	    printf("Could not open scan list file %s\n", aa);
-	    exit(1);
-	}
-	pui->sls = (struct scan_list_struct *)
-	      malloc(sizeof(struct scan_list_struct));
-	memset(pui->sls, 0, sizeof(struct scan_list_struct));
-	pui->options |= SCAN_LIST;
-	printf( "Rotation angle tolerance: %.3f deg.\n", rotang_tol);
-	printf( "Sweep time tolerance: %.3f sec.\n", sweep_time_tol);
-    }
     if(aa=get_tagged_string("PIRAQ_FORCE_POLYPP")) {
        pui->options |= FORCE_POLYPP;
     }
@@ -1551,8 +1425,6 @@ piraq_ini()
 	  { pui->options |= SPARC_ALIGNMENT; }
 	if(strstr(aa, "RANGE0"))
 	  { pui->options |= RANGE0_DEFAULT; }
-	if(strstr(aa, "NOSE_R"))
-	  { pui->options |= NOSE_RADAR; }
 	if(strstr(aa, "PIRAQ_T")) /* PIRAQ_TIME_SERIES */
 	  { pui->options |= DUMP_TIME_SERIES; }
 	if(strstr(aa, "FLIP_VEL")) /* FLIP_VELOCITIES */
@@ -1999,13 +1871,8 @@ piraq_next_ray()
     pui->fxdang_sum += fxd;
 
     if(!pui->transition_count) {
-	if(pui->options & SCAN_LIST) {
-	    pui->swp_que->swpang = pui->sls->fixed_angle;
-	}
-	else {
 	    pui->swp_que->swpang = 
 		  pui->fxdang_sum/(float)pui->sweep_ray_num;
-	}
     }
 
 
@@ -3421,6 +3288,7 @@ Option = "
 	    pui->time_correction = val;
 	}
     }
+# ifdef obsolete
     else if(ival == 14) {
 	printf("Current sweep time tolerance: %.3f secs. New tolerance: "
 	       , sweep_time_tol);
@@ -3445,6 +3313,7 @@ Option = "
 	    rotang_tol = val;
 	}
     }
+# endif
 
     preamble[0] = '\0';
 

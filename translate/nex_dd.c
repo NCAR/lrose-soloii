@@ -307,11 +307,6 @@ void nexx_ini()
     }
 
     nui->new_vol = YES;
-    if(a=get_tagged_string("RANGE_DELAY")) {
-	ii = atoi(a);
-	if(ii > 0)
-	      nui->dz_offset = ii;
-    }
     gri->binary_format = DD_16_BITS;
     gri->source_format = WSR_88D_FMT;
     gri->radar_type = GROUND;

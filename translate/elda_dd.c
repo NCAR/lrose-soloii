@@ -807,44 +807,9 @@ void eldx_ini()
 	}
 	eui->fake_sweep_nums = YES;
     }
-    if(a=get_tagged_string("GENERATE_THRESHOLDED_FIELDS")) {
-	eui->gen_thr_flds = YES;
-	printf("Generate_thresholded_fields\n");
-    }
-    if(a=get_tagged_string("CELL_VECTOR_BIAS")) {
-	eui->cell_vector_bias = atof(a);
-	printf( "Cell vector bias: %f\n", eui->cell_vector_bias);
-    }
-    eui->min_time_gap = 15;
-    if((a=get_tagged_string("MIN_TIME_GAP"))) {
-	if((i = atoi(a)) > 0 )
-	      eui->min_time_gap = i;
-    }
     if((a=get_tagged_string("OPTIONS"))) {
-	if(strstr(a, "THRESH")) {
-	    eui->options |= ELD_THRESHOLDING;
-	}
-	if(strstr(a, "NOTCH_R")) {
-	    eui->options |= ELD_NOTCH_REMOVAL;
-	}
-	if(strstr(a, "DESPECKL")) {
-	    eui->options |= ELD_DESPECKLING;
-	}
-	if(strstr(a, "UNFOLD")) {
-	    eui->options |= ELD_UNFOLDING;
-	}
 	if(strstr(a, "COARE_FIX")) {
 	    eui->options |= TOGACOARE_FIXES;
-	}
-	if(strstr(a, "VORTEX_FIXES")) {
-	    eui->options |= VORTEX_FIXES;
-	}
-	if(strstr(a, "FASTEX_FIXES")) {
-	    eui->options |= FASTEX_FIXES;
-	}
-	if(strstr(a, "AIR_MOTION")) {
-	    eui->options |= ELD_AIR_MOTION;
-	    printf("Air motion removal\n");
 	}
 	if(strstr(a, "AC_COMPARE")) {
 	    eui->options |= ELD_AC_COMPARE;
@@ -3125,11 +3090,6 @@ void eld_stuff_ray(dgi, current_time)
     prs->dP = prs->pitch -prs->last->pitch;
     prs->time = dgi->time;
     prs->rotation_angle = dd_rotation_angle(dgi);
-# ifdef obsolete
-    if(eui->options AND ELD_THRESHOLDING) {
-	eld_thr_flds(eui);
-    }
-# endif
     if(dgi->new_vol) {
 	if (acmrg) {
 	  nn = sizeof (dds->vold->proj_name);
