@@ -34,6 +34,8 @@ void sii_check_def_widget_sizes ();
 
 void sii_dump_debug_stuff();
 
+guint sii_inc_master_seq_num ();
+guint sii_get_master_seq_num ();
 
 /* c---------------------------------------------------------------------- */
 
@@ -89,6 +91,7 @@ void sii_blow_up_expose_event (GtkWidget *frame, GdkEvent *event
    totally_exposed = alloc.width == expose->area.width &&
      alloc.height == expose->area.height;
 
+ 
    *str = '\0';
    if (reconfigured) {
       strcat (str, "reconfig ");
@@ -136,14 +139,14 @@ void sii_frame_expose_event(GtkWidget *frame, GdkEvent *event
    GtkWidget*	drawing_area = frame;
    guint frame_num = GPOINTER_TO_UINT (data); /* frame number */
    SiiFrameConfig *sfc;
-   guint ix=0, iy=0, width, height, ncols, nrows, cn, mm, nn, jj;
+   guint ix=0, iy=0, width, height, ncols, nrows, cn, mm, nn, jj, ndx;
    gint mark;
    sii_table_parameters *stp;
    GdkGC *gc;
    GdkColor *gcolor;
    GdkEventExpose *expose = (GdkEventExpose *)event;
    GtkAllocation alloc;
-   gboolean reconfigured, uncovered, totally_exposed;
+   gboolean reconfigured, uncovered, totally_exposed, second_expose;
    static gboolean new_frames = FALSE;
    GdkRectangle *rect, area;
    gchar mess[256];
@@ -194,6 +197,8 @@ void sii_frame_expose_event(GtkWidget *frame, GdkEvent *event
 	, expose->area.width, expose->area.height
 	);
 # endif
+   second_expose = sfc->config_sync_num == sfc->expose_sync_num;
+  sfc->expose_sync_num = sfc->config_sync_num; 
 
    if (reconfigured) {
      mark = 0;
@@ -208,6 +213,26 @@ void sii_frame_expose_event(GtkWidget *frame, GdkEvent *event
    /* the reconfig_count is reset once it's been plotted by sii_displayq() */
 
    while (sfc->reconfig_count) {
+
+      if (!sfc->local_reconfig && (sfc->reconfig_flag & FrameDragResize)) {
+	 /*
+	  * This requires no reconfiguration other than increasing
+	  * the image size if the frame is bigger
+	  * 
+	  */
+	 if (!second_expose) {
+	    ndx = sfc->cfg_que_ndx;
+	    sfc->width = sfc->cfg_width[ndx];
+	    sfc->height = sfc->cfg_height[ndx];
+	    sii_check_image_size (frame_num);
+	    sfc->sync_num = sfc->config_sync_num;
+	    g_string_append (gs, " X0");
+	    sii_plot_data2 (frame_num, REPLOT_THIS_FRAME);
+	 }
+	 else
+	   { g_string_append (gs, " X1"); }
+	 break;
+      }
      
      if (sfc->local_reconfig && sfc->expose_count == sfc->reconfig_count)
        {
@@ -220,65 +245,35 @@ void sii_frame_expose_event(GtkWidget *frame, GdkEvent *event
 	 sfc->data_width = alloc.width;
 	 sfc->data_height = alloc.height;
 	 sfc->local_reconfig = FALSE;
-	 g_string_append (gs, " X0");
-# ifdef config_debug
-	 sii_append_debug_stuff (gs->str);
-# endif
+	 g_string_append (gs, " X2");
+	 sfc->sync_num = sfc->config_sync_num;
 	 sii_plot_data (frame_num, REPLOT_THIS_FRAME);
 	 break;
        }
-				/*
-     if (sfc->reconfig_count > 2)
-				 */
+
      if (sfc->expose_count == 1)
        {
 	 /* We've rebuilt the tables and this is the last expose,
 	  * now plot the data
 	  */
-# ifdef obsolete
-	 sfc->width = alloc.width;
-	 sfc->height = alloc.height;
-	 sfc->data_width = alloc.width;
-	 sfc->data_height = alloc.height;
-# endif
-	 g_string_append (gs, " X1");
-# ifdef config_debug
-	 sii_append_debug_stuff (gs->str);
-# endif
+	 g_string_append (gs, " X3");
+	 sfc->sync_num = sfc->config_sync_num;
 	 sii_plot_data (frame_num, REPLOT_THIS_FRAME);
 	 break;
        }
 
-     if (0 && sfc->expose_count == 2)
-       {
-
-	 if (frame_num == 0) {
-	   /* recalculate basic table cell size
-	    * should be a multiple of 4
-	    */
-	   stp = &frame_configs[0]->tbl_parms;
-	   mm = stp->right_attach - stp->left_attach;
-	   nn = stp->bottom_attach - stp->top_attach;
-	   sii_table_widget_width =
-	     (guint)((gdouble)alloc.width/mm);
-	   sii_table_widget_height =
-	     (guint)((gdouble)alloc.height/nn);
-	   
-	   g_string_append (gs, " X2");
 # ifdef config_debug
-	 sii_append_debug_stuff (gs->str);
-# endif
-	   sii_check_def_widget_sizes ();
-	   sii_new_frames ();
-	 }
-	 break;
-       }
-# ifdef config_debug
-     g_string_append (gs, " X3");
-     sii_append_debug_stuff (gs->str);
+     g_string_append (gs, " X4");
 # endif
      break;
    }
+# ifdef config_debug
+   /*
+   printf ("%s\n", gs->str);
+    */
+   sii_append_debug_stuff (gs->str);
+# endif
+
 }
 
 /* c---------------------------------------------------------------------- */
@@ -322,33 +317,49 @@ void sii_frame_config_event(GtkWidget *frame, GdkEvent *event
   gchar *aa = GTK_WIDGET_SENSITIVE( frame ) ? "sensitive" : "insensitive" ;
   gchar *bb, mess[256];
   gdouble d;
+  SiiFrameConfig *sfc;
+  GdkEvent *next_event;
+  GdkRectangle rect;
 
+  next_event = gdk_event_peek();
+  if (next_event) {
+     printf ("Next event type:%d\n", next_event->type);
+  }
   strcpy (mess, " ");
   ce = (GdkEventConfigure *)event;
-  ++frame_configs[frame_num]->reconfig_count;
-  frame_configs[frame_num]->colorize_count = 0;
+  sfc = frame_configs[frame_num];
+  sfc->config_sync_num = sii_inc_master_seq_num ();
+  ++sfc->reconfig_count;
+  sfc->colorize_count = 0;
 
-  ndx = (frame_configs[frame_num]->cfg_que_ndx +1) % CFG_QUE_SIZE;
-  frame_configs[frame_num]->cfg_que_ndx = ndx;
-  frame_configs[frame_num]->cfg_width[ndx] = frame->allocation.width;
-  frame_configs[frame_num]->cfg_height[ndx] = frame->allocation.height;
+  ndx = (sfc->cfg_que_ndx +1) % CFG_QUE_SIZE;
+  sfc->cfg_que_ndx = ndx;
+  sfc->cfg_width[ndx] = frame->allocation.width;
+  sfc->cfg_height[ndx] = frame->allocation.height;
+  if (!sfc->local_reconfig) {
+     sfc->reconfig_flag |= FrameDragResize;
+     ++sfc->drag_resize_count;
+  }
 
 # ifdef config_debug
   sprintf (mess, "CFG frm:%d %dx%d gtk:%dx%d  ec:%d cc:%d nf:%d et:%d se:%d"
 	     , frame_num
-	     , frame_configs[frame_num]->width
-	     , frame_configs[frame_num]->height
+	     , sfc->width
+	     , sfc->height
 	     , frame->allocation.width
 	     , frame->allocation.height
-	     , frame_configs[frame_num]->expose_count
-	     , frame_configs[frame_num]->reconfig_count
-	     , frame_configs[frame_num]->new_frame_count
+	     , sfc->expose_count
+	     , sfc->reconfig_count
+	     , sfc->new_frame_count
 	     , event->type
 	     , ce->send_event
 	     );
   sii_append_debug_stuff (mess);
+  /*
+  printf ("%s\n", mess);
+   */
 # endif
-  frame_configs[frame_num]->expose_count = 0;
+  sfc->expose_count = 0;
 }
 
 /* c---------------------------------------------------------------------- */
@@ -899,17 +910,38 @@ void custom_config_cb( GtkWidget *w, gpointer   data )
   guint nrows = cfg % 10;
   g_message ("Hello, Custom Config World! cols: %d  rows: %d\n"
 	     , ncols, nrows );
-# define ONE_BIG_TWOV_SMALL   1012
+# define ONE_BIG_TWOV_SMALL  1012
 # define ONE_BIG_TWO_SMALL   2012
 # define ONE_BIG_THREE_SMALL 1013
 # define ONE_BIG_FIVE_SMALL  1015
 # define ONE_BIG_SEVEN_SMALL 1017
-# define TWO_BIG_FOURV_SMALL  1024
+# define TWO_BIG_FOURV_SMALL 1024
 # define TWO_BIG_FOUR_SMALL  2024
+# define FOUR_512x512        4022
+# define FOUR_DEFAULT        2022
 
   sii_reset_config_cells();
 
-  if( cfg == ONE_BIG_TWOV_SMALL ) {
+
+  if( cfg == FOUR_512x512 ) {
+    config_cells[0]->frame_num = 1;
+    config_cells[1]->frame_num = 2;
+    config_cells[4]->frame_num = 3;
+    config_cells[5]->frame_num = 4;
+    sii_table_widget_width = 512;
+    sii_table_widget_height = 512;
+    
+  }
+  else if( cfg == FOUR_DEFAULT ) {
+    config_cells[0]->frame_num = 1;
+    config_cells[1]->frame_num = 2;
+    config_cells[4]->frame_num = 3;
+    config_cells[5]->frame_num = 4;
+    sii_table_widget_width = DEFAULT_WIDTH;
+    sii_table_widget_height = DEFAULT_WIDTH;
+    
+  }
+  else if( cfg == ONE_BIG_TWOV_SMALL ) {
     config_cells[0]->frame_num = 1;
     config_cells[1]->frame_num = 1;
     config_cells[4]->frame_num = 1;
@@ -1022,7 +1054,11 @@ void zoom_config_cb( GtkWidget *w, gpointer   data )
    gdouble factor, zoom;
    gint jj;
 
-   if( pct > 10000 ) {
+
+   if (!pct) {
+      return;
+   }
+   else if( pct > 10000 ) {
      pct %= 10000;
      if( pct == 5 )
        { factor = 100./106; }
@@ -1036,19 +1072,16 @@ void zoom_config_cb( GtkWidget *w, gpointer   data )
    else
      { factor = 1. + pct * .01; }
    
+   for (jj=0; jj < sii_return_frame_count(); jj++) {
+      /*
+	frame_configs[jj]->local_reconfig = TRUE;
+	frame_configs[jj]->reconfig_count = 0;
+       */
+   }
    sii_table_widget_width = (guint)(factor * sii_table_widget_width +.5 );
    sii_table_widget_height =(guint)(factor * sii_table_widget_height +.5 );
 
-   for (jj=0; jj < sii_return_frame_count(); jj++) {
-	frame_configs[jj]->local_reconfig = TRUE;
-	frame_configs[jj]->reconfig_count = 0;
-   }
    sii_check_def_widget_sizes ();
-
-   if (!pct) {
-     sii_table_widget_width += 4;
-     sii_table_widget_height += 4;
-   }
    sii_new_frames ();
 }
 
@@ -1090,8 +1123,10 @@ void shape_cb( GtkWidget *w, gpointer   data )
    }
 # endif   
    for (jj=0; jj < sii_return_frame_count(); jj++) {
+      /*
 	frame_configs[jj]->local_reconfig = TRUE;
 	frame_configs[jj]->reconfig_count = 0;
+       */
    }
    sii_check_def_widget_sizes ();
    sii_new_frames ();
@@ -1105,10 +1140,6 @@ void config_cb( GtkWidget *w, gpointer   data )
    guint nrows = cfg % 10;
    guint ii, jj, kk, frame_num = 0;
    gboolean result;
-
-# ifdef obsolete
-   g_message ("Hello, Config World! cols: %d  rows: %d\n", ncols, nrows );
-# endif
 
   if( cfg == 99 ) {		/* the config cells have been set already */
      result = sii_set_config();
@@ -1126,70 +1157,6 @@ void config_cb( GtkWidget *w, gpointer   data )
   result = sii_set_config();
   sii_new_frames ();
 }
-
-# ifdef obsolete
-/* c---------------------------------------------------------------------- */
-
-static GtkItemFactoryEntry editor_menu_items[] = {
-  { "/File",                NULL,          NULL,    0,  "<Branch>" },
-  { "/File/Open Cmd File", NULL,   checkup_cb,    0,  NULL },
-  { "/File/Save Cmd File", NULL,   checkup_cb,    0,  NULL },
-  { "/File/sep3",          NULL,      NULL,    0,  "<Separator>" },
-  { "/File/Open Bnd File", NULL,   checkup_cb,    0,  NULL },
-  { "/File/Save Bnd File", NULL,   checkup_cb,    0,  NULL },
-  { "/File/sep3",          NULL,      NULL,    0,  "<Separator>" },
-  { "/File/Extend Edit",   NULL,   checkup_cb,    0,  NULL },
-  { "/File/sep3",          NULL,      NULL,    0,  "<Separator>" },
-  { "/File/Close",         NULL,   checkup_cb,    0,  NULL },
-  { "/Boundary",           NULL,          NULL,    0,  "<Branch>" },
-  { "/Boundary/List Points",NULL,   checkup_cb,    0,  NULL },
-  { "/Boundary/sep3",      NULL,      NULL,    0,  "<Separator>" },
-  { "/Boundary/Edit Inside",NULL,   checkup_cb,    0,  NULL },
-  { "/Boundary/Edit Outside",NULL,   checkup_cb,    0,  NULL },
-  { "/Help",                NULL,          NULL,    0,  "<Branch>" },
-  { "/Help/Cmd Editing",        NULL,   checkup_cb,    0,  NULL },
-  { "/Help/On Boundaries",        NULL,   checkup_cb,    0,  NULL },
-
-};
-
-/* c---------------------------------------------------------------------- */
-
-void sii_get_edit_menubar( GtkWidget  *window,
-                    GtkWidget **menubar )
-{
-  GtkItemFactory *item_factory;
-  GtkAccelGroup *accel_group;
-  gint nmenu_items = sizeof (editor_menu_items) / sizeof (editor_menu_items[0]);
-  
-  
-  accel_group = gtk_accel_group_new ();
-
-  /* This function initializes the item factory.
-     Param 1: The type of menu - can be GTK_TYPE_MENU_BAR, GTK_TYPE_MENU,
-              or GTK_TYPE_OPTION_MENU.
-     Param 2: The path of the menu.
-     Param 3: A pointer to a gtk_accel_group.  The item factory sets up
-              the accelerator table while generating menus.
-  */
-
-  item_factory = gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>", 
-				       accel_group);
-
-  /* This function generates the menu items. Pass the item factory,
-     the number of items in the array, the array itself, and any
-     callback data for the the menu items. */
-
-  gtk_item_factory_create_items (item_factory, nmenu_items, editor_menu_items, NULL);
-
-  /* Attach the new accelerator group to the window. */
-  gtk_window_add_accel_group (GTK_WINDOW (window), accel_group);
-
-  if (menubar)
-    /* Finally, return the actual menu bar created by the item factory. */ 
-    *menubar = gtk_item_factory_get_widget (item_factory, "<main>");
-
-}
-# endif
 
 /* c---------------------------------------------------------------------- */
 guint test_event_cb(GtkWidget *label, gpointer data )
