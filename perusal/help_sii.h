@@ -47,6 +47,7 @@ static const gchar * hlp_sii_basics[] = {
 "or \"Cancel\" buttons will leave plot parameters unchanged.",
 };
 
+
 static const gchar * hlp_sii_file[] = {
 "If you have not set any of the environment variables \"DORADE_DIR\",",
 "\"SOLO_WINDOW_INFO\" or \"swi\" (swi and SOLO_WINDOW_INFO are",
@@ -55,11 +56,17 @@ static const gchar * hlp_sii_file[] = {
 "configuration directory. This same widget will appear when you click",
 "\"Set Source Dir\", \"Config Files\", or \"Set Image Dir\".",
 " ",
+"It is not necessary to set \"DORADE_DIR\" if you start soloii from a",
+"directory containing sweepfiles. ",
+" ",
 "Subsequent changes to the source directory can and should be done",
 "in the \"Sweepfiles Widget\"",
 " ",
 "To save a configuration, you can modify the \"Comment\" and then click",
 "\"Save Config\".",
+" ",
+"To initialize the file selection widgets with a directory name, set the ",
+"environment variable \"INIT_FILESEL\" to a directory name",
 " ",
 "To make a PNG image of the soloii display click the button labeled",
 "\"Make PNG Image\" in the Initialization widget. Be sure the data",
@@ -73,6 +80,7 @@ static const gchar * hlp_sii_file[] = {
 "want to set the SOLO_WINDOW_INFO environment variable and the",
 "WINDOW_DUMP_DIR variable.",
 }; 
+
 
 static const gchar * hlp_sii_zoom[] = {
 "With this menu you can zoom or unzoom the data or the size of the data",
@@ -91,6 +99,7 @@ static const gchar * hlp_sii_zoom[] = {
 "negative zooms under \"Config\".",
 };
 
+
 static const gchar * hlp_sii_ctr[] = {
 "For centering on two or four clicks, the new center is based on the",
 "center of the extremes in the horizontal and vertical. The zoom is",
@@ -99,6 +108,7 @@ static const gchar * hlp_sii_ctr[] = {
 "The \"Electric\" toggle button enables or disables replotting when the",
 "center mouse button is clicked in a frame.",
 };
+
 
 static const gchar * hlp_sii_config[] = {
 "The configuration of the frames of data is based on a 4x4 matrix.  All",
@@ -113,6 +123,7 @@ static const gchar * hlp_sii_config[] = {
 " ",
 "Finally a set of unusual configurations just for grins.",
 };
+
 
 static const gchar * hlp_sii_shortcuts[] = {
 "Text Editing Shortcuts",
@@ -139,6 +150,7 @@ static const gchar * hlp_sii_shortcuts[] = {
 "Ctrl+C -- Copy to clipboard",
 "clipboard",
 };
+
 
 static const gchar * hlp_sii_comparisons[] = {
 "The procedure for aligning two or more radars to do comparisons",
@@ -172,6 +184,7 @@ static const gchar * hlp_sii_comparisons[] = {
 "this is the \"Center\" button in the \"View\" widget.",
 };
 
+
 static const gchar * hlp_sii_about[] = {
 "SoloII was specifically targeted to work using the GTK+ graphics",
 "libraries and the GNU compilers that come with RedHat Linux operating",
@@ -184,6 +197,7 @@ static const gchar * hlp_sii_about[] = {
 " ",
 "date:",
 };
+
 
 static const gchar * hlp_sii_[] = {
 };
