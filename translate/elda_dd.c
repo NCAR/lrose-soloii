@@ -807,6 +807,11 @@ void eldx_ini()
 	}
 	eui->fake_sweep_nums = YES;
     }
+    if((a=get_tagged_string("OUTPUT_FLAGS"))) {
+       if (strstr (a, "TIME_S")) {
+	  eui->options |= ELD_TIME_SERIES;
+       }
+    }
     if((a=get_tagged_string("OPTIONS"))) {
 	if(strstr(a, "COARE_FIX")) {
 	    eui->options |= TOGACOARE_FIXES;
@@ -1600,15 +1605,13 @@ int eld_next_ray()
 
 	eld_next_block = at = irq->top->at;
 	eld_bytes_left = irq->top->bytes_left;
+	gd = (struct generic_descriptor *)eld_next_block;
 
 	if(LittleEndian) {
 	   gd = &xgd;
 	   memcpy(gd->name_struct, eld_next_block, 4);
 	   swack4(eld_next_block+4, &gd->sizeof_struct);
 	}
-	else {
-	   gd = (struct generic_descriptor *)eld_next_block;
-	}	
 	gdsos = gd->sizeof_struct;
 
 	if(gd->sizeof_struct < sizeof(struct generic_descriptor)) {
@@ -1632,6 +1635,7 @@ int eld_next_ray()
 		    , str_terminate(dname, eld_next_block, 4), eld_bytes_left);
 	    dd_append_cat_comment(str);
 	    printf("%s\n", str);
+		frad = (struct field_parameter_data *)eld_next_block;
 	    gd->sizeof_struct = 0;
 	    eld_bytes_left = irq->top->bytes_left = 0;
 	    continue;
@@ -2026,14 +2030,16 @@ int eld_next_ray()
 		    mark = *deep6;
 		}
 	    }
-# ifdef notyet
-	    if (!ts_count++) {
-	      ts_fid = creat ("/scr/ale/oye/tianyou.fb", PMODE);
+	    if(eui->options & ELD_TIME_SERIES) {
+	       if (!ts_count++) {
+		  slash_path(str, get_tagged_string("DORADE_DIR"));
+		  strcat (str, "time_series.tape");
+		  ts_fid = creat (str, PMODE);
+	       }
+	       if (ts_fid > 0 && gdsos > 0) {
+		  fb_write (ts_fid, eld_next_block+8, gdsos -8);
+	       }
 	    }
-	    if (ts_fid > 0 && gdsos > 0) {
-		fb_write (ts_fid, eld_next_block+8, gdsos -8);
-	    }
-# endif
 	}
 	else if(strncmp(eld_next_block,"RYIB",4)==0 && ryib_flag ) {
 	    break;
