@@ -28,6 +28,7 @@
 #define DATA_MAX_POL    10 /* same as full plus plus more gates */
 #define DATA_HVSIMUL    11 /* simultaneous transmission of H and V */
 #define DATA_SHRTPUL    12 /* same as MAX_POL with gate averaging */
+#define DATA_SMHVSIM    13 /* 2000 DOW4 copolar matrix for simultaneous H-V (no iq average) */
 #define DATA_DUALPP     15 /* DOW dual prt pulse pair ABP,ABP */
 #define	PIRAQ_ABPDATA   16 /* ABP data computed in piraq3: rapidDOW project */
 #define DATA_TYPE_MAX PIRAQ_ABPDATA /* limit of data types */ 
