@@ -2168,12 +2168,6 @@ void sii_plot_data (guint frame_num, guint plot_function)
      /* next plot after a drag resize. Do a local reconfig
       * in case the frame sizes are not consistant
       */
-     sii_recalc_default_frame();
-
-     for (fn=0; fn < sii_frame_count; fn++ ) {
-	sfc = frame_configs[fn];
-	sfc->drag_resize_count = 0;
-     }
      sii_new_frames ();
   }
 
