@@ -146,6 +146,22 @@ static const gchar * bluebrown10[] = {
 "endtable",
 };
 
+static const gchar * bluebrown11[] = {
+"colortable bluebrown11",
+"	0.004	0.379	0.754",
+"	0.005	0.517	0.815",
+"	0.006	0.654	0.877",
+"	0.007	0.792	0.938",
+"	0.008	0.930	1.000",
+"	0.906	0.902	0.906",
+"	1.000	0.902	0.695",
+"	0.902	0.764	0.606",
+"	0.805	0.625	0.517",
+"	0.707	0.487	0.429",
+"	0.609	0.348	0.340",
+"endtable",
+};
+
 static const gchar * theodore16[] = {
 "colortable theodore16",
 "	0.676	0.676	0.996",
