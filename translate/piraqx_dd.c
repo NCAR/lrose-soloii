@@ -102,6 +102,7 @@ struct piraq_useful_items {
     
     unsigned long ref_time;
     unsigned long trip_time;
+    unsigned long unix_day;
     int vol_num;
     int sweep_num;
     int vol_count_flag;
@@ -221,6 +222,7 @@ struct piraq_swp_que {
 # define     IGNORE_TRANSITIONS 0x100000
 # define       HZO_IMPROVE_FLAG 0x200000
 # define         DZ_TO_DBZ_FLAG 0x400000
+# define              RABID_DOW 0x800000
 
 extern int LittleEndian;
 
@@ -512,6 +514,17 @@ piraqx_ini()
 	piraq_name_aliases(aa, &top_ren);
     }
     if((aa=get_tagged_string("OPTIONS"))) {
+	if(strstr(aa, "RABID"))
+	  {
+	     pui->options |= RABID_DOW;
+	     dts.year = 2003;
+	     dts.month = 5;
+	     dts.day = 15;
+	     d = d_time_stamp(&dts);
+	     ii = (int)(d/86400);
+	     printf ("yy:%d mo:%2d dd:%2d => unix_day:%d\n"
+		     , dts.year, dts.month, dts.day, ii);
+	  }
 	if(strstr(aa, "RANGE0"))
 	  { pui->options |= RANGE0_DEFAULT; }
 	if(strstr(aa, "FLIP_VEL")) /* FLIP_VELOCITIES */
@@ -554,7 +567,7 @@ piraqx_ini()
       slm = solo_malloc_list_mgmt(256);
       nt = generic_sweepfiles( aa, slm, "", ".tape", 0 );
       if ( nt < 1 ) {		/* Josh's CDs */
-	 nt = generic_sweepfiles( aa, slm, "", "z", 0 );
+	 nt = generic_sweepfiles( aa, slm, "", "x", 0 );
       }
       bb = dd_est_src_dev_names_list("PRQ", slm, aa );
     }
@@ -866,6 +879,9 @@ piraqx_next_ray()
 	 * see if the last sweep should be saved
 	 * remember you can set MIN_RAYS_PER_SWEEP
 	 */
+       if (pui->options & RABID_DOW) {
+	  printf ("D:%d ", pui->unix_day);
+       }
 	if( pui->swp_que->scan_mode == RHI) {
 	    if(fabs(pui->el_diff_sum) < 4.) { /* RHI can't be less than 4 deg. */
 		gri->ignore_this_sweep = YES;
@@ -970,7 +986,7 @@ piraqx_map_hdr(aa, gotta_header)
   int gotta_header;
 {
     static int count=0;
-    int jj, nn, mark, new_vol = NO;
+    int jj, kk, nn, mark, new_vol = NO;
     double d, subsec;
     struct piraq_ray_que *rq=pui->ray_que;
     int sparc_alignment = 0;
@@ -979,6 +995,18 @@ piraqx_map_hdr(aa, gotta_header)
     void swack_long();
     void swack_double();
     uint4 usecs, secs_mask = 0x7fffffff;
+    uint8 temp1;
+    struct timeval tv;
+
+    /*
+#if SYSTEM_CLOCK_INT == 48000000
+#define    COUNTFREQ    6000000
+#else
+#define    COUNTFREQ    8000000
+#endif
+We're using 48000000 so use 6000000.
+     */
+#define    COUNTFREQ    6000000
     
     count++;
 
@@ -1001,12 +1029,23 @@ piraqx_map_hdr(aa, gotta_header)
     gri->range_b1 = dwlx->meters_to_first_gate;
     gri->bin_spacing = dwlx->gate_spacing_meters[0];
     gri->range_b1 += pui->range_correction;
+    strcpy (gri->radar_name, dwlx->radar_name);
     
     gri->dts->year = 1970;
     gri->dts->month = gri->dts->day = 0;
-
+    
     /* klooge! */
     usecs = dwlx->secs & secs_mask;
+    gettimeofday( &tv, 0);
+    jj = tv.tv_sec/86400;
+
+    temp1 = dwlx->pulse_num * (uint8)(dwlx->prt[0] * (float)COUNTFREQ + 0.5);
+    usecs = dwlx->secs = temp1 / COUNTFREQ;
+    pui->unix_day = usecs/86400;
+
+    dwlx->nanosecs =
+      ((uint8)10000 * (temp1 % ((uint8)COUNTFREQ))) / (uint8)COUNTFREQ;
+    dwlx->nanosecs *= (uint8)100000; // multiply by 10**5 to get nanoseconds
 
     rq->ptime = usecs;
     rq->subsec = dwlx->nanosecs;
@@ -1784,7 +1823,11 @@ void products()
    switch(dwlx->dataformat)
      {
       case PIRAQ_ABPDATA:
+	simplepp2();
+	/*
+	simplepp();
 	newsimplepp();
+	 */
 	break;
 	
       default:
@@ -1792,6 +1835,153 @@ void products()
 	break;
      }
 }
+# define LIGHT_SPEED SPEED_OF_LIGHT   
+
+/* c------------------------------------------------------------------------ */
+
+// create 6 scaled products from the simplepp moments 
+void simplepp()
+{
+   unsigned int  i;   
+   float        *aptr,*pptr;
+   double       a,b,p,cp,pcorrect;
+   double       noise,velconst;
+   double       dbm,widthconst,range,rconst,width,r12;
+   double       sqrt();   
+   
+ 
+   short *velp=gri->scaled_data[0];
+   short *dbmp=gri->scaled_data[1];
+   short *ncpp=gri->scaled_data[2];
+   short *swp=gri->scaled_data[3];
+   short *dbzp=gri->scaled_data[4];
+   short *dbzcp=gri->scaled_data[5];
+   float f, scale=100., bias=0;
+   
+   rconst = dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
+   noise = (dwlx->noise_power > -10.0) ? 0.0 : 0.0;
+   velconst = LIGHT_SPEED / (2.0 * dwlx->frequency * 2.0 * M_PI * dwlx->prt[0]);
+   pcorrect = dwlx->data_sys_sat
+	    - 20.0 * log10(0x1000000 * dwlx->rcvr_pulsewidth / 1.25E-7) 
+	    - 10.0 * log10((double)dwlx->hits)
+	    - dwlx->receiver_gain;
+   widthconst = (LIGHT_SPEED / dwlx->frequency) / dwlx->prt[0] / (2.0 * sqrt(2.0) * M_PI);
+   
+   if(0)  velconst = -velconst;   /* // fix later for velsign  */
+     /*  */
+   aptr = (float *)pui->raw_data;
+   range = 0.0;
+
+   for(i=0; i<dwlx->gates; i++) 
+      {
+      a = *aptr++;
+      b = *aptr++;
+      p = *aptr++;
+      
+      if(i)     range = 20.0 * log10(i * 0.0005 * LIGHT_SPEED * dwlx->rcvr_pulsewidth);
+      
+      /* // compute floating point, scaled, scientific products  */
+      f = velconst * atan2(b,a); /*  // velocity in m/s  */
+      *velp++ = DD_SCALE(f, scale, bias);
+
+      f = dbm = 10.0 * log10(fabs(p)) + pcorrect;      /* // power in dBm  */
+      *dbmp++ = DD_SCALE(f, scale, bias);
+      
+      f = (cp = sqrt(r12 = a*a+b*b))/p; /* // NCP no units  */
+      *ncpp++ = DD_SCALE(f, scale, bias);
+
+      if((width = log(fabs((p-noise)/cp))) < 0.0) width = 0.0001;
+      f = sqrt(width) * widthconst;  /* // s.w. in m/s  */
+      *swp++ = DD_SCALE(f, scale, bias);
+ 
+      f = dbm + rconst + range; /* // in dBZ  */
+      *dbzp++ = DD_SCALE(f, scale, bias);
+       
+      f = 10.0 * log10(fabs(cp)) + pcorrect + rconst + range; /* // in dBZ  */
+      *dbzcp++ = DD_SCALE(f, scale, bias);
+
+   }
+   /*
+      if (numProducts == 6) {continue;}
+      *(pptr +  6) = 0.0; 
+      *(pptr +  7) = 0.0; 
+      *(pptr +  8) = 0.0; 
+      *(pptr +  9) = 0.0; 
+      *(pptr + 10) = 0.0; 
+      *(pptr + 11) = 0.0; 
+      *(pptr + 12) = 0.0; 
+      *(pptr + 13) = 0.0; 
+      *(pptr + 14) = 0.0; 
+      *(pptr + 15) = 0.0; 
+      }
+   return dwlx->gates *  numProducts * sizeof(float) ;
+    */
+}
+/* c------------------------------------------------------------------------ */
+
+// create 6 scaled products from the simplepp moments 
+int simplepp2()
+   {
+   unsigned int  i;   
+   float        *aptr,*pptr;
+   double       a,b,p,cp,pcorrect;
+   double       noise,velconst;
+   double       dbm,widthconst,range,rconst,width,r12;
+   int numProducts = 6;
+ 
+   short *velp=gri->scaled_data[0];
+   short *dbmp=gri->scaled_data[1];
+   short *ncpp=gri->scaled_data[2];
+   short *swp=gri->scaled_data[3];
+   short *dbzp=gri->scaled_data[4];
+   short *dbzcp=gri->scaled_data[5];
+   float f, scale=100., bias=0;
+
+   rconst = dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
+   noise = (dwlx->noise_power > -10.0) ? 0.0 : 0.0;
+   velconst = LIGHT_SPEED / (2.0 * dwlx->frequency * 2.0 * M_PI * dwlx->prt[0]);
+   pcorrect = dwlx->data_sys_sat - dwlx->receiver_gain;
+   widthconst = (LIGHT_SPEED / dwlx->frequency) / dwlx->prt[0] / (2.0 * sqrt(2.0) * M_PI);
+   
+   if(0)  velconst = -velconst;   // fix later for velsign 
+
+   aptr = (float *)pui->raw_data;
+   range = 0.0;
+
+   for(i=0; i<dwlx->gates; i++,pptr += numProducts) // 6 (was 16) products 
+      {
+      a = *aptr++;
+      b = *aptr++;
+      p = *aptr++;
+      
+      if(i)     range = 20.0 * log10(i * 0.0005 * LIGHT_SPEED * dwlx->rcvr_pulsewidth);
+
+      // compute floating point, scaled, scientific products 
+      f = velconst * atan2(b,a);    /*  // velocity in m/s  */
+      *velp++ = DD_SCALE(f, scale, bias);
+      
+      f = dbm = 10.0 * log10(fabs(p)) + pcorrect; /* // power in dBm  */
+      *dbmp++ = DD_SCALE(f, scale, bias);
+      
+      f = (cp = sqrt(r12 = a*a+b*b))/p;   /* // NCP no units  */
+      *ncpp++ = DD_SCALE(f, scale, bias);
+      
+      if((width = log(fabs((p-noise)/cp))) < 0.0) width = 0.0001;
+      f = sqrt(width) * widthconst;  /* // s.w. in m/s  */
+      *swp++ = DD_SCALE(f, scale, bias);
+      
+      f = dbm + rconst + range;     /* // in dBZ  */
+      *dbzp++ = DD_SCALE(f, scale, bias);
+      
+      f = 10.0 * log10(fabs(cp)) + pcorrect + rconst + range;  /* // in dBZ  */
+      *dbzcp++ = DD_SCALE(f, scale, bias);
+     }
+   /*
+   return dwlx->gates *  numProducts * sizeof(float) ;
+    */
+   }
+
+
 /* c------------------------------------------------------------------------ */
 /*
 // compute products from encoded A,B,P
