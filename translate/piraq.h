@@ -5,7 +5,9 @@ struct radar_consts {
   float h_rconst;
   float v_rconst;
 };
+
 # ifdef obsolute
+
 /* definition of several different data formats */
 #define DATA_SIMPLEPP    0 /* simple pulse pair ABP */
 #define DATA_POLYPP      1 /* poly pulse pair ABPAB */
@@ -24,6 +26,7 @@ struct radar_consts {
 #define DATA_MAX_POL_CMP  30	/* same as full plus plus more gates */
 #define DATA_HVSIMUL_CMP  31	/* simultaneous transmission of H and V */
 #define DATA_SHRTPUL_CMP  32	/* same as MAX_POL with gate averaging */
+
 # endif
 
 #define MAXNUM 10000
@@ -427,7 +430,14 @@ typedef struct  {
 		char              transition;
 		LeFloat           hxmit_power;    /* on the fly hor power */
 		LeFloat           vxmit_power;    /* on the fly ver power */
-		char              spare[100];
+# ifdef obsolete
+		char            spare[100];
+# else
+		LeFloat           yaw;            /* platform heading in degrees */
+		LeFloat           pitch;          /* platform pitch in degrees */
+		LeFloat           roll;           /* platform roll in degrees */
+		char            spare[88];
+# endif
 		} LeHEADERV;
 
 /* this structure gets recorded for each dwell */
@@ -461,7 +471,14 @@ typedef struct  {
 		LeFloat   vreceiver_gain; /* ver chan gain from antenna flange to VIRAQ */
 		LeFloat   vtest_pulse_pwr; /* ver test pulse power refered to antenna flange */
 		LeFloat   vantenna_gain;  
-		LeFloat   misc[6];        /* 7 more misc floats */
+# ifdef obsolete
+		LeFloat   misc[6];        /* 6 more misc floats */
+# else
+		LeFloat   vnoise_power;   /* for subtracting from data */
+		LeFloat   zdr_fudge_factor; /* what else? */
+                LeFloat   mismatch_loss;
+		LeFloat   misc[3];        /* 3 more misc floats */
+# endif
 		char    text[960];
 		} LeRADARV;
 
@@ -548,116 +565,6 @@ typedef struct  {
 
 /* c------------------------------------------------------------------------ */
 
-# ifdef obsolete
-typedef   int   int4;
-typedef float float4;
-
-struct piraqX_header {		/* /code/oye/solo/translate/piraq.h
-				 * all elements start on 4-byte boundaries
-				 * 8-byte elements start on 8-byte boundaries
-				 * character arrays that are a multiple of 4
-				 * are welcome
-				 */
-  char desc[4];			/* "DWLX" */
-  int4 recordlen;
-  int4 one;			/* always set to the value 1 (endian flag) */
-  int4 byte_offset_to_data;
-
-  int4 typeof_compression;	/*  */
-  int4 rays_in_chunk;		/* a chunk is some number of compressed rays */
-  int4 ray_in_chunk;				
-  int4 ray_in_sweep;				
-
-  int4 gates;
-  int4 hits;
-  float4 rcvr_pulsewidth;
-  float4 prt;
-
-  float4 delay;
-  int4 clutterfilter;
-  int4 timeseries;
-  int4 tsgate;
-
-  int4 time;
-  int4 subsec;
-  float4 az;
-  float4 el;
-
-  float4 radar_longitude;
-  float4 radar_lattitude;
-  float4 radar_altitude;
-  float4 ew_velocity;
-
-  float4 ns_velocity;
-  float4 vert_velocity;
-  int4 dataformat;
-  float4 prt2;
-
-  float4 fxd_angle;		/* in degrees instead of counts */
-  int4 scan_type;
-  int4 scan_num;
-  int4 vol_num;
-
-  int4 ray_count;
-  int4 transition;
-  float4 hxmit_power;
-  float4 vxmit_power;
-
-  float4 yaw;
-  float4 pitch;
-  float4 roll;
-  float4 spare1;
-
-				/*
-  // items from the depricated radar "RHDR" header
-  // do not set "radar->recordlen"
-				 */
-
-  int4 rev;
-  int4 year;
-  char radar_name[8];
-
-  int4 polarization;
-  float4 test_pulse_pwr;
-  float4 test_pulse_frq;
-  float4 frequency;
-
-  float4 peak_power;
-  float4 noise_figure;
-  float4 noise_power;
-  float4 receiver_gain;
-
-  float4 data_sys_sat;
-  float4 antenna_gain;
-  float4 horz_beam_width;
-  float4 vert_beam_width;
-
-  float4 xmit_pulsewidth;
-  float4 rconst;
-  float4 phaseoffset;
-  float4 vreceiver_gain;
-
-  float4 vtest_pulse_pwr;
-  float4 vantenna_gain;
-  float4 vnoise_power;
-  float4 zdr_fudge_factor;
-
-  float4 mismatch_loss;
-  float4 h_rconst;
-  float4 v_rconst;
-  float4 spare2;
-
-  float4 test_pulse_rngs_km[2];
-  float4 misc[6];
-
-				/*
-  // always append new items so the alignment of legacy variables
-  // won't change
-				 */
-};
-
-typedef struct piraqX_header PIRAQX;
-# endif
 
 /* c------------------------------------------------------------------------ */
 
