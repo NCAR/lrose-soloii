@@ -1,6 +1,8 @@
 This file is named .../soloii/README.soloii.
 
-soloii requires the GTK+ headers and libraries!
+soloii requires the GTK+ headers and libraries! Also if you will be
+reading or writing netCDF files make sure the netcdf libraries have
+been loaded.
 
 The build of Soloii is based on autoconf which produces a Borne shell
 script "configure" from a "configure.ac" file and uses "Makefile.in"
