@@ -118,6 +118,12 @@ int se_header_value(arg, cmds)	/* #header-value# */
 	  ii = dd_get_scan_mode( s_val );
 	  dds->radd->scan_mode = ii;
       }
+      else if(strstr("ipp1", name)) {
+	dds->radd->interpulse_per1 = f_val;
+      }
+      else if(strstr("ipp2", name)) {
+	dds->radd->interpulse_per2 = f_val;
+      }
     }
 
     if(strstr("tilt-angle", name)) {
