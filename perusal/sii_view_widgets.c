@@ -663,15 +663,6 @@ void sii_view_update_links (guint frame_num, int li_type)
     { return; }
 
   switch (li_type) {
-   case LI_SWPFI:
-     lwins = wwptr->sweep->linked_windows;
-     break;
-   case LI_LOCKSTEP:
-     lwins = wwptr->lock->linked_windows;
-     break;
-   case LI_PARAM:
-     lwins = wwptr->parameter->linked_windows;
-     break;
    case LI_VIEW:
      lwins = wwptr->view->linked_windows;
      break;
