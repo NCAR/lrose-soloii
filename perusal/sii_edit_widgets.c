@@ -889,7 +889,7 @@ guint edit_file_text_event_cb (GtkWidget *text, GdkEvent *event
   guint num = GPOINTER_TO_UINT (data);
   guint frame_num, task, wid, wid2, tid;
   gint mm, nn, cndx, jj;
-  gchar str[256], *aa, *bb, *cc, *line;
+  gchar str[256], *aa, *bb, *cc, *line="";
   char *buf;
   int size;
   GtkWidget *entry, *text2;
@@ -914,6 +914,9 @@ guint edit_file_text_event_cb (GtkWidget *text, GdkEvent *event
     gtk_editable_select_region (GTK_EDITABLE (text), start, end);
     line = sii_nab_line_from_text (edd->orig_txt[wid]->str, nn);
   }
+  if (!strlen (line))
+    { return FALSE; }
+
   if (wid == EDIT_CMD_FILES) {
      scf = se_return_cmd_files_struct();
      strcpy (scf->directory_text, edd->orig_txt[EDIT_CMD_DIR]->str); 
