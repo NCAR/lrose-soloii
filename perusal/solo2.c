@@ -2304,7 +2304,7 @@ void solo_data_color_lut(frme)
     int i, j, kk, n, nc, min, max;
     WW_PTR wwptr, solo_return_wwptr();
     double f_inc, f_min, f_max, f_color_num=0;
-    float ctr, inc;
+    float ctr, inc, emin, emax;
 
     nc = sii_get_ctr_and_inc (frme, &ctr, &inc);
 
@@ -2331,16 +2331,14 @@ void solo_data_color_lut(frme)
 	kk = f_color_num;
 	*(wwptr->data_color_lut+i) = (wwptr->xcolors+kk)->pixel;
     }
+    sii_get_emph_min_max (frme, &emin, &emax);
 
-
-    if(wwptr->emphasis_min < wwptr->emphasis_max) {
+    if(emin < emax) {
 	/*
 	 * do the emphasis zone
 	 */
-	min = DD_SCALE(wwptr->emphasis_min
-		       , wwptr->parameter_scale, wwptr->parameter_bias);
-	max = DD_SCALE(wwptr->emphasis_max
-		       , wwptr->parameter_scale, wwptr->parameter_bias);
+	min = DD_SCALE(emin, wwptr->parameter_scale, wwptr->parameter_bias);
+	max = DD_SCALE(emax, wwptr->parameter_scale, wwptr->parameter_bias);
 	min = min >= (-K32) ? min : -K32;
 	max = max < K32 ? max : K32-1;
 
