@@ -1,1 +1,1 @@
-static char *sii_date_stamp = "06/05/02  0857";
+static char *sii_date_stamp = "08/17/02  0626";
