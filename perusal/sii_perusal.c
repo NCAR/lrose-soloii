@@ -621,6 +621,7 @@ int displayq(click_frme, command)
 	    sii_update_swpfi_widget (flink->wwptr->window_num);
 	    sii_update_param_widget (flink->wwptr->window_num);
 	    sii_update_view_widget (flink->wwptr->window_num);
+	    sii_edit_reset_times (flink->wwptr->window_num);
 	}
     }
 
