@@ -764,7 +764,10 @@ void sii_swpfi_list_widget( guint frame_num )
     sd->data_widget[SWPFI_SCROLLED] =
       scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
     gtk_container_add (GTK_CONTAINER (window), scrolledwindow);
-
+# ifdef notyet
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolledwindow),
+                                    GTK_POLICY_AUTOMATIC, GTK_POLICY_ALWAYS);
+# endif 
   } /* first time */
   else {
     ptp = &frame_configs[frame_num]->widget_origin[FRAME_SWPFI_DISPLAY];
