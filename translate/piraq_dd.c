@@ -197,7 +197,7 @@ struct piraq_swp_que {
 
 /* options flags
  */
-# define              SCAN_LIST 0x1
+# define            WINDOWS_DOW 0x1
 # define          SIMPLE_SWEEPS 0x2
 # define           FORCE_POLYPP 0x4
 # define            FORCE_REV_1 0x8
@@ -432,6 +432,8 @@ pui_next_block()
   char mess[256], *last_top;
   TOP *gh;
   static TOP *last_gh;
+  RADARV *rhdrx;
+  HEADERV *hdrx;
   /* c...mark */
 
 
@@ -525,6 +527,8 @@ pui_next_block()
 
     dwel_record = !strncmp("DWEL", aa, 4);
     rhdr_record = !strncmp("RHDR", aa, 4);
+    rhdrx = (RADARV *)aa;
+    hdrx = (HEADERV *)aa;
 
     if (!(dwel_record || rhdr_record)) {
       if((illegal_header_count++ % 3) == 0 ) {
@@ -1411,6 +1415,8 @@ piraq_ini()
 	pui->options |= MERGE_HRD_AC;
     }
     if((aa=get_tagged_string("OPTIONS"))) {
+	if(strstr(aa, "WINDOWS"))
+	  { pui->options |= WINDOWS_DOW; }
 	if(strstr(aa, "SIMPLE_SW"))
 	  { pui->options |= SIMPLE_SWEEPS; }
 	if(strstr(aa, "CE_REV_1"))
@@ -2045,9 +2051,16 @@ piraq_map_hdr(aa, gotta_header)
    }
     piraq_crack_header(aa, xhdr, (int)0, sparc_alignment);
 
+    if (pui->options & WINDOWS_DOW) {
+      memcpy (xhdr, aa, sizeof (*xhdr));
+    }
+
     if(pui->options & SPARC_ALIGNMENT) {
        pui->raw_data = aa + sizeof(HEADERNU);
     }
+    else if(pui->options & WINDOWS_DOW) {
+       pui->raw_data = aa + sizeof(HEADERV);
+    } 
     else {
        pui->raw_data = aa + sizeof(LeHEADERV);
     }
@@ -2296,7 +2309,12 @@ piraq_header()
 # else
     ii = 33;
     ii = pui->options & SPARC_ALIGNMENT;
+
     piraq_crack_radar (lrhdr, xrhdr, (int)0, ii );
+
+    if (pui->options & WINDOWS_DOW) {
+      memcpy (xrhdr, lrhdr, sizeof (*xrhdr));
+    }
     rhdr = xrhdr;
     if(strstr(rhdr->radar_name, "SPOL")) {
        pui->options |= SPOL_FLAG;
@@ -6412,7 +6430,5 @@ void smallhvsimul(DWELL *dwell, RADAR *radar, float *prods)
 # endif
 
    }
-/* c------------------------------------------------------------------------ */
-
 /* c------------------------------------------------------------------------ */
 
