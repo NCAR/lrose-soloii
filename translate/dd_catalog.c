@@ -447,7 +447,7 @@ void cat_volume( dgi, cii, current_time, finish )
     c_deblank(vold->proj_name, 20, arglist);
     cat_cat_att( "Project", 1, arglist, cat );
 
-    arg = "/RSF/NCAR/UCAR/NSF";
+    arg = "/RTF/ATD/NCAR/UCAR/NSF";
     cat_cat_att( "Facility", 1, arg, cat );
 
     arg = "GMT";
