@@ -682,6 +682,7 @@ dd_init_io_structs(index, fmt)
     else if(fmt == UF_FMT) {
 	iri->que_count = 8;
 	iri->sizeof_bufs = K64;
+	iri->sizeof_bufs = 128 * 1024;
     }
     else if(fmt == ETL2M_FMT) {
 	iri->que_count = 16;
