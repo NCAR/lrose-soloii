@@ -1,6 +1,6 @@
 /* 	$Id$	 */
 
-# define SRS_MAX_FIELDS 24
+# define SRS_MAX_FIELDS 64
 # define SRS_MAX_GATES 2048
 
 struct generic_radar_info {
