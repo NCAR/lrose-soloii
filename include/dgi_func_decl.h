@@ -86,7 +86,7 @@ void 	dgi_interest_really();
 int  	dgi_buf_rewind();
 void    do_print_dd_open_info();
 void    dont_print_dd_open_info();
-void 	eld_nimbus_fix_asib();
+char * 	eld_nimbus_fix_asib();
 void 	eld_gpro_fix_asib();
 
 int     mddir_file_list_v3();	/* dd_files.c */
