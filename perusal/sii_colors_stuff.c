@@ -239,6 +239,8 @@ void sii_set_default_colors ()
 # else
   nn = sizeof (carbone17)/sizeof (char *);
   sii_param_add_ctbl (carbone17, nn);
+  nn = sizeof (carbone11)/sizeof (char *);
+  sii_param_add_ctbl (carbone11, nn);
   nn = sizeof (rrate11)/sizeof (char *);
   sii_param_add_ctbl (rrate11, nn);
   nn = sizeof (bluebrown10)/sizeof (char *);
