@@ -84,8 +84,6 @@ gboolean sii_electric_centering = FALSE;
 
 gboolean nexrad_mode_set = FALSE;
 
-gdouble angular_fill_value = 0;
-
 gboolean uniform_frame_shape = TRUE;
 
 gboolean batch_mode = FALSE;
