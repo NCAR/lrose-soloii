@@ -19,6 +19,7 @@ static char vcid[] = "$Id$";
 static struct dd_input_sweepfiles_v3 *dis;
 static struct dd_input_filters *difs;
 static struct dd_stats *dd_stats;
+static char *acmrg = NULL;
 
 
 /* c------------------------------------------------------------------------ */
@@ -26,9 +27,11 @@ static struct dd_stats *dd_stats;
 int dd_swpfi_conv()
 {
     static int count=0;
-    int ii, rn;
+    int ii, jj, nn, rn;
     struct unique_sweepfile_info_v3 *usi;
     struct dd_general_info *dgi, *dd_window_dgi();
+    DDS_PTR dds;
+    char *aa, str[256];
     
     if((ii=dd_swpfi_init()) == END_OF_TIME_SPAN ) {
 	return(1);
@@ -42,14 +45,34 @@ int dd_swpfi_conv()
      */
     for(rn=0; rn++ < dis->num_radars; usi=usi->next) {
 	dgi = dd_window_dgi(usi->radar_num);
+	dds = dgi->dds;
+
 	strcpy(dgi->radar_name, usi->radar_name);
 	for(;;) {
+	    acmrg = eld_nimbus_fix_asib(dgi->dds->dts, dgi->dds->asib
+					, 0, dgi->radar_num);
 	    dd_stats->ray_count++;
 
 	    if( dgi->new_sweep)
 	      {  dd_stats->sweep_count++; }
-	    if( dgi->new_vol)
-	      {  dd_stats->vol_count++; }
+	    if( dgi->new_vol) {
+	      dd_stats->vol_count++;
+	      if (acmrg) {
+		nn = sizeof (dds->vold->proj_name);
+		aa = dds->vold->proj_name;
+		str_terminate (str, aa, nn);
+		if (strstr (str, acmrg))
+		  { jj = 0; }
+		else if (strlen (str) + strlen (acmrg) < nn ) {
+		  strcat (str, acmrg);
+		}
+		else {
+		  jj = nn-strlen (acmrg)-1;
+		  strcat (str+jj, acmrg);
+		}
+		strcpy (aa, str);
+	      }
+	    }
 				/*
 	    if(!(count++ % 500))
 		  dgi_interest_really(dgi, NO, "", "", dgi->dds->swib);
