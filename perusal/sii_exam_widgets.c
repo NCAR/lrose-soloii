@@ -663,8 +663,10 @@ void sii_exam_menu_cb ( GtkWidget *w, gpointer   data )
       g_return_if_fail (GTK_IS_RADIO_MENU_ITEM (rmi));
 
       active = GTK_CHECK_MENU_ITEM (check_item)->active;
+# ifdef obsolete
       g_message ( "Exam Task: %d  State: %d  Active: %d"
 		 , task, xmd->toggle[task], active );
+# endif
       xmd->toggle[task] = active;
 
       if(active) {
@@ -691,8 +693,10 @@ void sii_exam_menu_cb ( GtkWidget *w, gpointer   data )
       g_return_if_fail (GTK_IS_RADIO_MENU_ITEM (rmi));
 
       active = GTK_CHECK_MENU_ITEM (check_item)->active;
+# ifdef obsolete
       g_message ( "Exam Task: %d  State: %d  Active: %d"
 		 , task, xmd->toggle[task], active );
+# endif
       xmd->toggle[task] = active;
 
       if(active) {
@@ -706,8 +710,10 @@ void sii_exam_menu_cb ( GtkWidget *w, gpointer   data )
       g_return_if_fail (GTK_IS_RADIO_MENU_ITEM (rmi));
 
       active = GTK_CHECK_MENU_ITEM (check_item)->active;
+# ifdef obsolete
       g_message ( "Exam Task: %d  State: %d  Active: %d"
 		 , task, xmd->toggle[task], active );
+# endif
       xmd->toggle[task] = active;
 
       if( active) {
@@ -1244,7 +1250,8 @@ void sii_exam_widget( guint frame_num )
      style = gtk_style_copy (defstyle);
      style->font = font;
   }
-# ifndef notyet
+  /* labels for data only
+   */
   xmdata->label_bar0 = label = gtk_label_new ( "" );
   gtk_container_add (GTK_CONTAINER(vbox00), label);
   gtk_widget_set_style (label, style);
@@ -1254,7 +1261,7 @@ void sii_exam_widget( guint frame_num )
   gtk_container_add (GTK_CONTAINER(vbox00), label);
   gtk_widget_set_style (label, style);
   gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
-# endif
+
   /* set keyboard events for this window to signal
    * arrows used for scrolling
    */
