@@ -131,6 +131,21 @@ void sii_links_widget_cb ( GtkWidget *w, gpointer   data )
       gtk_container_foreach (GTK_CONTAINER (table),
 			 sii_links_get_foreach,
 			 (gpointer)li );
+      switch (li->widget_id) {
+       case FRAME_SWPFI_LINKS:
+       case FRAME_LOCKSTEP_LINKS:
+	 sii_set_swpfi_info (li->frame_num, -1);
+	 break;
+       case FRAME_VIEW_LINKS:
+       case FRAME_CTR_LINKS:
+       case FRAME_LMRK_LINKS:
+	 sii_update_linked_view_widgets (li->frame_num);
+	 break;
+       case FRAME_PARAM_LINKS:
+	 sii_set_param_info (li->frame_num);
+	 break;
+      }
+
     case LINKS_CANCEL:
       if( widget = sii_get_widget_ptr (li->frame_num, li->widget_id))
 	{ gtk_widget_hide (widget); }
