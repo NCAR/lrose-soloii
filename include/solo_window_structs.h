@@ -159,6 +159,18 @@ struct solo_plot_lock {
 };
 /* c------------------------------------------------------------------------ */
 
+struct solo_plot_lock0 {
+    char name_struct[4];	/* "SPTL" */
+    long sizeof_struct;
+    long window_num;
+    long time_modified;
+    long changed;
+    long always_popup;
+
+    long linked_windows[6];
+};
+/* c------------------------------------------------------------------------ */
+
 struct solo_parameter_info {
     char name_struct[4];	/* "SPMI" */
     long sizeof_struct;
@@ -232,6 +244,20 @@ struct solo_view_info {
 };
 /* c------------------------------------------------------------------------ */
 
+struct landmark_info {
+    char name_struct[4];	/* "SLMK" */
+    long sizeof_struct;
+    long window_num;
+    long time_modified;
+    long changed;
+    long always_popup;
+
+    long linked_windows[SOLO_MAX_WINDOWS];
+    long landmark_options;
+    long reference_frame;
+};
+/* c------------------------------------------------------------------------ */
+
 struct frame_ctr_info {
     char name_struct[4];	/* "SCTR" */
     long sizeof_struct;
@@ -245,20 +271,6 @@ struct frame_ctr_info {
     long reference_frame;
 };
 
-/* c------------------------------------------------------------------------ */
-
-struct landmark_info {
-    char name_struct[4];	/* "SLMK" */
-    long sizeof_struct;
-    long window_num;
-    long time_modified;
-    long changed;
-    long always_popup;
-
-    long linked_windows[SOLO_MAX_WINDOWS];
-    long landmark_options;
-    long reference_frame;
-};
 /* c------------------------------------------------------------------------ */
 
 struct solo_palette {
@@ -429,6 +441,12 @@ struct landmark_info0 {
 };
 /* c------------------------------------------------------------------------ */
 
+struct res_landmark_info0 {
+    long landmark_options;
+    long reference_frame;
+};
+/* c------------------------------------------------------------------------ */
+
 struct frame_ctr_info0 {
     char name_struct[4];	/* "SCTR" */
     long sizeof_struct;
@@ -438,6 +456,13 @@ struct frame_ctr_info0 {
     long always_popup;
 
     long linked_windows[6];
+    long centering_options;
+    long reference_frame;
+};
+
+/* c------------------------------------------------------------------------ */
+
+struct res_frame_ctr_info0 {
     long centering_options;
     long reference_frame;
 };
@@ -491,6 +516,27 @@ struct solo_sweep_file0 {
 };
 /* c------------------------------------------------------------------------ */
 
+struct res_solo_sweep_file0 {
+    long sweep_count;
+    long sweep_skip;
+
+    long time_stamp;
+    long latest_version;
+    long input_fmt;
+    long io_type;
+    long millisecond;
+    long radar_type;
+    long version_num;
+    char directory_name[128];
+    char file_name[128];
+    char scan_type[16];
+    char radar_name[16];
+    long radar_num;
+    long sweep_keep_count;
+    double stop_time;
+};
+/* c------------------------------------------------------------------------ */
+
 struct solo_parameter_info0 {
     char name_struct[4];	/* "SPMI" */
     long sizeof_struct;
@@ -500,6 +546,12 @@ struct solo_parameter_info0 {
     long always_popup;
 
     long linked_windows[6];
+    char parameter_name[16];
+    char palette_name[16];
+};
+/* c------------------------------------------------------------------------ */
+
+struct res_solo_parameter_info0 {
     char parameter_name[16];
     char palette_name[16];
 };
@@ -539,6 +591,11 @@ struct solo_radar_name0 {
 };
 /* c------------------------------------------------------------------------ */
 
+struct res_solo_radar_name0 {
+    char radar_name[16];
+};
+/* c------------------------------------------------------------------------ */
+
 struct solo_view_info0 {
     char name_struct[4];	/* "SWVI" */
     long sizeof_struct;
@@ -554,6 +611,51 @@ struct solo_view_info0 {
     long auto_grid;
     long frame_config;
     long linked_windows[6];
+    long type_of_annot;
+    long type_of_grid;
+    long type_of_plot;
+
+    float angular_fill_deg;
+    float angular_fill_pct;
+    float az_line_int_deg;
+    float az_annot_at_km;
+    float rng_ring_int_km;
+    float rng_annot_at_deg;
+    float grid_line_width_pix;
+    float horiz_tic_mark_km;
+    float vert_tic_mark_km;
+    float radar_altitude_km;
+    float border_minor_tic_km;
+    float border_major_tic_km;
+
+    float magnification;
+    float vertical_mag;
+
+    /* there are also three points in space associtated with view info.
+     * they are the radar_location, center_of_view, and a landmark.
+     * they reside in the solo_window_ptrs struct.
+     */
+    long offset_to_pisps;
+    long num_pisps;
+    char message[48];		/* display length of x and y axes in km. */
+    /*
+     * "SOL_RAD_LOC" id contains the radar location for this window
+     * "SOL_WIN_LOC" id contains the location of the center of this window
+     * "SOL_LANDMARK" id contains a landmark for this window
+     */
+    long type_of_centering;
+    float rhi_x_ctr_km;		/* center for rhi plots */
+    float rhi_y_ctr_km;		/* center for rhi plots */
+
+    float ts_magnification;	/* time series has its own mag. */
+    float ts_ctr_km;		/* center for time-series plots */
+    float x_tic_mag;
+    float y_tic_mag;
+
+};
+/* c------------------------------------------------------------------------ */
+
+struct res_solo_view_info0 {
     long type_of_annot;
     long type_of_grid;
     long type_of_plot;
