@@ -90,6 +90,7 @@ int se_remove_ac_motion();
 int se_remove_field();
 int se_rescale_field();
 int se_ring_zap();
+int se_rewrite();
 int se_set_bad_flags();
 int se_threshold_field();
 int se_use_bnd();
@@ -620,6 +621,16 @@ return_sed_stuff()
 	/*
 	 * exhaustive list of commands with the
 	 * subroutine that will process each command
+	 * 
+	 * routines and files to be modified when adding a new command
+	 * 
+	 * edit this routine and  "se_all_fer_cmds()" or
+	 #    "se_all_other_commands()" in this file.
+	 * generate code to perform this command
+	 * add help for this command in ../perusal/help_edit.h
+	 * add an entry in the routine "edit_cmds_help_widget ()"
+	 *    in the file ../perusal/sii_edit_widget.c
+	 * 
 	 */
 
 
@@ -1243,6 +1254,13 @@ return_sed_stuff()
 
 	ucm->keyword = "rescale-field";
 	ucm->cmd_proc = se_rescale_field;
+	ucm_prev->next = ucm;
+	ucm_prev = ucm;
+
+	ucm = malloc_cmd_mgmt();
+
+	ucm->keyword = "rewrite";
+	ucm->cmd_proc = se_rewrite;
 	ucm_prev->next = ucm;
 	ucm_prev = ucm;
 
@@ -1925,6 +1943,9 @@ void se_all_fer_cmds(which)
     solo_add_list_entry(which, a, strlen(a));
 
     a = "rescale-field <field> <real> <real> scale and bias";
+    solo_add_list_entry(which, a, strlen(a));
+
+    a = "rewrite";
     solo_add_list_entry(which, a, strlen(a));
 
     a = "set-bad-flags when <field> <where> <real>";
