@@ -124,7 +124,7 @@ typedef struct {
    gfloat values[VIEW_MAX_WIDGETS][2];
 
    GString *orig_txt[VIEW_MAX_WIDGETS];
-   GString *txt[VIEW_MAX_WIDGETS];;
+   GString *txt[VIEW_MAX_WIDGETS];
    guint precision[VIEW_MAX_WIDGETS];
 
    gboolean toggle[VIEW_MAX_WIDGETS];
