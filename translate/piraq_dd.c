@@ -33,6 +33,7 @@ static char vcid[] = "$Id$";
 #define M_SQRT1_2       0.70710678118654752440
 # endif
 
+
 struct solo_list_mgmt *solo_malloc_list_mgmt();
 int generic_sweepfiles();
 
@@ -305,7 +306,9 @@ static int vang_ndx = 0;
 static int ldrv_ndx = 0;
 static int iq_norm_ndx = 0;
 static int iq_ang_ndx = 0;
+static int dbzv_ndx = 0;
 static struct radar_consts r_consts; 
+static char *acmrg=NULL;
 
 FILE * ts_fid = NULL;
 int sizeof_ts_fi = 0;
@@ -344,6 +347,7 @@ void dualpol12();
 void dualpolplus();
 void fullpolplus();
 void fullpolplusGf();
+void smallhvsimul();
 void dualprt();
 void xdualpol12();
 void dualspolx();
@@ -358,6 +362,7 @@ double short_running_sum();
 double avg_running_sum();
 double short_avg_running_sum();
 void update_prqx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel);
+char *eld_nimbus_fix_asib();
 
 # ifdef obsolete
 /* c------------------------------------------------------------------------ */
@@ -2016,7 +2021,8 @@ piraq_next_ray()
 	hrd_merge_std(gri);
     }
     else {
-	eld_nimbus_fix_asib(gri->dts, asib, pui->options, gri->dd_radar_num);
+	acmrg = eld_nimbus_fix_asib(gri->dts, asib, pui->options
+				 , gri->dd_radar_num);
 # ifdef notyet
 	gri->altitude = asib->altitude_msl;
 	gri->latitude = asib->latitude;
@@ -2099,12 +2105,12 @@ piraq_map_hdr(aa, gotta_header)
   int gotta_header;
 {
     static int count=0;
-    int mark, new_vol = NO;
+    int jj, nn, mark, new_vol = NO;
     double d, subsec;
     struct piraq_ray_que *rq=pui->ray_que;
     int sparc_alignment = 0;
     int tdiff;
-    char message[256];
+    char message[256], str[256];
     
     count++;
     dwl = (DWELLV *)aa;
@@ -2297,6 +2303,18 @@ piraq_map_hdr(aa, gotta_header)
 	      gri->nyquist_vel = gri->wavelength*gri->PRF*.25;
 	pui->new_vol = pui->new_sweep = YES;
 	piraq_fields();
+	if (acmrg) {
+	  nn = 20;
+	  str_terminate (str, gri->project_name, nn);
+	  if (strlen (str) + strlen (acmrg) < nn ) {
+	    strcat (str, acmrg);
+	  }
+	  else {
+	    jj = nn-strlen (acmrg)-1;
+	    strcat (str+jj, acmrg);
+	  }
+	  strcpy (gri->project_name, str);
+	}
     }
     rq->hits = hdr->hits;
     rq->prt = hdr->prt;
@@ -2672,6 +2690,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
     case DATA_MAX_POL:
     case DATA_HVSIMUL:
     case DATA_SHRTPUL:
+    case DATA_SMHVSIM:
 	if( pui->options & FULL_MATRIX ) {
 
 	    ldrv_ndx = pn = gri->num_fields_present++;
@@ -2770,18 +2789,6 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	strcpy( gri->field_units[pn], "       " );
 	gri->actual_num_bins[pn] = nbins;
 
-	ldr_ndx = 
-	    pn = gri->num_fields_present++;
-	gri->dd_scale[pn] = 100.;
-	gri->dd_offset[pn] = 0;
-	gri->field_id_num[pn] = 0;
-	strcpy( gri->field_name[pn], "LDR     " );
-	strncpy( gri->field_long_name[pn] 
-		 , "Lin. depolarization ratio (H tx, V rec)                "
-		 , 40);
-	strcpy( gri->field_units[pn], "dBm " );
-	gri->actual_num_bins[pn] = nbins;
-
 	dbmv_ndx = 
 	    pn = gri->num_fields_present++;
 	gri->dd_scale[pn] = 100.;
@@ -2794,17 +2801,31 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	strcpy( gri->field_units[pn], "dBm " );
 	gri->actual_num_bins[pn] = nbins;
 
-	dbmx_ndx = 
+	if( hdr->dataformat != DATA_SMHVSIM ) {
+	  ldr_ndx = 
 	    pn = gri->num_fields_present++;
-	gri->dd_scale[pn] = 100.;
-	gri->dd_offset[pn] = 0;
-	gri->field_id_num[pn] = 0;
-	strcpy( gri->field_name[pn], "DX      " );
-	strncpy( gri->field_long_name[pn] 
-		 , "Cross-polar (H tx, V rec) received power                "
-		 , 40);
-	strcpy( gri->field_units[pn], "dBm " );
-	gri->actual_num_bins[pn] = nbins;
+	  gri->dd_scale[pn] = 100.;
+	  gri->dd_offset[pn] = 0;
+	  gri->field_id_num[pn] = 0;
+	  strcpy( gri->field_name[pn], "LDR     " );
+	  strncpy( gri->field_long_name[pn] 
+		   , "Lin. depolarization ratio (H tx, V rec)                "
+		   , 40);
+	  strcpy( gri->field_units[pn], "dBm " );
+	  gri->actual_num_bins[pn] = nbins;
+
+	  dbmx_ndx = 
+	    pn = gri->num_fields_present++;
+	  gri->dd_scale[pn] = 100.;
+	  gri->dd_offset[pn] = 0;
+	  gri->field_id_num[pn] = 0;
+	  strcpy( gri->field_name[pn], "DX      " );
+	  strncpy( gri->field_long_name[pn] 
+		   , "Cross-polar (H tx, V rec) received power                "
+		   , 40);
+	  strcpy( gri->field_units[pn], "dBm " );
+	  gri->actual_num_bins[pn] = nbins;
+	}
 
     case DATA_POL1:
 
@@ -3704,6 +3725,10 @@ void products(DWELL *dwell, RADARV *radar, float *prods)
       case DATA_DUALPP:   dualprt(dwell,radar,prods);     break;
       case DATA_POL1:
 	dualpol1(dwell,radar,prods);
+	break;
+
+      case DATA_SMHVSIM:
+	smallhvsimul(dwell,radar,prods);
 	break;
 
       case DATA_POL2:
@@ -6154,11 +6179,299 @@ void update_prqx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel)
 }
 
 /* c------------------------------------------------------------------------ */
-
+#define STARTGATE       5      /* start gate for power average of all gates */
 /* c------------------------------------------------------------------------ */
 
+void smallhvsimul(DWELL *dwell, RADAR *radar, float *prods)      
+   {
+   int          i,avecount,num_gates, mark;   
+   short        *aptr;
+   float        *gate1;
+   double       scale2ln,scale2db;
+   double       h_channel_radar_constant,v_channel_radar_constant;
+   double       angle_to_velocity_scale_factor;
+   double       horiz_offset_to_dBm,verti_offset_to_dBm;
+   double       cp1,v1a,lnpv,cp2,v2a,lnph,lnhv,lag2;
+   double       lncrhv,vcrhv,lncrvh,vcrvh;
+   double       ph_off,temp,theta,dp,lncp,v;
+   double       horiz_dBm_at_coupler,verti_dBm_at_coupler;
+   double       horiz_coherent_dBm_at_coupler;
+   double       crosshv_dBm_at_coupler,crossvh_dBm_at_coupler,laghh_dBm_at_coupler;
+   double       hchan_noise_power,vchan_noise_power,lncoherent;
+   double       widthconst,range_correction,coher_noise_power;
+   double       linear_h_power,linear_v_power,average_h_power,average_v_power;
+   double       lnvh,lniq,phiq;
+   double       linear_hvcross_mag,average_real_hvcross,average_imag_hvcross;
+   double       linear_vhcross_mag,average_real_vhcross,average_imag_vhcross;
+   double       d;
+
+    short *velp=gri->scaled_data[ve_ndx];
+    short *dbmp=gri->scaled_data[dbm_ndx];
+    short *ncpp=gri->scaled_data[ncp_ndx];
+    short *swp=gri->scaled_data[sw_ndx];
+    short *dbzp=gri->scaled_data[dz_ndx];
+
+    short *dbzcp=gri->scaled_data[dzc_ndx];
+    short *zdrp=gri->scaled_data[zdr_ndx];
+    short *phip=gri->scaled_data[phi_ndx];
+    short *rhohv=gri->scaled_data[rhohv_ndx];
+    short *ldr=gri->scaled_data[ldr_ndx];
+
+    short *dbmv=gri->scaled_data[dbmv_ndx];
+
+    float f, scale=100., bias=0;
+    HEADERV *dwel = hdr;
 
 
+   /* initialize the things used for h and v power average */
+   average_h_power = average_v_power = 0.0;
+   /* initialize the things used for hv antenna isolation average */
+   average_real_hvcross = average_imag_hvcross = 0.0;
+   average_real_vhcross = average_imag_vhcross = 0.0;
+   gate1 = prods + 16;
+   avecount = 0;
 
+   scale2ln = 0.004 * log(10.0) / 10.0;  /* from counts to natural log */
+   scale2db = 0.004 / scale2ln;         /* from natural log to 10log10() */
 
+   h_channel_radar_constant 
+	= rhdr->rconst - 20.0 * log10(rhdr->xmit_pulsewidth / dwel->rcvr_pulsewidth)
+	  + 10.0 * log10(rhdr->peak_power / dwel->hxmit_power);
+
+   v_channel_radar_constant 
+	= rhdr->rconst - 20.0 * log10(rhdr->xmit_pulsewidth / dwel->rcvr_pulsewidth)
+	  + 10.0 * log10(rhdr->peak_power / dwel->vxmit_power)
+	  + 2.0 * (rhdr->antenna_gain - rhdr->vantenna_gain);
+
+   angle_to_velocity_scale_factor
+	= C / (2.0 * rhdr->frequency * 2.0 * M_PI * dwel->prt);
+
+   horiz_offset_to_dBm = rhdr->data_sys_sat - 20.0 * log10(0x10000) 
+			- rhdr->receiver_gain + 10.0 * log10(2.0);  /* correct for half power measurement */
+
+   verti_offset_to_dBm = rhdr->data_sys_sat - 20.0 * log10(0x10000) 
+			- rhdr->vreceiver_gain + 10.0 * log10(2.0); /* correct for half power measurement */
+
+   widthconst = (C / rhdr->frequency) / dwel->prt / (4.0 * sqrt(2.0) * M_PI);
+
+   ph_off = 20.0 * M_PI / 180.0; /* set phase offset to be 20 deg */
+
+# ifdef obsolete
+    aptr = dwel->abp;
+# else
+    aptr = (short *)pui->raw_data;
+    num_gates = dwel->gates;
+# endif
+   range_correction = 0.0;
+
+   /* these powers reflect the LNA and waveguide performance */
+   /* they cannot be broken down into co an cross powers */
+   hchan_noise_power = (rhdr-> noise_power > -10.0) ? 0.0 : exp((rhdr-> noise_power - horiz_offset_to_dBm) / scale2db);
+   vchan_noise_power = (rhdr->vnoise_power > -10.0) ? 0.0 : exp((rhdr->vnoise_power - verti_offset_to_dBm) / scale2db);
+   coher_noise_power = exp((-129.0 - verti_offset_to_dBm) / scale2db);
+				/*
+   mark = *aptr;
+				 */
+   
+   for(i=0; i<num_gates; i++,prods+=16)
+      {
+# ifdef obsolete	
+      /* read in the raw data from structure */
+      cp1  = *aptr++ * scale2ln;        /* natural log  of |R(1)| from V pulse pair */
+      v1a  = *aptr++ * M_PI / 32768.0;  /* radian angle of |R(1)| from V pulse pair */
+      lnpv = *aptr++ * scale2ln;        /* natural log  of V power (from 16 bit scaled log) */
+      cp2  = *aptr++ * scale2ln;        /* natural log  of |R(1)| from H pulse pair */
+      v2a  = *aptr++ * M_PI / 32768.0;  /* radian angle of |R(1)| from H pulse pair */
+      lnph = *aptr++ * scale2ln;        /* natural log  of H power (from 16 bit scaled log) */
+      lnvh = *aptr++ * scale2ln;        /* natural log  of |HV*| -- used for Phidp */
+      theta = *aptr++ * M_PI / 32768.0; /* radian angle of VH* ; i.e. differential phase */
+# endif
+
+      if(LittleEndian) {
+	cp1  = (*aptr++) * scale2ln;        /* natural log  of |R(1)| from V pulse pair */
+	v1a  = (*aptr++) * M_PI / 32768.0;  /* radian angle of |R(1)| from V pulse pair */
+	lnpv = (*aptr++) * scale2ln;        /* natural log  of V power (from 16 bit scaled log) */
+	cp2  = (*aptr++) * scale2ln;        /* natural log  of |R(1)| from H pulse pair */
+	v2a  = (*aptr++) * M_PI / 32768.0;  /* radian angle of |R(1)| from H pulse pair */
+	lnph = (*aptr++) * scale2ln;        /* natural log  of H power (from 16 bit scaled log) */
+	lnvh = (*aptr++) * scale2ln;        /* natural log  of |HV*| -- used for Phidp */
+	theta = (*aptr++) * M_PI / 32768.0; /* radian angle of VH* ; i.e. differential phase */
+      }
+      else {
+	/* PX2() does byte swapping */
+	cp1  = PX2(*aptr++) * scale2ln; /* natural log  of |R(1)| from V pulse pair */
+	v1a  = PX2(*aptr++) * M_PI / 32768.0;
+	lnpv = PX2(*aptr++) * scale2ln;        /* natural log  of V power (from 16 bit scaled log) */
+	cp2  = PX2(*aptr++) * scale2ln;        /* natural log  of |R(1)| from H pulse pair */
+	v2a  = PX2(*aptr++) * M_PI / 32768.0;  /* radian angle of |R(1)| from H pulse pair */
+	lnph = PX2(*aptr++) * scale2ln;        /* natural log  of H power (from 16 bit scaled log) */
+	lnvh = PX2(*aptr++) * scale2ln;        /* natural log  of |HV*| -- used for Phidp */
+	theta = PX2(*aptr++) * M_PI / 32768.0; /* radian angle of VH* ; i.e. differential phase */
+
+      }
+
+      lncoherent = (cp1 + log(1 + exp(cp2 - cp1)) - LOG2);  /* natural log  of coherent power */
+
+      /* NCP */
+      /* it is best if this parameter is computed before noise correction */
+     
+      lncp =  log(exp(cp1 - lnpv) + exp(cp2 - lnph)) - log(2.0);
+//      lncp = cp1 - lnpv;
+# ifdef obsolete
+      prods[2] = exp(lncp);        /* average of V and H NCP's */
+# else
+      d = exp(lncp);        /* average of V and H NCP's */
+      *ncpp++ = DD_SCALE(d, scale, bias);
+# endif
+
+      
+# ifdef obsolete
+      /* h/v cross correlation RHOhv (normalized dB) */
+      /* it is best if this parameter is computed before noise correction */
+      prods[9] = exp(lnvh - (log(0.5) + (lnpv + log(1 + exp(lnph - lnpv)))));
+# else
+      d = exp(lnvh - (log(0.5) + (lnpv + log(1 + exp(lnph - lnpv)))));
+      *rhohv++ = DD_SCALE(d, scale, bias);
+# endif
+      
+      /* subtract raw noise power from the raw log powers */
+      linear_h_power = exp(lnph) - hchan_noise_power;   if(linear_h_power <= 0.0)       linear_h_power = SMALL;       
+      lnph = log(linear_h_power);   /* corrected h chan power */
+      linear_v_power = exp(lnpv) - vchan_noise_power;   if(linear_v_power <= 0.0)       linear_v_power = SMALL;       
+      lnpv = log(linear_v_power);   /* corrected v chan power */
+
+      /* convert the raw log powers to dBm at the test pulse waveguide coupler */
+      horiz_dBm_at_coupler          = lnph * scale2db + horiz_offset_to_dBm;    /* HH  power in dBm */
+      horiz_coherent_dBm_at_coupler = lncoherent * scale2db + horiz_offset_to_dBm;    /* HH  coherent power in dBm */
+      verti_dBm_at_coupler          = lnpv * scale2db + verti_offset_to_dBm;    /* VV  power in dBm */
+
+# ifdef notyet
+      if(i >= STARTGATE)        /* only average past startgate */
+	 {
+	 avecount++;
+	 
+	 /* average h and v power for solar cal purposes */
+	 average_h_power += linear_h_power;
+	 average_v_power += linear_v_power;
+	 
+	 }
+# endif
+
+      /* compute range correction in dB. Skip the first gate */
+      if(i)     range_correction = 20.0 * log10(i * 0.0005 * C * dwel->rcvr_pulsewidth);
+
+      /* compute velocity by averaging v1a and v2a */
+      v = atan2(exp(cp1) * sin(v1a) + exp(cp2) * sin(v2a),exp(cp1) * cos(v1a) + exp(cp2) * cos(v2a));
+
+      /* figure the differential phase (from - 20 to +160) */
+      theta -= rhdr->phaseoffset;
+      dp = theta;
+      if (dp < -ph_off)   dp += M_PI;
+      /* note: dp cannot be greater than +160, range is +/- 90 */        
+
+      /* velocity in m/s */
+# ifdef obsolete
+      prods[0] = v * angle_to_velocity_scale_factor;
+# else
+      d = v * angle_to_velocity_scale_factor;
+      *velp++ = DD_SCALE(d, scale, bias);
+# endif
+
+      /* horizontal power in dBm at test pulse coupler */
+# ifdef obsolete
+      prods[1] = horiz_dBm_at_coupler;
+# else
+      d = horiz_dBm_at_coupler;
+      *dbmp++ = DD_SCALE(d, scale, bias);
+# endif
+
+      /* this space intentionaly left blank */
+      /* NCP is computed above, before noise correction */
+
+      /* spectral width in m/s */
+      if( lncp > 0.0)   lncp = 0.0;
+# ifdef obsolete
+      prods[3] = widthconst * sqrt(-lncp);
+# else
+      d = widthconst * sqrt(-lncp);
+      *swp++ = DD_SCALE(d, scale, bias);
+# endif
+
+      /* horizontal reflectivity in dBZ */
+# ifdef obsolete
+      prods[4] = horiz_dBm_at_coupler + h_channel_radar_constant
+	+ range_correction;
+# else
+      d = horiz_dBm_at_coupler + h_channel_radar_constant
+	+ range_correction;
+      *dbzp++ = DD_SCALE(d, scale, bias);
+# endif
+
+      /* horizontal coherent reflectivity in dBZ */
+# ifdef obsolete
+      prods[5] = horiz_coherent_dBm_at_coupler + h_channel_radar_constant
+	+ range_correction;
+# else
+      d = horiz_coherent_dBm_at_coupler + h_channel_radar_constant
+	+ range_correction;
+      *dbzcp++ = DD_SCALE(d, scale, bias);
+# endif
+
+      /* differential reflectivity Zdr in dB */
+# ifdef obsolete
+      prods[6] = horiz_dBm_at_coupler + h_channel_radar_constant
+	- verti_dBm_at_coupler - v_channel_radar_constant
+	+ rhdr->zdr_fudge_factor;
+# else
+      d = horiz_dBm_at_coupler + h_channel_radar_constant
+	- verti_dBm_at_coupler - v_channel_radar_constant
+	+ rhdr->zdr_fudge_factor;
+      *zdrp++ = DD_SCALE(d, scale, bias);
+# endif
+
+      /* differential phase PHI dp in degrees */
+# ifdef obsolete
+      prods[7] = -dp * 180.0 / M_PI;
+# else
+      d = -dp * 180.0 / M_PI;
+      *phip++ = DD_SCALE(d, scale, bias);
+# endif
+
+      /* v power in dBm */ 
+# ifdef obsolete
+      prods[8] = verti_dBm_at_coupler;
+# else
+      d = verti_dBm_at_coupler;
+      *dbmv++ = DD_SCALE(d, scale, bias);
+# endif
+
+      /* this space intentionaly left blank */
+      /* RHOhv is computed above, before noise correction */
+
+# ifdef obsolete
+      /* v power in dBm--repeats [8]? */ 
+      prods[10] = verti_dBm_at_coupler;
+      
+      /* V reflectivity in dBZ */
+      prods[11] = verti_dBm_at_coupler + v_channel_radar_constant
+	+ range_correction;
+      
+      /* v power in dBm */ 
+      prods[12] = verti_dBm_at_coupler;
+# endif
+      
+      }
+
+# ifdef notyet
+   /* now insert the average h and v power into the gate 1 data */
+   /* this is only necessary for the realtime system */
+   if(avecount == 0) return;
+   gate1[ 1] = log(average_h_power / (double)avecount) * scale2db + horiz_offset_to_dBm;    /* average HH  power in dBm */
+   gate1[10] = log(average_v_power / (double)avecount) * scale2db + verti_offset_to_dBm;    /* average VV  power in dBm */
+# endif
+
+   }
+/* c------------------------------------------------------------------------ */
+
+/* c------------------------------------------------------------------------ */
 
