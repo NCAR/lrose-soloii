@@ -19,6 +19,7 @@
 # define maxConfigCols 4
 # define maxConfigCells maxConfigRows*maxConfigCols
 # define maxLinkSets 16
+# define CFG_QUE_SIZE 3
 
 # define GDK_COLOR_NORM 0xffff
 # define TASK_MODULO 100
@@ -298,6 +299,10 @@ typedef struct {		/* frame info */
   guint max_big_image_size;
   guint big_image_show_count;
    
+  guint cfg_que_ndx;
+  guint cfg_width[CFG_QUE_SIZE];
+  guint cfg_height[CFG_QUE_SIZE];
+
 } SiiFrameConfig;
 
 /* c---------------------------------------------------------------------- */
