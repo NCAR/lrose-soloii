@@ -5,7 +5,7 @@ struct radar_consts {
   float h_rconst;
   float v_rconst;
 };
-
+# ifdef obsolute
 /* definition of several different data formats */
 #define DATA_SIMPLEPP    0 /* simple pulse pair ABP */
 #define DATA_POLYPP      1 /* poly pulse pair ABPAB */
@@ -24,6 +24,7 @@ struct radar_consts {
 #define DATA_MAX_POL_CMP  30	/* same as full plus plus more gates */
 #define DATA_HVSIMUL_CMP  31	/* simultaneous transmission of H and V */
 #define DATA_SHRTPUL_CMP  32	/* same as MAX_POL with gate averaging */
+# endif
 
 #define MAXNUM 10000
 
@@ -547,6 +548,7 @@ typedef struct  {
 
 /* c------------------------------------------------------------------------ */
 
+# ifdef obsolete
 typedef   int   int4;
 typedef float float4;
 
@@ -655,6 +657,7 @@ struct piraqX_header {		/* /code/oye/solo/translate/piraq.h
 };
 
 typedef struct piraqX_header PIRAQX;
+# endif
 
 /* c------------------------------------------------------------------------ */
 
