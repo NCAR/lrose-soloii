@@ -561,7 +561,7 @@ dd_init_io_structs(index, fmt)
 	iri->que_count = 16;
 	iri->sizeof_bufs = K64/2;
     }
-    else if(fmt == WSR_88D_FMT) {
+    else if(fmt == WSR_88D_FMT || fmt == PIRAQX_FMT) {
 	iri->que_count = 8;
 	iri->sizeof_bufs = 96 * 1024;
     }
