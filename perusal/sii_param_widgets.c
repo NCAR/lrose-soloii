@@ -2042,6 +2042,8 @@ void sii_param_dup_opal (struct solo_palette *opal)
   pal->ctrinc[0] = opal->center;
   pal->ctrinc[1] = opal->increment;
   pal->num_colors = opal->num_colors;
+  pal->emphasis_zone[0] = opal->emphasis_zone_lower;
+  pal->emphasis_zone[1] = opal->emphasis_zone_upper;
 
   aa = opal->color_table_name;
   bb = (gchar *)g_tree_lookup( ascii_color_tables, (gpointer)aa);
@@ -2121,6 +2123,8 @@ void sii_param_dup_pal (gpointer sii_pal, gpointer old_pal)
   opal->center = pal->ctrinc[0];
   opal->increment = pal->ctrinc[1];
   opal->num_colors = pal->num_colors;
+  opal->emphasis_zone_lower = pal->emphasis_zone[0];
+  opal->emphasis_zone_upper = pal->emphasis_zone[1];  
   strcpy (opal->color_table_name, pal->color_table_name->str);
   strcpy (opal->grid_color, pal->grid_color->str);
   strcpy (opal->missing_data_color, pal->missing_data_color->str);
