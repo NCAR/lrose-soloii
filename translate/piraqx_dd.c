@@ -955,11 +955,13 @@ piraqx_next_ray()
     /*
      * calculate antenna movement per ray
      */
-    if(fabs(d = pui->ray_que->az_diff) < 5.)
-	gri->azimuth = FMOD360(gri->azimuth - .5 * d);
-
-    if(fabs(d = pui->ray_que->el_diff) < 5.)
-      gri->elevation = FMOD360(gri->elevation - .5 * d);
+    if (!(pui->options & RABID_DOW)) {
+      if(fabs(d = pui->ray_que->az_diff) < 5.)
+        gri->azimuth = FMOD360(gri->azimuth - .5 * d);
+      
+      if(fabs(d = pui->ray_que->el_diff) < 5.)
+        gri->elevation = FMOD360(gri->elevation - .5 * d);
+    }
 
     if(gri->scan_mode == RHI) {
 	gri->rotation_angle = gri->corrected_rotation_angle = gri->elevation;
