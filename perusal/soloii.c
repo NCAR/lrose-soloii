@@ -811,12 +811,14 @@ void sii_initialization_widget()
 		      , (gpointer)SII_MAIN_CANCEL
 		      );
 
-  label = gtk_label_new
-    ("
-For default startup, type the sweepfile directory and hit <enter>
-or enter the directory with your confguration files and hit <enter>
-and then click on the desired file name."
-     );
+  g_string_truncate (gen_gs, 0);
+  g_string_append (gen_gs, 
+"For default startup, type the sweepfile directory and hit <enter>\n");
+  g_string_append (gen_gs, 
+"or enter the directory with your confguration files and hit <enter>\n");
+  g_string_append (gen_gs, 
+"and then click on the desired file name.\n");
+  label = gtk_label_new (gen_gs->str);
 
   gtk_label_set_justify ((GtkLabel *)label, GTK_JUSTIFY_LEFT );
   gtk_container_add (GTK_CONTAINER(vbox0), label);
