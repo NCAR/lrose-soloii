@@ -1294,6 +1294,7 @@ char *nex_next_block()
 # endif
 	ctm = (struct CTM_info *)at;
 	if (prior_ctm) {
+# ifdef obsolete
 	   mm = (int)(.1*NEX_PACKET_SIZE);
 	   if (memcmp (ctm, prior_ctm, sizeof (*ctm))) {
 	      bytes_used += sizeof (*ctm);
@@ -1302,12 +1303,11 @@ char *nex_next_block()
 	      ezhxdmp(at, 0, mm);
 	      return (NULL);
 	   }
+# endif
 	}
 	else {
 	   prior_ctm = (struct CTM_info *)malloc (sizeof (*ctm));
 	}
-# ifdef obsolete
-# endif
 	memcpy (prior_ctm, ctm, sizeof (*ctm));
 	last_packet = at;
 	at += sizeof(struct CTM_info);
