@@ -59,6 +59,9 @@ static const gchar * hlp_exam_operations[] = {
 "range defined by the first and second cells clicked as long as the two",
 "cells clicked are in the same column.",
 " ",
+"Folding operations on a ray from the clicked cell to the end are",
+"accomplished with the \"- Fold Ray >\" and \"+ Fold Ray >\" options.",
+" ",
 };
 
 static const gchar * hlp_exam_options[] = {
