@@ -63,7 +63,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
     char *a, *b, *c, *buf, *e, str[256], mess[256], atts[256], *sptrs[32];
     char *cbuf, *aa, *bb, *cc;
     struct solo_generic_window_struct *gws, gwx;
-    struct point_in_space *pisp;
+    struct point_in_space pisp;
     struct solo_view_info view;
     WW_PTR wwptr, solo_return_wwptr();
     struct solo_palette spal;
@@ -175,19 +175,6 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	     *
 	     */
 	    sii_param_dup_opal (&spal);
-
-# ifdef obsolete
-	    pal->at->sizeof_struct = sizeof(struct solo_palette);
-	    xpal = solo_topof_palettes();
-	    for(xpal = solo_topof_palettes();  xpal ; xpal = xpal->next) {
-	       if(!strcmp(pal->at->palette_name, xpal->at->palette_name)) {
-		  solo_palette_remove(xpal);
-		  solo_free_palette(xpal);
-		  break;
-	       }
-	    }
-	    pal = solo_push_palette(pal);
-# endif
 	}
 	else if(!strncmp(c, "SCTB", 4)) { /* ascii color table */
 	  nn = gdsos -8;
@@ -316,18 +303,18 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 
 	    b = c +wwptr->view->offset_to_pisps;
 	    for(ii=0; ii < wwptr->view->num_pisps; ii++) {
-		pisp = (struct point_in_space *)b;
-		ppsos = pisp->sizeof_struct;
+	        memcpy (&pisp, b, sizeof (pisp));
+		ppsos = pisp.sizeof_struct;
 		if( gottaSwap ) {
-		   swack4(&pisp->sizeof_struct, &ppsos);
+		   swack4(&pisp.sizeof_struct, &ppsos);
 		}
-		if(strstr(pisp->id, "SOL_RAD_LOC")) {
+		if(strstr(pisp.id, "SOL_RAD_LOC")) {
 		    a = (char *)wwptr->radar_location;
 		}
-		else if(strstr(pisp->id, "SOL_WIN_LOC")) {
+		else if(strstr(pisp.id, "SOL_WIN_LOC")) {
 		    a = (char *)wwptr->center_of_view;
 		}
-		else if(strstr(pisp->id, "SOL_LANDMARK")) {
+		else if(strstr(pisp.id, "SOL_LANDMARK")) {
 		    a = (char *)wwptr->landmark;
 		}
 		else {
@@ -604,6 +591,7 @@ void solo_save_window_info (char *dir, char *a_comment)
     int ww, i, ii, j, nn, mark, size=0, frame_count;
     size_t len, lenx;
     FILE *stream;
+    fpos_t pos;
     long time, time_now();
     char *a, *b, *c, *buf, *e, str[256], uid[32];
     struct solo_frame_state_files *sfsf, *se_return_state_files_struct();
@@ -615,7 +603,7 @@ void solo_save_window_info (char *dir, char *a_comment)
     struct solo_perusal_info *spi, *solo_return_winfo_ptr();
     char mess[256];
     SiiFrameConfig *sfc;
-    SiiLinkedList *sps;
+    SiiLinkedList *sps, *top;
 
     spi = solo_return_winfo_ptr();
     frame_count = sii_return_frame_count ();
@@ -651,17 +639,16 @@ void solo_save_window_info (char *dir, char *a_comment)
 	sii_message(mess);
 	return;
     }
-# ifndef notyet
-    if (!sii_param_dump_ctbls (stream))
-      { return; }
-# endif
-
+    ii = fgetpos (stream, &pos);
     /* save the palettes in reverse order so they will pop onto the
      * stack in the current order
      */
-    sps = sii_solo_palette_stack ();
+    top = sii_solo_palette_stack ();
 
-    for(; sps; sps = sps->next) {
+    for(sps=top; sps->next; sps = sps->next); /* find last */
+    mark = 0;
+
+    for(; sps; sps = sps->previous) {
       spal = (struct solo_palette *)sps->data;
       
       if((nn = fwrite(spal, sizeof(char), (size_t)spal->sizeof_struct, stream))
@@ -672,6 +659,8 @@ void solo_save_window_info (char *dir, char *a_comment)
 	  sii_message(mess);
 	  return;
 	}
+      if (sps == top)
+	break;
     }
 
     /* save the direct window descriptors
@@ -830,6 +819,16 @@ void solo_save_window_info (char *dir, char *a_comment)
 	     return;
 	  }
      }
+				/* Write color tables here (odd byte counts) */
+    if (!sii_param_dump_ctbls (stream))
+      { return; }
+
     fclose(stream);
 }
 /* c------------------------------------------------------------------------ */
+
+
+
+
+
+
