@@ -16,7 +16,7 @@ static char vcid[] = "$Id$";
  * to a FORTRAN-BINARY file
  */
 # define PMODE 0644
-# define BLOCK_SIZE 65536
+# define BLOCK_SIZE 131072
 # ifndef FB_IO
 # define FB_IO 1
 # endif
@@ -30,7 +30,7 @@ main(argc, argv)
   char *argv[];
 {
     char *inputdev = NULL, *outputdev = NULL;
-    char buf[BLOCK_SIZE];
+    char *buf, str[256];
     int * iptr;
     int i, f, m, n, mark, in, out, num_files=999999, num_recs=0, r;
     int io_type=0, out_io_type=0, num_filesx = 0;
@@ -38,11 +38,13 @@ main(argc, argv)
     int eof_rec_count = 0, eof_interval = 0, forced_eof_count = 0;
     int err_count = 0, total_err_count = 0, skip_count = 0;
     int weof_count = 0, force2_weofs = 0, skipf_count = 0;
+    int first_four = 0;
     long recl;
     double size = 0, tsize = 0;
     struct mtop op;
     char * null_name = "/dev/null", *aa, *source_dev, *out_dev;
 
+    buf = (char *)malloc (BLOCK_SIZE);
     buf[0] = 0;
     iptr = (int *)buf;
     *iptr = 1;
@@ -71,6 +73,11 @@ main(argc, argv)
       printf(" %s ", argv[i]);
     printf("\n");
     
+    
+    if( aa = getenv( "FIRST_FOUR" ) ) {
+       first_four = 1;
+    }
+
     if( aa = getenv( "FORCE_SECOND_EOF" ) ) {
       force2_weofs = 1;
     }
@@ -209,6 +216,12 @@ main(argc, argv)
 # ifdef obsolete
 	    printf("Rec %3d\n", r );
 # endif
+	    if (first_four && m >= 4) {
+	       strncpy (str, buf, 4);
+	       str[4] = 0;
+	       printf ("%s\n", str);
+	    }
+
 	    if( null_dev ) {
 	       mark = 0;
 	    }
