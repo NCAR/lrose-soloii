@@ -367,10 +367,10 @@ void map_uf_ptrs( sbuf )
 	 nn = fhed[ii]->fld_data_ptr - fidp[ii]->fld_hed_ptr;
 	 nn += fhed[ii]->num_gates; /* field header plus data */
 
-	 if ( fidp[ii]->fld_hed_ptr + dhed->num_flds_this_ray*nn >
+	 if ( FsCs( fidp[ii]->fld_hed_ptr) + nn >
 	     man->rec_len)
 	   { 
-	      dhed->num_flds_this_ray = 1;
+	      dhed->num_flds_this_ray = ii;
 	      break; 
 	   }
 
