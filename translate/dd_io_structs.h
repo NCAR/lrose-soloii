@@ -1,5 +1,10 @@
 /* 	$Id$	 */
 
+# ifndef DD_IO_STRUCTS_H
+# define DD_IO_STRUCTS_H
+
+# include <stdio.h>
+
 # define MAX_OPENED_FILES 7
 # define MAX_LOG_PACKETS 100
 
@@ -46,4 +51,7 @@ struct input_read_info {
     char dev_name[256];
     char directory_name[128];
     int min_block_size;
+    FILE *strm;
 };
+
+# endif	/* DD_IO_STRUCTS_H */
