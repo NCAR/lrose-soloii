@@ -1,0 +1,101 @@
+# ------------------------------------------------------------------------
+MFVERSION="$Id$"
+# ------------------------------------------ Cut 0 -----------------------
+# On some systems there cannot be tabs to the left of macro declarations
+# (IRIX in particular)
+            SHELL = @WHICH_SHELL@
+               CC = @CC@
+              CPP = @CPP@
+          INSTALL = @WHICH_INSTALL@
+	AC_CFLAGS = @CFLAGS@
+      AC_CPPFLAGS = @CPPFLAGS@
+       LOCAL_DEFS = @LOCAL_DEFS@
+   LOCAL_INCLUDES = @LOCAL_INCLUDES@
+      GTKINCLUDES = @GTKINCLUDES@
+               AR = ar rsv
+               RM = rm -f
+
+CPPFLAGS = $(AC_CPPFLAGS)
+PROGS=""
+PROGLIBS=""
+SUBDIRS=""
+# ------------------------------------------ Cut 1 -----------------------
+# Paths
+           prefix = @prefix@
+      exec_prefix = @exec_prefix@
+           BINDIR = @bindir@
+           LIBDIR = @libdir@
+           INCDIR = @includedir@
+   LOCAL_INCLUDES = @LOCAL_INCLUDES@
+          SOLODIR = @SOLODIR@
+       SOLOLIBDIR = @SOLOLIBDIR@
+# ------------------------------------------ Cut 2 -----------------------
+
+EXTRA_DEFINES = 
+
+LOCALLIB = libsoloedit.a
+
+
+LIBOBJS =  se_bnd.o se_wgt_stf.o se_catch_all.o se_utils.o \
+	se_for_each.o se_defrkl.o se_histog.o se_flag_ops.o se_add_mult.o \
+	se_proc_data.o se_BB_unfold.o sxm_examine.o
+
+SRCS = $(LIBOBJS:.o=.c)
+
+CFLAGS = $(AC_CFLAGS) $(LOCAL_INCLUDES) $(GTKINCLUDES)
+
+PROGLIBS = $(LOCALLIB)
+
+all: $(PROGLIBS)
+
+$(LOCALLIB): $(LIBOBJS)
+	$(RM) $@
+	$(AR) $@ $(LIBOBJS)
+
+# ------------------------------------------ Cut 3 -----------------------
+# Between cuts 3 and 4 there can only be tabs to the left of shell commands
+# on some systems (IRIX in particular)
+
+.c.o:
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
+install: all
+	@if test -n "$(PROGS)"; then \
+	test -d $(SOLOBINDIR) || mkdir -p $(SOLOBINDIR); \
+	for p in $(PROGS); do \
+		if test -r "$$p"; then \
+		echo install $$p in $(SOLOBINDIR); $(INSTALL) $$p $(SOLOBINDIR); \
+		fi \
+	done \
+	fi
+
+	@if test -n "$(PROGLIBS)"; then \
+	test -d $(SOLOLIBDIR) || mkdir -p $(SOLOLIBDIR); \
+	for p in $(PROGLIBS); do \
+		if test -r "$$p"; then \
+		echo install $$p in $(SOLOLIBDIR); chmod 0644 $$p; cp $$p $(SOLOLIBDIR); \
+		fi \
+	done \
+	fi
+
+	@if test -n "$(SUBDIRS)"; then \
+	for d in $(SUBDIRS); do \
+		if test -d "$$d"; then \
+		(cd $$d; $(MAKE) install) \
+		fi \
+	done \
+	fi
+
+clean:
+	rm -f core *.o *~ $(PROGS) $(PROGLIBS)
+
+depend:
+	rm -f Makefile.old
+	mv Makefile Makefile.old
+	sed -e '/^# DEPEND/,$$d' < Makefile.old > Makefile
+	echo '# DEPEND Marker -- no edits below this line' >> Makefile
+	$(CC) -M $(CFLAGS) $(CPPFLAGS) $(SRCS) >> Makefile
+
+# DEPEND Marker -- no edits below this line
+
+# ------------------------------------------ Cut 4 -----------------------

@@ -1,0 +1,152 @@
+# ------------------------------------------------------------------------
+MFVERSION="$Id$"
+# ------------------------------------------ Cut 0 -----------------------
+# On some systems there cannot be tabs to the left of macro declarations
+# (IRIX in particular)
+            SHELL = @WHICH_SHELL@
+               CC = @CC@
+               FC = @WHICHFORTRAN@
+              CPP = @CPP@
+          INSTALL = @WHICH_INSTALL@
+           CFLAGS = @CFLAGS@
+           FCFLAGS = @FCFLAGS@
+         X_CFLAGS = @X_CFLAGS@
+      AC_CPPFLAGS = @CPPFLAGS@
+       LOCAL_DEFS = @LOCAL_DEFS@
+             LIBS = @LIBS@
+            FLIBS = @FLIBS@
+           X_LIBS = @X_LIBS@
+        LDOPTIONS = @LDFLAGS@
+     FCSTATICFLAG = @FCSTATICFLAG@
+               AR = ar rsv
+               RM = rm -f
+
+CPPFLAGS = $(AC_CPPFLAGS) $(X_CFLAGS) $(LOCAL_DEFS) $(LOCAL_INCLUDES) $(EXTRA_DEFINES)
+PROGS=""
+PROGLIBS=""
+SUBDIRS=""
+# ------------------------------------------ Cut 1 -----------------------
+# Paths
+           prefix = @prefix@
+      exec_prefix = @exec_prefix@
+           BINDIR = @bindir@
+           LIBDIR = @libdir@
+           INCDIR = @includedir@
+   LOCAL_INCLUDES = @LOCAL_INCLUDES@
+           DAPLIB = @DAPLIB@
+          SOLODIR = @SOLODIR@
+       SOLOLIBDIR = @SOLOLIBDIR@
+       SOLOBINDIR = @SOLOBINDIR@
+   REODORADE_LIBS = @REODORADE_LIBS@
+# ------------------------------------------ Cut 2 -----------------------
+
+DAPLB = libdap.a
+
+EXTRA_DEFINES = 
+
+S2LIB = libs2.a
+DAPLIB_FOBJS = qdap.o
+DAPLIB_FSRCS = $(DAPLIB_FOBJS:.o=.F)
+
+DAPLIB_COBJS = dap_common.o
+
+DDLB_OBJS = dd_files.o dda_common.o ddb_common.o dorade_share.o \
+	dd_time.o swp_file_acc.o dd_io_mgmt.o
+
+XLT_OBJS = ddin.o ddout.o dd_uf.o dd_ncdf.o \
+	gneric_dd.o hrd_dd.o sigm_dd.o uf_dd.o nex_dd.o \
+	toga_dd.o elda_dd.o eldb_dd.o gpro_data.o ground_echo.o \
+	stdhrd.o xwsrqc.o fof_dd.o piraq_dd.o tdwr_dd.o etl_dd.o \
+	cimm_dd.o nc_dd.o
+
+PROD_OBJS = by_products.o dd_catalog.o gecho.o dorade_uf.o \
+	product_x.o dd_der_flds.o nssl_mrd.o dd_swp_files.o \
+	dorade_tape.o shane.o dd_crackers.o dorade_ncdf.o dd_swpfi.o
+
+NXR_OBJS = nx_reblock.o dorade_share.o
+
+DDEX_OBJS = dd_examine.o
+
+TO_FB_OBJS = to_fb.o
+
+C_OBJS = $(DAPLIB_COBJS) $(DDEX_OBJS) $(DDLB_OBJS) $(XLT_OBJS) $(PROD_OBJS)\
+	$(TO_FB_OBJS) ddmain.o ${NXR_OBJS}
+
+SRCS = $(C_OBJS:.o=.c)
+
+PROGLIBS = $(DAPLIB) $(S2LIB)
+
+PROGS = xltrs ddex to_fb nx_reblock
+
+all: $(PROGLIBS) $(PROGS)
+
+$(S2LIB): $(XLT_OBJS) $(DDLB_OBJS) $(PROD_OBJS)
+	$(RM) $@
+	$(AR) $@ $(XLT_OBJS) $(DDLB_OBJS) $(PROD_OBJS)
+
+$(DAPLB): $(DAPLIB_FOBJS) $(DAPLIB_COBJS)
+	$(RM) $@
+	$(AR) $@ $(DAPLIB_FOBJS) $(DAPLIB_COBJS)
+
+xlt:
+	../sii_build_date.pl
+	make xltrs
+
+xltrs: ddmain.o $(S2LIB)
+	$(RM) $@
+	$(CC) $(CFLAGS) -o $@ ddmain.o $(LDOPTIONS) $(S2LIB) $(LIBS)
+
+ddex: $(DDEX_OBJS) $(S2LIB)
+	$(RM) $@
+	$(CC) $(CFLAGS) -o $@ $(DDEX_OBJS) $(LDOPTIONS) $(S2LIB) $(LIBS)
+
+nx_reblock: $(NXR_OBJS) $(S2LIB)
+	$(RM) $@
+	$(CC) $(CFLAGS) -o $@ $(NXR_OBJS) $(LDOPTIONS) $(S2LIB) $(LIBS)
+
+to_fb: $(TO_FB_OBJS)
+	$(RM) $@
+	$(CC) $(CFLAGS) -o $@ $(TO_FB_OBJS) $(LDOPTIONS)
+
+$(DAPLIB_FOBJS): $(DAPLIB_FSRCS)
+	$(FC) $(FCFLAGS) -c $(DAPLIB_FSRCS)
+
+# ------------------------------------------ Cut 3 -----------------------
+# Between cuts 3 and 4 there can only be tabs to the left of shell commands
+# on some systems (IRIX in particular)
+
+.c.o:
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+
+install: all
+	@if test -n "$(PROGS)"; then \
+	test -d $(SOLOBINDIR) || mkdir -p $(SOLOBINDIR); \
+	for p in $(PROGS); do \
+		if test -r "$$p"; then \
+		echo install $$p in $(SOLOBINDIR); $(INSTALL) $$p $(SOLOBINDIR); \
+		fi \
+	done \
+	fi
+
+	@if test -n "$(PROGLIBS)"; then \
+	test -d $(SOLOLIBDIR) || mkdir -p $(SOLOLIBDIR); \
+	for p in $(PROGLIBS); do \
+		if test -r "$$p"; then \
+		echo install $$p in $(SOLOLIBDIR); chmod 0644 $$p; cp $$p $(SOLOLIBDIR); \
+		fi \
+	done \
+	fi
+
+clean:
+	rm -f core *.o *~ $(PROGS) $(PROGLIBS)
+
+depend:
+	rm -f Makefile.old
+	mv Makefile Makefile.old
+	sed -e '/^# DEPEND/,$$d' < Makefile.old > Makefile
+	echo '# DEPEND Marker -- no edits below this line' >> Makefile
+	$(CC) -M $(CFLAGS) $(CPPFLAGS) $(SRCS) >> Makefile
+
+# DEPEND Marker -- no edits below this line
+
+# ------------------------------------------ Cut 4 -----------------------
