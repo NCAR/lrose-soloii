@@ -423,7 +423,7 @@ void ddout_sweep_dump(usi)
 		bytes = LONGS_TO_BYTES(SHORTS_TO_LONGS(num_short));
 		qdat->pdata_length = ncopy + bytes;
 		if(LittleEndian) {
-		   ddin_crack_qdat(dds->qdat[pn], swap_buf, (int)0);
+		   ddin_crack_qdat(qdat, swap_buf, (int)0);
 		   mark = ddout_write(ddout_fid, swap_buf, ncopy);
 		   swack_short(c, swap_buf, num_short);
 		   mark = ddout_write(ddout_fid, swap_buf, bytes);
