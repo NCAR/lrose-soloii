@@ -16,6 +16,7 @@ int sii_png_image (char *fname)
   Window windowID=0;
 
   windowID = GDK_WINDOW_XWINDOW (main_event_box->window);
+  gdk_flush ();
 
   sprintf (command, "xwd -id %d -nobdrs | convert xwd:- ", windowID);
   aa = command +strlen(command);
