@@ -51,8 +51,9 @@ void sp_change_cursor();
 
 /* external routines */
 int tsDisplay();		/* color_bscan.c */
-int solo_halt_flag();		/* sp_basics.c */
-void solo_clear_halt_flag();	/* sp_basics.c */
+int solo_halt_flag();		/* ddb_common.c */
+void solo_clear_halt_flag();	/* ddb_common.c */
+void solo_set_halt_flag();	/* ddb_common.c */
 void solo_set_busy_signal();	/* sp_basics.c */
 void solo_cpy_sweep_info();	/* sp_accepts.c */
 void dd_copy_pisp();		/* ddb_common.c */
@@ -101,8 +102,10 @@ void mouse_control_case();
 /* c------------------------------------------------------------------------ */
 
 void sii_xfer_images ();
+void sii_reset_reconfig_flags (guint frame_num);
 void sii_update_frame_info (guint frame_num);
-
+guint sii_frame_sync_num (guint frame_num);
+guint sii_config_sync_num (guint frame_num);
 
 /* c------------------------------------------------------------------------ */
 
@@ -258,7 +261,9 @@ int displayq(click_frme, command)
     original_sweep_count = original_sweep_set_count = 0;
 
     for(ii=0; ii < frame_count; ii++) {
-	if(checked_off[ww=frame_list[ii]])
+        ww=frame_list[ii];
+
+	if(checked_off[ww])
 	      continue;
 	checked_off[ww] = YES;
 	/*
@@ -681,6 +686,7 @@ int sp_data_loop(flink0)
     WW_PTR wwptr, solo_return_wwptr();
     struct xyras *rxy, *return_xyras();
     struct dd_general_info *dgi, *dd_window_dgi();
+    guint frame_sync_nums[SOLO_MAX_WINDOWS];
 
 
 
@@ -689,7 +695,12 @@ int sp_data_loop(flink0)
     dgi = dd_window_dgi(lead_frame, "UNKNOWN");
     prev_angle1 = EMPTY_FLAG;
     
-    
+    flink = flink0;
+    for(flink = flink0; flink; flink=flink->next) {
+       ww = flink->wwptr->window_num;
+       frame_sync_nums[ww] = sii_frame_sync_num (ww);
+    }
+   
     /*
      * now really loop through the data
      */
@@ -738,6 +749,9 @@ int sp_data_loop(flink0)
 		mark = 0;
 	    }
 	    ww = flink->wwptr->window_num;
+	    if (frame_sync_nums[ww] != sii_config_sync_num ((guint)ww))
+	      { return -1; }
+
 	    rxy = return_xyras(ww);
 	    ray_raster_setup(ww, angle0, angle1, rxy);
 	    if(rxy->ignore_this_ray) {
@@ -782,9 +796,8 @@ int sp_data_loop(flink0)
 
     for(flink=flink0;  flink;  flink=flink->next) {
 	ww = flink->wwptr->window_num;
-	sii_set_sync_num (ww);
 	sii_xfer_images (ww, NULL);
-	sii_reset_reconfig_count(ww);
+	sii_reset_reconfig_flags(ww);
     }
 
     return(0);
