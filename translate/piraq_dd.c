@@ -188,9 +188,9 @@ struct piraq_swp_que {
     int scan_mode;
     int count;
 };
-# define PX2(x) (sig_swap2((&x)))
-# define PX4(x) (pc_swap4((&x)))
-# define PX4F(x) (pc_swap4f((&x)))
+# define SX2(x) (sig_swap2((&x)))
+# define SX4(x) (pc_swap4((&x)))
+# define SX4F(x) (pc_swap4f((&x)))
 
 # define         PIRAQ_IO_INDEX 3
 # define         SWEEP_QUE_SIZE 64
@@ -346,7 +346,8 @@ double running_sum();
 double short_running_sum();
 double avg_running_sum();
 double short_avg_running_sum();
-void update_prqx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel);
+void update_prqxx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel);
+void update_prqx (PIRAQX *prqx, LeRADARV *rhdr, LeHEADERV *dwel);
 char *eld_nimbus_fix_asib();
 
 
@@ -523,7 +524,7 @@ pui_next_block()
     }
     aa = irq->top->at;
     gh = (TOP *)aa;
-    recordlen = LittleEndian ? gh->recordlen : PX2(gh->recordlen);
+    recordlen = LittleEndian ? gh->recordlen : SX2(gh->recordlen);
 
     dwel_record = !strncmp("DWEL", aa, 4);
     rhdr_record = !strncmp("RHDR", aa, 4);
@@ -689,14 +690,7 @@ piraq_dd_conv(interactive_mode)
 
 	    if(!difs->catalog_only)
   		  products(dwl, rhdr, fp);
-	    
-	    r_consts.h_rconst = h_rconst;
-	    r_consts.v_rconst = v_rconst;
-	    /*
-	    prqx->h_rconst = h_rconst;
-	    prqx->v_rconst = v_rconst;
-	     */
-	    
+
 	    dd_stuff_ray();	/* pass it off to dorade code */
 	}
 	else {
@@ -2007,36 +2001,36 @@ piraq_map_hdr(aa, gotta_header)
     lhdr = (LeHEADERV *)aa;
     
 # ifdef obsolete
-    hdr->recordlen = PX2(lhdr->recordlen);
-    hdr->gates = PX2(lhdr->gates);
-    hdr->hits = PX2(lhdr->hits);
-    hdr->rcvr_pulsewidth = PX4F(lhdr->rcvr_pulsewidth);
-    hdr->prt = PX4F(lhdr->prt);
-    hdr->delay = PX4F(lhdr->delay);
+    hdr->recordlen = SX2(lhdr->recordlen);
+    hdr->gates = SX2(lhdr->gates);
+    hdr->hits = SX2(lhdr->hits);
+    hdr->rcvr_pulsewidth = SX4F(lhdr->rcvr_pulsewidth);
+    hdr->prt = SX4F(lhdr->prt);
+    hdr->delay = SX4F(lhdr->delay);
     hdr->clutterfilter = (lhdr->clutterfilter);
     hdr->timeseries = (lhdr->timeseries);
-    hdr->tsgate = PX2(lhdr->tsgate);
-    hdr->time = PX4(lhdr->time);
-    hdr->subsec = PX2(lhdr->subsec);
-    hdr->az = PX4F(lhdr->az);
-    hdr->el = PX4F(lhdr->el);
-    hdr->radar_longitude = PX4F(lhdr->radar_longitude); 
-    hdr->radar_lattitude = PX4F(lhdr->radar_lattitude);
-    hdr->radar_altitude = PX4F(lhdr->radar_altitude);
-    hdr->ew_velocity = PX4F(lhdr->ew_velocity);
-    hdr->ns_velocity = PX4F(lhdr->ns_velocity);
-    hdr->vert_velocity = PX4F(lhdr->vert_velocity);
+    hdr->tsgate = SX2(lhdr->tsgate);
+    hdr->time = SX4(lhdr->time);
+    hdr->subsec = SX2(lhdr->subsec);
+    hdr->az = SX4F(lhdr->az);
+    hdr->el = SX4F(lhdr->el);
+    hdr->radar_longitude = SX4F(lhdr->radar_longitude); 
+    hdr->radar_lattitude = SX4F(lhdr->radar_lattitude);
+    hdr->radar_altitude = SX4F(lhdr->radar_altitude);
+    hdr->ew_velocity = SX4F(lhdr->ew_velocity);
+    hdr->ns_velocity = SX4F(lhdr->ns_velocity);
+    hdr->vert_velocity = SX4F(lhdr->vert_velocity);
     if(rhdr->rev) {
        hdr->dataformat = lhdr->dataformat;
-       hdr->prt2 = PX4F(lhdr->prt2);
+       hdr->prt2 = SX4F(lhdr->prt2);
     }
     if(rhdr->rev > 1 || hdr->time > P960501) {
-       hdr->fxd_angle = PX4F(lhdr->fxd_angle);
+       hdr->fxd_angle = SX4F(lhdr->fxd_angle);
        hdr->scan_type = lhdr->scan_type;
        hdr->scan_num = lhdr->scan_num;
        hdr->vol_num = lhdr->vol_num;
-       hdr->hxmit_power = PX4F(lhdr->hxmit_power);
-       hdr->vxmit_power = PX4F(lhdr->vxmit_power);
+       hdr->hxmit_power = SX4F(lhdr->hxmit_power);
+       hdr->vxmit_power = SX4F(lhdr->vxmit_power);
     }
 # else
 
@@ -2079,7 +2073,8 @@ piraq_map_hdr(aa, gotta_header)
     gri->gpptr2 = (void *)hdr;
     gri->gpptr4 = (void *)prqx;
     gri->sizeof_gpptr4 = sizeof (*prqx);
-    update_prqx (prqx, rhdr, hdr);
+
+    update_prqx (prqx, lrhdr, lhdr);
     gri->transition = (hdr->transition) ? IN_TRANSITION : NORMAL;
     gri->num_bins = (hdr->gates);
     gri->num_samples = (hdr->hits);
@@ -2272,9 +2267,9 @@ piraq_header()
     gri->missing_data_flag = EMPTY_FLAG;
 
 # ifdef obsolete
-    rhdr->recordlen = PX2(lrhdr->recordlen);
-    rhdr->rev = PX2(lrhdr->rev);
-    rhdr->year = PX2(lrhdr->year);
+    rhdr->recordlen = SX2(lrhdr->recordlen);
+    rhdr->rev = SX2(lrhdr->rev);
+    rhdr->year = SX2(lrhdr->year);
     memcpy(rhdr->radar_name, lrhdr->radar_name, 8);
     str_terminate(gri->radar_name, rhdr->radar_name, 8);
 
@@ -2284,28 +2279,28 @@ piraq_header()
     piraq_name_replace(gri->radar_name, top_ren);
 
     rhdr->polarization = (lrhdr->polarization);
-    rhdr->test_pulse_pwr = PX4F(lrhdr->test_pulse_pwr);
-    rhdr->test_pulse_frq = PX4F(lrhdr->test_pulse_frq);
-    rhdr->frequency = PX4F(lrhdr->frequency);
-    rhdr->peak_power = PX4F(lrhdr->peak_power);
-    rhdr->noise_figure = PX4F(lrhdr->noise_figure);
-    rhdr->noise_power = PX4F(lrhdr->noise_power);
-    rhdr->receiver_gain = PX4F(lrhdr->receiver_gain);
-    rhdr->data_sys_sat = PX4F(lrhdr->data_sys_sat);
-    rhdr->antenna_gain = PX4F(lrhdr->antenna_gain);
-    rhdr->horz_beam_width = PX4F(lrhdr->horz_beam_width);
-    rhdr->vert_beam_width = PX4F(lrhdr->vert_beam_width);
-    rhdr->xmit_pulsewidth = PX4F(lrhdr->xmit_pulsewidth);
-    rhdr->rconst = PX4F(lrhdr->rconst );
+    rhdr->test_pulse_pwr = SX4F(lrhdr->test_pulse_pwr);
+    rhdr->test_pulse_frq = SX4F(lrhdr->test_pulse_frq);
+    rhdr->frequency = SX4F(lrhdr->frequency);
+    rhdr->peak_power = SX4F(lrhdr->peak_power);
+    rhdr->noise_figure = SX4F(lrhdr->noise_figure);
+    rhdr->noise_power = SX4F(lrhdr->noise_power);
+    rhdr->receiver_gain = SX4F(lrhdr->receiver_gain);
+    rhdr->data_sys_sat = SX4F(lrhdr->data_sys_sat);
+    rhdr->antenna_gain = SX4F(lrhdr->antenna_gain);
+    rhdr->horz_beam_width = SX4F(lrhdr->horz_beam_width);
+    rhdr->vert_beam_width = SX4F(lrhdr->vert_beam_width);
+    rhdr->xmit_pulsewidth = SX4F(lrhdr->xmit_pulsewidth);
+    rhdr->rconst = SX4F(lrhdr->rconst );
     memcpy(rhdr->text, lrhdr->text, sizeof(rhdr->text));
 
     if(rhdr->rev) {
-	rhdr->phaseoffset = PX4F(lrhdr->phaseoffset);
+	rhdr->phaseoffset = SX4F(lrhdr->phaseoffset);
     }
     if(pui->options & SPOL_FLAG) {
-	rhdr->vreceiver_gain = PX4F(lrhdr->vreceiver_gain);
-	rhdr->vtest_pulse_pwr = PX4F(lrhdr->vtest_pulse_pwr);
-	rhdr->vantenna_gain = PX4F(lrhdr->vantenna_gain);
+	rhdr->vreceiver_gain = SX4F(lrhdr->vreceiver_gain);
+	rhdr->vtest_pulse_pwr = SX4F(lrhdr->vtest_pulse_pwr);
+	rhdr->vantenna_gain = SX4F(lrhdr->vantenna_gain);
     }
 # else
     ii = 33;
@@ -2870,9 +2865,9 @@ simplepp(DWELL *dwell, RADARV *radar, float *prods)
 	  p = (*aptr++);
        }
        else {
-	  a = PX4F(*aptr++);
-	  b = PX4F(*aptr++);
-	  p = PX4F(*aptr++);
+	  a = SX4F(*aptr++);
+	  b = SX4F(*aptr++);
+	  p = SX4F(*aptr++);
        }
 
        if(gg > 0) range = 20.0 * log10
@@ -2958,9 +2953,9 @@ simplepp16(DWELL *dwell, RADARV *radar, float *prods)
 	  p = (*aptr++);
        }
        else {
-	  cp = PX2(*aptr++);
-	  v = PX2(*aptr++);
-	  p = PX2(*aptr++);
+	  cp = SX2(*aptr++);
+	  v = SX2(*aptr++);
+	  p = SX2(*aptr++);
        }
        if(i) range = 20.0 * log10
 	      (i * 0.0005 * C * hdr->rcvr_pulsewidth);
@@ -3634,53 +3629,60 @@ piraq_print_rhdr(rhdr, slm)
 
 static
 void products(DWELL *dwell, RADARV *radar, float *prods)      
-   {
-   switch(hdr->dataformat)
-      {
-      case DATA_POLYPP:   polypp(dwell,radar,prods);      break;
-      case DATA_DUALPP:   dualprt(dwell,radar,prods);     break;
-      case DATA_POL1:
-	dualpol1(dwell,radar,prods);
-	break;
+{
+  switch(hdr->dataformat)
+    {
+    case DATA_POLYPP:   polypp(dwell,radar,prods);      break;
+    case DATA_DUALPP:   dualprt(dwell,radar,prods);     break;
+    case DATA_POL1:
+      dualpol1(dwell,radar,prods);
+      break;
 
-      case DATA_SMHVSIM:
-	smallhvsimul(dwell,radar,prods);
-	break;
+    case DATA_SMHVSIM:
+      smallhvsimul(dwell,radar,prods);
+      break;
 
-      case DATA_POL2:
-      case DATA_POL3:
-	  if( hdr->time > P980201 )
-	      { dualpol12(dwell,radar,prods); }
-	  else
-	      { dualpol3(dwell,radar,prods); }
-	break;
-      case DATA_SIMPLEPP16:
-	simplepp16(dwell,radar,prods);
-	break;
+    case DATA_POL2:
+    case DATA_POL3:
+      if( hdr->time > P980201 )
+	{ dualpol12(dwell,radar,prods); }
+      else
+	{ dualpol3(dwell,radar,prods); }
+      break;
+    case DATA_SIMPLEPP16:
+      simplepp16(dwell,radar,prods);
+      break;
 
-      case DATA_POL12:
-	dualpol12(dwell,radar,prods);
-	break;
+    case DATA_POL12:
+      dualpol12(dwell,radar,prods);
+      break;
 
-      case DATA_POL_PLUS:
-      case DATA_MAX_POL:
-      case DATA_HVSIMUL:
-      case DATA_SHRTPUL:
-	  if( pui->options & GUIFU_FLAG ) {
-//	      fullpolplusGf(dwell,radar,prods);
-	      /*
-	      dualpolplus(dwell,radar,prods);
-	       */
-	  }
-	  else {
-	      fullpolplus(dwell,radar,prods);
-	  }
-	break;
-
-      case DATA_SIMPLEPP:   
-      default:            simplepp(dwell,radar,prods);    break;
+    case DATA_POL_PLUS:
+    case DATA_MAX_POL:
+    case DATA_HVSIMUL:
+    case DATA_SHRTPUL:
+      if( pui->options & GUIFU_FLAG ) {
+	//	      fullpolplusGf(dwell,radar,prods);
+	/*
+	  dualpolplus(dwell,radar,prods);
+	*/
       }
-   }
+      else {
+	fullpolplus(dwell,radar,prods);
+      }
+      break;
+
+    case DATA_SIMPLEPP:   
+    default:            simplepp(dwell,radar,prods);    break;
+    }
+  /*
+    r_consts.h_rconst = h_rconst;
+    r_consts.v_rconst = v_rconst;
+  */
+  prqx->h_rconst = h_rconst;
+  prqx->v_rconst = v_rconst;
+   
+}
 #define NEW_UNFOLD      
 #define NYQ_COUNT  32768.0
 
@@ -3743,15 +3745,15 @@ void dualprt(DWELL *dwell, RADAR *radar, float *pptr) {
 	    p = p + log(1 + exp(scale2ln * (p2 - p))) / scale2ln;  
 	}
 	else {
-	    cp  = PX2(*abpptr++);
+	    cp  = SX2(*abpptr++);
 	    cp1 = cp;
-	    v1  = PX2(*abpptr++);
-	    p   = PX2(*abpptr++);
+	    v1  = SX2(*abpptr++);
+	    p   = SX2(*abpptr++);
 	    p1  = p;
-	    cp2 = PX2(*abpptr++);
+	    cp2 = SX2(*abpptr++);
 	    cp = cp + log(1 + exp(scale2ln * (cp2 - cp))) / scale2ln;  
-	    v2  = PX2(*abpptr++);
-	    p2  = PX2(*abpptr++);
+	    v2  = SX2(*abpptr++);
+	    p2  = SX2(*abpptr++);
 	    p = p + log(1 + exp(scale2ln * (p2 - p))) / scale2ln;  
 	}
 
@@ -3920,11 +3922,11 @@ void polypp(DWELL *dwell, RADARV *radar, float *prods)
 	    b2 = (*aptr++);
 	 }
 	 else {
-	    a = PX4F(*aptr++);
-	    b = PX4F(*aptr++);
-	    p = PX4F(*aptr++);
-	    a2 = PX4F(*aptr++);
-	    b2 = PX4F(*aptr++);
+	    a = SX4F(*aptr++);
+	    b = SX4F(*aptr++);
+	    p = SX4F(*aptr++);
+	    a2 = SX4F(*aptr++);
+	    b2 = SX4F(*aptr++);
 	 }
       
       r12 = a * a + b * b;
@@ -4066,12 +4068,12 @@ void dualprt(DWELL *dwell, RADARV *radar, float *prods)
 	  p2 = (*bptr++);
        }
        else {
-	  a = PX4F(*aptr++);
-	  b = PX4F(*aptr++);
-	  p = PX4F(*aptr++);
-	  a2 = PX4F(*bptr++);
-	  b2 = PX4F(*bptr++);
-	  p2 = PX4F(*bptr++);
+	  a = SX4F(*aptr++);
+	  b = SX4F(*aptr++);
+	  p = SX4F(*aptr++);
+	  a2 = SX4F(*bptr++);
+	  b2 = SX4F(*bptr++);
+	  p2 = SX4F(*bptr++);
        }
 	if(i)     range = 20.0 * log10(i * 0.0005 * C * hdr->rcvr_pulsewidth);
 
@@ -4260,24 +4262,24 @@ void dualpol3(DWELL *dwell, RADARV *radar, float *prods) {
       }
       else {
 # ifdef obsolete
-	 cp1  = PX2(*aptr++) * scale2ln;
-	 v1a  = PX2(*aptr++) * vcnvt;
-	 p    = PX2(*aptr++) * scale2ln;
-	 cp2  = PX2(*aptr++) * scale2ln;
-	 v2a  = PX2(*aptr++) * vcnvt;
-	 p2   = PX2(*aptr++) * scale2ln;
-	 lag2 = PX2(*aptr++) * scale2ln;
-	 phv  = PX2(*aptr++) * scale2ln;
+	 cp1  = SX2(*aptr++) * scale2ln;
+	 v1a  = SX2(*aptr++) * vcnvt;
+	 p    = SX2(*aptr++) * scale2ln;
+	 cp2  = SX2(*aptr++) * scale2ln;
+	 v2a  = SX2(*aptr++) * vcnvt;
+	 p2   = SX2(*aptr++) * scale2ln;
+	 lag2 = SX2(*aptr++) * scale2ln;
+	 phv  = SX2(*aptr++) * scale2ln;
 # else
-	 cp1  = PX2(*aptr++) * scale2ln;
-	 v1a  = PX2(*aptr++) * vcnvt;
-	 cnt = PX2(*aptr++);
+	 cp1  = SX2(*aptr++) * scale2ln;
+	 v1a  = SX2(*aptr++) * vcnvt;
+	 cnt = SX2(*aptr++);
 	 p = *(nLut + (unsigned short)cnt);
-	 cp2  = PX2(*aptr++) * scale2ln;
-	 v2a  = PX2(*aptr++) * vcnvt;
-	 p2 = *(nLut + (unsigned short)PX2(*aptr++));
-	 lag2 = PX2(*aptr++) * scale2ln;
-	 phv = *(nLut + (unsigned short)PX2(*aptr++));
+	 cp2  = SX2(*aptr++) * scale2ln;
+	 v2a  = SX2(*aptr++) * vcnvt;
+	 p2 = *(nLut + (unsigned short)SX2(*aptr++));
+	 lag2 = SX2(*aptr++) * scale2ln;
+	 phv = *(nLut + (unsigned short)SX2(*aptr++));
 # endif
       }
 
@@ -4527,22 +4529,22 @@ void dualpol12(DWELL *dwellness, RADARV *radar, float *prods) {
 	    }
 	}
 	else {
-	    cp1  = PX2(*aptr++) * scale2ln;        /* natural log  of R(1) from H to V pulse pair */
-	    v1a  = PX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from H to V pulse pair */
-	    pv   = PX2(*aptr++);
+	    cp1  = SX2(*aptr++) * scale2ln;        /* natural log  of R(1) from H to V pulse pair */
+	    v1a  = SX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from H to V pulse pair */
+	    pv   = SX2(*aptr++);
 	    lnpv = pv * scale2ln;        /* natural log  of V power (from 16 bit scaled log) */
-	    cp2  = PX2(*aptr++) * scale2ln;        /* natural log  of R(1) from V to H pulse pair */
-	    v2a  = PX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from V to H pulse pair */
-	    ph   = PX2(*aptr++);
+	    cp2  = SX2(*aptr++) * scale2ln;        /* natural log  of R(1) from V to H pulse pair */
+	    v2a  = SX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from V to H pulse pair */
+	    ph   = SX2(*aptr++);
 	    lnph = ph * scale2ln;        /* natural log  of H power (from 16 bit scaled log) */
-	    lag2 = PX2(*aptr++) * scale2ln;        /* natural log  of R(2) from H to H + R(2) from V to V */
-	    hv   = PX2(*aptr++);
+	    lag2 = SX2(*aptr++) * scale2ln;        /* natural log  of R(2) from H to H + R(2) from V to V */
+	    hv   = SX2(*aptr++);
 	    lnhv = hv * scale2ln;        /* natural log  of V power on H xmit pulse */
 	    if( dwel->dataformat == DATA_POL12 ) {
-		h_rho = PX2(*aptr++) * scale2ln;
-		h_ang = PX2(*aptr++) * M_PI / 32768.0;
-		v_rho = PX2(*aptr++) * scale2ln;
-		v_ang = PX2(*aptr++) * M_PI / 32768.0;
+		h_rho = SX2(*aptr++) * scale2ln;
+		h_ang = SX2(*aptr++) * M_PI / 32768.0;
+		v_rho = SX2(*aptr++) * scale2ln;
+		v_ang = SX2(*aptr++) * M_PI / 32768.0;
 	    }
 	}
 
@@ -4911,31 +4913,31 @@ void fullpolplus(DWELL *dwellness, RADARV *radar, float *prods) {
 	    phiq = (*aptr++) * M_PI / 32768.0;   /* radian angle of average I and Q */
 	}
 	else {
-	    /* PX2() does byte swapping */
-	    cp1  = PX2(*aptr++) * scale2ln;        /* natural log  of R(1) from H to V pulse pair */
-	    v1a  = PX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from H to V pulse pair */
-	    pv   = PX2(*aptr++);
+	    /* SX2() does byte swapping */
+	    cp1  = SX2(*aptr++) * scale2ln;        /* natural log  of R(1) from H to V pulse pair */
+	    v1a  = SX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from H to V pulse pair */
+	    pv   = SX2(*aptr++);
 	    lnpv = pv * scale2ln;        /* natural log  of V power (from 16 bit scaled log) */
-	    cp2  = PX2(*aptr++) * scale2ln;        /* natural log  of R(1) from V to H pulse pair */
-	    v2a  = PX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from V to H pulse pair */
-	    ph   = PX2(*aptr++);
+	    cp2  = SX2(*aptr++) * scale2ln;        /* natural log  of R(1) from V to H pulse pair */
+	    v2a  = SX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from V to H pulse pair */
+	    ph   = SX2(*aptr++);
 	    lnph = ph * scale2ln;        /* natural log  of H power (from 16 bit scaled log) */
-	    lag2 = PX2(*aptr++) * scale2ln;        /* natural log  of R(2) from H to H + R(2) from V to V */
-	    hv   = PX2(*aptr++);
+	    lag2 = SX2(*aptr++) * scale2ln;        /* natural log  of R(2) from H to H + R(2) from V to V */
+	    hv   = SX2(*aptr++);
 	    lnhv = hv * scale2ln;        /* natural log  of V power on H xmit pulse */
 
-	    lncrhv = PX2(*aptr++) * scale2ln; /* natural log of cross correlation on H xmit pulse */
-	    vcrhv = PX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of H xmit pulse */
+	    lncrhv = SX2(*aptr++) * scale2ln; /* natural log of cross correlation on H xmit pulse */
+	    vcrhv = SX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of H xmit pulse */
 
-	    lncrvh = PX2(*aptr++) * scale2ln; /* natural log of cross correlation on V xmit pulse */
-	    vcrvh = PX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of V xmit pulse */
+	    lncrvh = SX2(*aptr++) * scale2ln; /* natural log of cross correlation on V xmit pulse */
+	    vcrvh = SX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of V xmit pulse */
 
 	    /* below follows the "plus" parameters */
 
-	    vh = PX2(*aptr++);
+	    vh = SX2(*aptr++);
 	    lnvh = vh * scale2ln;   /* natural log of H power on M xmit pulse */
-	    lniq = PX2(*aptr++) * scale2ln;   /* natural log of average I and average Q from H pulses */
-	    phiq = PX2(*aptr++) * M_PI / 32768.0;   /* radian angle of average I and Q */
+	    lniq = SX2(*aptr++) * scale2ln;   /* natural log of average I and average Q from H pulses */
+	    phiq = SX2(*aptr++) * M_PI / 32768.0;   /* radian angle of average I and Q */
 	}
 	lncoherent = (cp1 + log(1 + exp(cp2 - cp1)) - LOG2);  /* natural log  of coherent power */
 
@@ -5318,27 +5320,27 @@ void dualpolplus(DWELL *dwellness, RADARV *radar, float *prods) {
 	    phiq = (*aptr++) * M_PI / 32768.0;   /* radian angle of average I and Q */
 	}
 	else {
-	    cp1  = PX2(*aptr++) * scale2ln;        /* natural log  of R(1) from H to V pulse pair */
-	    v1a  = PX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from H to V pulse pair */
-	    pv   = PX2(*aptr++);
+	    cp1  = SX2(*aptr++) * scale2ln;        /* natural log  of R(1) from H to V pulse pair */
+	    v1a  = SX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from H to V pulse pair */
+	    pv   = SX2(*aptr++);
 	    lnpv = pv * scale2ln;        /* natural log  of V power (from 16 bit scaled log) */
-	    cp2  = PX2(*aptr++) * scale2ln;        /* natural log  of R(1) from V to H pulse pair */
-	    v2a  = PX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from V to H pulse pair */
-	    ph   = PX2(*aptr++);
+	    cp2  = SX2(*aptr++) * scale2ln;        /* natural log  of R(1) from V to H pulse pair */
+	    v2a  = SX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from V to H pulse pair */
+	    ph   = SX2(*aptr++);
 	    lnph = ph * scale2ln;        /* natural log  of H power (from 16 bit scaled log) */
-	    lag2 = PX2(*aptr++) * scale2ln;        /* natural log  of R(2) from H to H + R(2) from V to V */
-	    hv   = PX2(*aptr++);
+	    lag2 = SX2(*aptr++) * scale2ln;        /* natural log  of R(2) from H to H + R(2) from V to V */
+	    hv   = SX2(*aptr++);
 	    lnhv = hv * scale2ln;        /* natural log  of V power on H xmit pulse */
 
-	    lncrhv = PX2(*aptr++) * scale2ln; /* natural log of cross correlation on H xmit pulse */
-	    vcrhv = PX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of H xmit pulse */
-	    lncrvh = PX2(*aptr++) * scale2ln; /* natural log of cross correlation on V xmit pulse */
-	    vcrvh = PX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of V xmit pulse */
+	    lncrhv = SX2(*aptr++) * scale2ln; /* natural log of cross correlation on H xmit pulse */
+	    vcrhv = SX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of H xmit pulse */
+	    lncrvh = SX2(*aptr++) * scale2ln; /* natural log of cross correlation on V xmit pulse */
+	    vcrvh = SX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of V xmit pulse */
 
-	    vh = PX2(*aptr++);
+	    vh = SX2(*aptr++);
 	    lnvh = vh * scale2ln;   /* natural log of H power on M xmit pulse */
-	    lniq = PX2(*aptr++) * scale2ln;   /* natural log of average I and average Q from H pulses */
-	    phiq = PX2(*aptr++) * M_PI / 32768.0;   /* radian angle of average I and Q */
+	    lniq = SX2(*aptr++) * scale2ln;   /* natural log of average I and average Q from H pulses */
+	    phiq = SX2(*aptr++) * M_PI / 32768.0;   /* radian angle of average I and Q */
 	}
 
 	lncoherent = (cp1 + log(1 + exp(cp2 - cp1)) - LOG2);  /* natural log  of coherent power */
@@ -5663,27 +5665,27 @@ void dualpolplusGf(DWELL *dwellness, RADARV *radar, float *prods) {
 	    phiq = (*aptr++) * M_PI / 32768.0;   /* radian angle of average I and Q */
 	}
 	else {
-	    cp1  = PX2(*aptr++) * scale2ln;        /* natural log  of R(1) from H to V pulse pair */
-	    v1a  = PX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from H to V pulse pair */
-	    pv   = PX2(*aptr++);
+	    cp1  = SX2(*aptr++) * scale2ln;        /* natural log  of R(1) from H to V pulse pair */
+	    v1a  = SX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from H to V pulse pair */
+	    pv   = SX2(*aptr++);
 	    lnpv = pv * scale2ln;        /* natural log  of V power (from 16 bit scaled log) */
-	    cp2  = PX2(*aptr++) * scale2ln;        /* natural log  of R(1) from V to H pulse pair */
-	    v2a  = PX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from V to H pulse pair */
-	    ph   = PX2(*aptr++);
+	    cp2  = SX2(*aptr++) * scale2ln;        /* natural log  of R(1) from V to H pulse pair */
+	    v2a  = SX2(*aptr++) * M_PI / 32768.0;  /* radian angle of R(1) from V to H pulse pair */
+	    ph   = SX2(*aptr++);
 	    lnph = ph * scale2ln;        /* natural log  of H power (from 16 bit scaled log) */
-	    lag2 = PX2(*aptr++) * scale2ln;        /* natural log  of R(2) from H to H + R(2) from V to V */
-	    hv   = PX2(*aptr++);
+	    lag2 = SX2(*aptr++) * scale2ln;        /* natural log  of R(2) from H to H + R(2) from V to V */
+	    hv   = SX2(*aptr++);
 	    lnhv = hv * scale2ln;        /* natural log  of V power on H xmit pulse */
 
-	    lncrhv = PX2(*aptr++) * scale2ln; /* natural log of cross correlation on H xmit pulse */
-	    vcrhv = PX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of H xmit pulse */
-	    lncrvh = PX2(*aptr++) * scale2ln; /* natural log of cross correlation on V xmit pulse */
-	    vcrvh = PX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of V xmit pulse */
+	    lncrhv = SX2(*aptr++) * scale2ln; /* natural log of cross correlation on H xmit pulse */
+	    vcrhv = SX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of H xmit pulse */
+	    lncrvh = SX2(*aptr++) * scale2ln; /* natural log of cross correlation on V xmit pulse */
+	    vcrvh = SX2(*aptr++) * M_PI / 32768.0; /* radian angle of cross correlation of V xmit pulse */
 
-	    vh = PX2(*aptr++);
+	    vh = SX2(*aptr++);
 	    lnvh = vh * scale2ln;   /* natural log of H power on M xmit pulse */
-	    lniq = PX2(*aptr++) * scale2ln;   /* natural log of average I and average Q from H pulses */
-	    phiq = PX2(*aptr++) * M_PI / 32768.0;   /* radian angle of average I and Q */
+	    lniq = SX2(*aptr++) * scale2ln;   /* natural log of average I and average Q from H pulses */
+	    phiq = SX2(*aptr++) * M_PI / 32768.0;   /* radian angle of average I and Q */
 	}
 
 	lncoherent = (cp1 + log(1 + exp(cp2 - cp1)) - LOG2);  /* natural log  of coherent power */
@@ -5981,15 +5983,15 @@ piraq_ts_stats()
       
 	aa = message;
 
-	I = PX4F( *fpx++ );
-	Q = PX4F( *fpx++ );
+	I = SX4F( *fpx++ );
+	Q = SX4F( *fpx++ );
 	sprintf( aa, " %4d %10.2f %10.2f ", ii, I, Q );
 	xx = sqrt( I*I + Q*Q );
 	sumhh += xx;
 	sumSqhh += xx*xx;
 
-	I = PX4F( *fpx++ );
-	Q = PX4F( *fpx++ );
+	I = SX4F( *fpx++ );
+	Q = SX4F( *fpx++ );
 	aa += strlen(aa);
 	sprintf( aa, " %10.2f %10.2f ", I, Q );
 	xx = sqrt( I*I + Q*Q );
@@ -5997,8 +5999,8 @@ piraq_ts_stats()
 	sumSqvv += xx*xx;
 
 # ifdef obsolete
-	I = PX4F( *fpx++ );
-	Q = PX4F( *fpx++ );
+	I = SX4F( *fpx++ );
+	Q = SX4F( *fpx++ );
 	aa += strlen(aa);
 	sprintf( aa, " %10.2f %10.2f ", I, Q );
 	xx = sqrt( I*I + Q*Q );
@@ -6013,11 +6015,215 @@ piraq_ts_stats()
 }
 
 // c---------------------------------------------------------------------------
+
+
+# ifdef obsolete
+// 
+//  piraq.h contains defs for PIRAQX 
+//
+//  viraq.h contains defs for LeRADARV and LeHEADERV
+//
+
+#include <string.h>
+
+#include "piraq/piraq.h"
+#include "viraq/viraq.h"
+#include "dorade/dd_defines.h"
+
+#include "update_prqx.h"
+# endif
+
+// c------------------------------------------------------------------------
+// c------------------------------------------------------------------------
+
+short snarf2 (char *bytes) {
+    union {
+        short newval;
+        unsigned char nv[2];
+    }u;
+    if (LittleEndian) {
+      u.nv[0] = bytes[0]; u.nv[1] = bytes[1];
+    }
+    else {
+      u.nv[1] = bytes[0]; u.nv[0] = bytes[1];
+    }
+
+    return(u.newval);
+}
+
+long snarf4 (char *bytes) {
+    union {
+        long newval;
+        unsigned char nv[4];
+    }u;
+    if (LittleEndian) {
+      u.nv[0] = bytes[0]; u.nv[1] = bytes[1];
+      u.nv[2] = bytes[2]; u.nv[3] = bytes[3];
+    }
+    else {
+      u.nv[3] = bytes[0]; u.nv[2] = bytes[1];
+      u.nv[1] = bytes[2]; u.nv[3] = bytes[0];
+    }
+    return(u.newval);
+}
+
+float snarf4f (char *bytes) {
+    union {
+        float newval;
+        unsigned char nv[4];
+    }u;
+    if (LittleEndian) {
+      u.nv[0] = bytes[0]; u.nv[1] = bytes[1];
+      u.nv[2] = bytes[2]; u.nv[3] = bytes[3];
+    }
+    else {
+      u.nv[3] = bytes[0]; u.nv[2] = bytes[1];
+      u.nv[1] = bytes[2]; u.nv[3] = bytes[0];
+    }
+    return(u.newval);
+}
+
+# define PX2(x) (snarf2(((char *)&x)))
+# define PX4(x) (snarf4(((char *)&x)))
+# define PX4F(x) (snarf4f(((char *)&x)))
+
+// c------------------------------------------------------------------------
+
+
+
+void update_prqx (PIRAQX *prqx, LeRADARV *rhdr, LeHEADERV *dwel)
+{
+  float prt = PX4F(dwel->prt);
+  strncpy(prqx->desc, "DWLX", 4);
+  prqx->recordlen       = (unsigned short)PX2(dwel->recordlen);
+  prqx->channel         = (uint4)EMPTY_FLAG;
+  prqx->rev             = PX2(rhdr->rev);
+  prqx->one             = 1; /* always set to the value 1 (endian flag) */
+  prqx->byte_offset_to_data = (uint4)EMPTY_FLAG;
+  prqx->dataformat      = dwel->dataformat;
+  prqx->typeof_compression = (uint4)EMPTY_FLAG;
+  prqx->pulse_num       = (uint8)EMPTY_FLAG;
+  prqx->beam_num        = (uint8)EMPTY_FLAG;
+
+  prqx->gates           =  PX2(dwel->gates);
+  prqx->start_gate      = (uint4)EMPTY_FLAG;
+  prqx->hits            = PX2(dwel->hits);
+  prqx->ctrlflags       = (uint4)EMPTY_FLAG;  /* equivalent to packetflag below?  */
+  prqx->bytespergate    = 2; 
+  prqx->rcvr_pulsewidth = PX4F(dwel->rcvr_pulsewidth);
+  prqx->prt[0]          = PX4F(dwel->prt);
+  prqx->prt[1]          = PX4F(dwel->prt2);
+  prqx->meters_to_first_gate = 0;
+
+  prqx->num_segments    = 1;
+  prqx->gate_spacing_meters[0] =
+    PX4F(dwel->rcvr_pulsewidth) * .5 * SPEED_OF_LIGHT;
+  prqx->gates_in_segment[0] = PX2(dwel->gates);
+
+  prqx->clutter_start[0] = (uint4)EMPTY_FLAG;
+  prqx->clutter_end[0]  = (uint4)EMPTY_FLAG;
+  prqx->clutter_type[0] = (uint4)EMPTY_FLAG;
+  prqx->secs            = PX4(dwel->time);
+  prqx->nanosecs        = (uint4)(PX2(dwel->subsec) * 1.0e-4 * 1.0e9);
+  prqx->az              = PX4F(dwel->az);
+  prqx->az_off_ref      = EMPTY_FLAG;   /* azimuth offset off reference */
+  prqx->el              = PX4F(dwel->el);
+  prqx->el_off_ref      = EMPTY_FLAG;   /* elevation offset off reference */
+
+  uint8 iprf = (prqx->prt[0]) ? (uint8)(1./prqx->prt[0]) : 0;
+  prqx->pulse_num       = (uint8)(iprf*(uint8)prqx->secs);
+  prqx->pulse_num      += (uint8)(iprf*prqx->nanosecs*0.000000001);
+  prqx->beam_num        = (iprf) ? (prqx->pulse_num/iprf) : 0;
+
+  prqx->radar_longitude = PX4F(dwel->radar_longitude); 
+  prqx->radar_latitude  = PX4F(dwel->radar_lattitude);
+  prqx->radar_altitude  = PX4F(dwel->radar_altitude);
+  strcpy (prqx->gps_datum, "UNK");
+  prqx->ts_start_gate   = PX2(dwel->tsgate);
+  prqx->ts_end_gate     = PX2(dwel->tsgate) +1;
+
+  prqx->ew_velocity     = PX4F(dwel->ew_velocity);
+  prqx->ns_velocity     = PX4F(dwel->ns_velocity);
+  prqx->vert_velocity   = PX4F(dwel->vert_velocity);
+  prqx->fxd_angle       = PX4F(dwel->fxd_angle) * ANGSCALE;
+  prqx->true_scan_rate  = EMPTY_FLAG;
+  prqx->scan_type       = dwel->scan_type;
+  prqx->scan_num        = dwel->scan_num;
+  prqx->vol_num         = dwel->vol_num;
+
+  prqx->transition      = dwel->transition;
+  prqx->xmit_power      = PX4F(dwel->hxmit_power);
+  prqx->yaw             = PX4F(dwel->yaw);
+  prqx->pitch           = PX4F(dwel->pitch);
+  prqx->roll            = PX4F(dwel->roll);
+  prqx->track           = EMPTY_FLAG;
+  prqx->gate0mag        = EMPTY_FLAG;
+  prqx->dacv            = EMPTY_FLAG;
+  prqx->packetflag      = (uint4)EMPTY_FLAG;
+
+  prqx->year             = PX2(rhdr->year);
+  prqx->julian_day       = (uint4)EMPTY_FLAG;
+  memcpy(prqx->radar_name, rhdr->radar_name, 8);
+  strcpy(prqx->channel_name, "UNK");
+  strcpy(prqx->project_name, "UNK");
+  strcpy(prqx->operator_name, "UNK");
+  strcpy(prqx->site_name, "UNK");
+  
+  prqx->polarization     = rhdr->polarization;
+  prqx->test_pulse_pwr   = PX4F(rhdr->test_pulse_pwr);
+  prqx->test_pulse_frq   = PX4F(rhdr->test_pulse_frq);
+  prqx->frequency        = PX4F(rhdr->frequency);
+
+  prqx->noise_figure     = PX4F(rhdr->noise_figure);
+  prqx->noise_power      = PX4F(rhdr->noise_power);
+  prqx->receiver_gain    = PX4F(rhdr->receiver_gain);
+  prqx->E_plane_angle    = EMPTY_FLAG;  /* offsets from normal pointing angle */
+  prqx->H_plane_angle    = EMPTY_FLAG;
+
+
+  prqx->data_sys_sat     = PX4F(rhdr->data_sys_sat);
+  prqx->antenna_gain     = PX4F(rhdr->antenna_gain);
+  prqx->H_beam_width     = PX4F(rhdr->horz_beam_width);
+  prqx->V_beam_width     = PX4F(rhdr->vert_beam_width);
+
+  prqx->xmit_pulsewidth  = PX4F(rhdr->xmit_pulsewidth);
+  prqx->rconst           = PX4F(rhdr->rconst);
+  prqx->phaseoffset      = PX4F(rhdr->phaseoffset);
+  prqx->zdr_fudge_factor = PX4F(rhdr->zdr_fudge_factor);
+  prqx->mismatch_loss    = PX4F(rhdr->mismatch_loss);
+
+  prqx->rcvr_const       = EMPTY_FLAG; 
+  prqx->test_pulse_rngs_km[0] = EMPTY_FLAG;
+  prqx->test_pulse_rngs_km[1] = EMPTY_FLAG;
+
+  strcpy (prqx->comment, "NO COMMENT");
+
+  prqx->i_norm            = EMPTY_FLAG;
+  prqx->q_norm            = EMPTY_FLAG;
+  prqx->i_compand         = EMPTY_FLAG;
+  prqx->q_compand         = EMPTY_FLAG;
+  /*
+  float4 transform_matrix[2][2][2];
+  float4 stokes[4]; 
+   */
+  prqx->vxmit_power        = PX4F(dwel->vxmit_power);
+  prqx->vtest_pulse_pwr    = PX4F(rhdr->vtest_pulse_pwr);
+  prqx->vnoise_power       = PX4F(rhdr->vnoise_power);
+  prqx->vreceiver_gain     = PX4F(rhdr->vreceiver_gain);
+  prqx->vantenna_gain      = PX4F(rhdr->vantenna_gain);
+  //  prqx->h_rconst           = this->return_h_rconst ();
+  //  prqx->v_rconst           = this->return_v_rconst ();
+  prqx->peak_power         = PX4F(rhdr->peak_power);
+
+}
+
+
+// c---------------------------------------------------------------------------
 # define UEMPTY_FLAG 2147483647
 
-void update_prqx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel)
+void update_prqxx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel)
 {
-
+# ifdef obsolete
   strncpy(prqx->desc, "DWLX", 4);
   prqx->recordlen       = sizeof (PIRAQX);
   prqx->channel         = UEMPTY_FLAG;
@@ -6134,7 +6340,7 @@ void update_prqx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel)
   prqx->h_rconst           = h_rconst;
   prqx->v_rconst           = v_rconst;
   prqx->peak_power         = rhdr->peak_power;
-
+# endif
 }
 
 // c---------------------------------------------------------------------------
@@ -6258,15 +6464,15 @@ void smallhvsimul(DWELL *dwell, RADAR *radar, float *prods)
 	theta = (*aptr++) * M_PI / 32768.0; /* radian angle of VH* ; i.e. differential phase */
       }
       else {
-	/* PX2() does byte swapping */
-	cp1  = PX2(*aptr++) * scale2ln; /* natural log  of |R(1)| from V pulse pair */
-	v1a  = PX2(*aptr++) * M_PI / 32768.0;
-	lnpv = PX2(*aptr++) * scale2ln;        /* natural log  of V power (from 16 bit scaled log) */
-	cp2  = PX2(*aptr++) * scale2ln;        /* natural log  of |R(1)| from H pulse pair */
-	v2a  = PX2(*aptr++) * M_PI / 32768.0;  /* radian angle of |R(1)| from H pulse pair */
-	lnph = PX2(*aptr++) * scale2ln;        /* natural log  of H power (from 16 bit scaled log) */
-	lnvh = PX2(*aptr++) * scale2ln;        /* natural log  of |HV*| -- used for Phidp */
-	theta = PX2(*aptr++) * M_PI / 32768.0; /* radian angle of VH* ; i.e. differential phase */
+	/* SX2() does byte swapping */
+	cp1  = SX2(*aptr++) * scale2ln; /* natural log  of |R(1)| from V pulse pair */
+	v1a  = SX2(*aptr++) * M_PI / 32768.0;
+	lnpv = SX2(*aptr++) * scale2ln;        /* natural log  of V power (from 16 bit scaled log) */
+	cp2  = SX2(*aptr++) * scale2ln;        /* natural log  of |R(1)| from H pulse pair */
+	v2a  = SX2(*aptr++) * M_PI / 32768.0;  /* radian angle of |R(1)| from H pulse pair */
+	lnph = SX2(*aptr++) * scale2ln;        /* natural log  of H power (from 16 bit scaled log) */
+	lnvh = SX2(*aptr++) * scale2ln;        /* natural log  of |HV*| -- used for Phidp */
+	theta = SX2(*aptr++) * M_PI / 32768.0; /* radian angle of VH* ; i.e. differential phase */
 
       }
 
