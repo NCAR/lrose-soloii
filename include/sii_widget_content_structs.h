@@ -170,6 +170,7 @@ struct view_widget_info {
     float ts_ctr_km;		/* center for time-series plots */
     float x_tic_mag;
     float y_tic_mag;
+    float angular_fill_pct;
 };
 /* c------------------------------------------------------------------------ */
 
