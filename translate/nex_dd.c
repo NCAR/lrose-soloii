@@ -328,12 +328,14 @@ void nexx_ini()
 	    nui->options = NEX_REFL_ONLY;
 	}
 	else if(strstr(a, "NEW_NCDC")) { /* new NCDC blocking */
+	    printf("OPTION: NEW_NCDC\n");
 	    nui->options = NEX_NCDC_BLOCKING;
 	}
 	else if(strstr(a, "VEL_ONLY") || strstr(a, "VELOCITY_ONLY")) {
 	    nui->options = NEX_VEL_ONLY;
 	}
 	if(strstr(a, "RAP_NEX")) {
+	    printf("OPTION: RAP_NEX \n");
 	    nui->options |= RAP_NEXRAD;
 	    nmh = (struct nexrad_message_header *)malloc
 	      (sizeof(struct nexrad_message_header));
@@ -408,6 +410,7 @@ void nexx_ini()
 
 	if(!strncmp(line, "VCPAT", 5)) {
 	    /* this is a new pattern */
+
 	    nvh = (struct nexrad_VCP_header *)
 		  malloc(sizeof(struct nexrad_VCP_header));
 	    memset(nvh, 0, sizeof(struct nexrad_VCP_header));
@@ -439,6 +442,7 @@ void nexx_ini()
 	    continue;
 	}
 	nvi = nvh->swp_info +swp_count++;
+
 	ii = sscanf(line, "%x%d%d%d%x%x%d%d%x%x%d%d%x%d%d%d%d"
 		    , &nvi->fixed_angle
 		    , &nvi->wave_type
@@ -499,6 +503,7 @@ void nexx_ini()
     }
 
     nex_next_ray();
+
     return;
 }
 /* c------------------------------------------------------------------------ */
@@ -947,9 +952,9 @@ void nexx_new_parms()
 	if(drdh->vol_coverage_pattern == current_nvh->VCP_num)
 	      break;
     }
-# ifdef obsolete
+
     printf("\n***** VCP number: %d *****\n\n", drdh->vol_coverage_pattern);
-# endif
+
     sprintf(postamble, "VCP: %d ", drdh->vol_coverage_pattern);
     if(!current_nvh) current_nvh = top_nvh;
     if((ii = current_nvh->pulse_flag & 0xff) == 2)
@@ -1126,9 +1131,9 @@ void nex_new_parms()
 	if(drdh->vol_coverage_pattern == current_nvh->VCP_num)
 	      break;
     }
-# ifdef obsolete
+
     printf("\n***** VCP number: %d *****\n\n", drdh->vol_coverage_pattern);
-# endif
+
     sprintf(postamble, "VCP: %d ", drdh->vol_coverage_pattern);
     if(!current_nvh) current_nvh = top_nvh;
     if((ii = current_nvh->pulse_flag & 0xff) == 2)
