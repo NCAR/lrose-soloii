@@ -657,12 +657,33 @@ void sii_view_update_links (guint frame_num, int li_type)
   WW_PTR wwptr = solo_return_wwptr(frame_num);
   ViewData *vd = (ViewData *)frame_configs[frame_num]->view_data;
   guint jj;
+  long *lwins = 0;
 
   if (!vd)
     { return; }
 
-  sii_set_links_from_solo_struct (frame_num, li_type
-				  , wwptr->frame_ctr_info->linked_windows);
+  switch (li_type) {
+   case LI_SWPFI:
+     lwins = wwptr->sweep->linked_windows;
+     break;
+   case LI_LOCKSTEP:
+     lwins = wwptr->lock->linked_windows;
+     break;
+   case LI_PARAM:
+     lwins = wwptr->parameter->linked_windows;
+     break;
+   case LI_VIEW:
+     lwins = wwptr->view->linked_windows;
+     break;
+   case LI_CENTER:
+     lwins = wwptr->frame_ctr_info->linked_windows;
+     break;
+   case LI_LANDMARK:
+     lwins = wwptr->landmark_info->linked_windows;
+     break;
+  };
+
+  sii_set_links_from_solo_struct (frame_num, li_type, lwins);
 
 }
 
