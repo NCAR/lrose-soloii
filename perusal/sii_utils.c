@@ -27,7 +27,7 @@ void sii_append_debug_stuff (gchar *gch)
    gchar *aa, *bb;
    gint len, mm, nn, max=777, slack=111;
 
-# ifdef notyet
+# ifndef notyet
    if (!dbgs)
      { dbgs = g_string_new (""); }
 
