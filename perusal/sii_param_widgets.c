@@ -3764,7 +3764,7 @@ int solo_hardware_color_table(gint frame_num)
      * advance to first non-whiteout character
      */
     strncpy (line, table+start, end-start);
-    line[end] = '\0';
+    line[end-start] = '\0';
     ndx = end +1;
     bb = table+ndx;
     g_strstrip (line);
