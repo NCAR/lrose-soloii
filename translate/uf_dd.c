@@ -58,6 +58,53 @@ static char vcid[] = "$Id$";
 
 extern int Sparc_Arch, LittleEndian;
 
+
+
+typedef struct {
+    char file_id[8];	/* e.g. "FOFS 1.0" */
+    long format;
+    long num_tables;
+    long bytes2header[16]; /* bytes to table header from BOF */
+    long header_size[16];
+} FILE_HEADER;
+
+
+typedef struct {
+    long bytes2table; /* bytes to first table entry from BOF */
+    long num_entries;
+    size_t table_entry_size;
+    char table_id[8];
+    char dependency[8];	/* pointers are dependent on the indicated table id */
+    char element_id[16][4]; /* 4 character id for each entry element */
+} TABLE_HEADER;
+
+
+typedef struct {
+    long bytes2rec; /* bytes to "physical record" from BOF */
+    u_short num_recs; /* number of logical records packed into "phys.rec." */
+    u_short place_holder;
+} RECORD_TABLE_ENTRY;
+
+
+typedef struct {
+    RECORD_TABLE_ENTRY record[1];
+} RECORD_TABLE;
+
+
+typedef struct {
+    TABLE_HEADER header;
+} RECORD_TABLE_HEADER;	/* "RADARREC" id */
+
+
+typedef struct {
+     TABLE_HEADER header;
+} SWEEP_TABLE_HEADER; /* "RADARSWP" id */
+
+
+
+
+
+
 UF_MANDITORY *man, *xman;
 UF_OPTIONAL *opt, *xopt;
 UF_LOC_USE_AC *loc, *xloc;
@@ -66,8 +113,9 @@ UF_FLD_ID_ARRAY *fida, *xfida;
 UF_FLD_ID *fidp[MAX_UF_FLDS], *xfidp[MAX_UF_FLDS];
 UF_FLD_HED *fhed[MAX_UF_FLDS], *xfhed[MAX_UF_FLDS];
 
-# define UF_360_MAX_SECTOR 0x1
-# define UF_FORCE_EOF_VOLS 0x2
+# define    UF_360_MAX_SECTOR 0x1
+# define    UF_FORCE_EOF_VOLS 0x2
+# define OLD_INDEXED_UF_FILES 0x4
 
 /* 
  * pointers to where the actual data is in the record
@@ -243,7 +291,7 @@ void uf_dd_conv(interactive)
 void map_uf_ptrs( sbuf )
   short *sbuf;
 {
-   int ii, nn;
+   int ii, nn, mark;
    char *cc;
    short *ss, *tt, *vv;
    /*
@@ -275,6 +323,17 @@ void map_uf_ptrs( sbuf )
 	 gri->actual_num_bins[ii] = fhed[ii]->num_gates;
 	 gri->scaled_data[ii] = fdata[ii];
       }
+
+	 /* get length of field header */
+	 nn = fhed[0]->fld_data_ptr - fidp[0]->fld_hed_ptr;
+	 nn += fhed[0]->num_gates; /* field header plus data */
+
+	 if ( fidp[0]->fld_hed_ptr + dhed->num_flds_this_ray * nn >
+	     man->rec_len +1)
+	   { 
+	      dhed->num_flds_this_ray = 1;
+	   }
+      mark = 0;
    }
    else {
       uf_crack_man(sbuf, man, (int)0);
@@ -304,9 +363,21 @@ void map_uf_ptrs( sbuf )
 	 uf_crack_fhed(tt, fhed[ii], (int)0);
 	 gri->actual_num_bins[ii] = fhed[ii]->num_gates;
 
+	 /* get length of field header */
+	 nn = fhed[ii]->fld_data_ptr - fidp[ii]->fld_hed_ptr;
+	 nn += fhed[ii]->num_gates; /* field header plus data */
+
+	 if ( fidp[ii]->fld_hed_ptr + dhed->num_flds_this_ray*nn >
+	     man->rec_len)
+	   { 
+	      dhed->num_flds_this_ray = 1;
+	      break; 
+	   }
+
 	 fdata[ii] = tt = sbuf + FsCs(fhed[ii]->fld_data_ptr);
 	 swack_short(tt, gri->scaled_data[ii], (int)fhed[ii]->num_gates);
       }
+      mark = 0;
    }
 }
 /* c----------------------------------------------------------------------- */
@@ -479,6 +550,9 @@ void ufx_ini()
        if(strstr(a, "FORCE_EOF_VOLS")) {
 	  uui->options |= UF_FORCE_EOF_VOLS;
        }
+       if(strstr(a, "INDEXED_UF")) {
+	  uui->options |= OLD_INDEXED_UF_FILES;
+       }
     }
     irq = dd_return_ios(4, UF_FMT);
     aa = NULL;
@@ -555,12 +629,38 @@ int uf_inventory(irq)
 
 int uf_logical_read()
 {
-    int nn, eof_count = 0, size = -1, ii;
+    int nn, eof_count = 0, size = -1, ii, mark;
     unsigned short rlen = 0;
-    char *aa;
+    char *aa, *fofsv="FOFSV0.0";
+    static int local_rec_count = 0, ray_trip = 111;
+    static FILE_HEADER *fthp;
+    TABLE_HEADER *thp;
+    static RECORD_TABLE_HEADER *rthp;
+    static RECORD_TABLE *rectbl;
+    static RECORD_TABLE_ENTRY *rtep;
+
+
+
+    if (dd_stats->ray_count > ray_trip) {
+       mark = 0;
+    }
 
     for(;;) {
 	if(irq->io_type == BINARY_IO ) {
+	    if (irq->top->bytes_left > strlen (fofsv) &&
+		strncmp (irq->top->at, fofsv, strlen (fofsv)) == 0) {
+	       fthp = (FILE_HEADER *)irq->top->at;
+	       rthp = (RECORD_TABLE_HEADER *)(irq->top->at + sizeof (*fthp));
+	       rectbl = (RECORD_TABLE *)(irq->top->at
+					     +rthp->header.bytes2table);
+	       rtep = (RECORD_TABLE_ENTRY *)(irq->top->at
+					     +rthp->header.bytes2table);
+	       /* skip 64K bytes of header info */
+	       irq->top->at += K64;
+	       irq->top->bytes_left -= K64;
+	       uui->options |= OLD_INDEXED_UF_FILES;
+	       continue;
+	    }
 	    if( irq->top->bytes_left >= 4 ) {
 		if(LittleEndian) {
 		    swack2( irq->top->at +2, &rlen );
@@ -574,6 +674,12 @@ int uf_logical_read()
 		     * record buffer
 		     */
 		    size = rlen * sizeof(short);
+		    if (uui->options & OLD_INDEXED_UF_FILES &&
+			rlen == 1604) {
+		       irq->top->at += rlen * sizeof (short);
+		       irq->top->bytes_left -= rlen * sizeof (short);
+		       continue;
+		    }
 		    break;
 		}
 	    }
@@ -600,6 +706,7 @@ int uf_logical_read()
 		if((ii = dd_input_read_open(irq, aa)) <= 0) {
 		    return(-1);
 		}
+		local_rec_count = 0;
 	    }
 	    else
 		{ return -1; }
@@ -630,6 +737,7 @@ int uf_logical_read()
 	    break;
 	}
     }
+    local_rec_count++;
     return( size );
 }
 /* c------------------------------------------------------------------------ */
