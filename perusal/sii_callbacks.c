@@ -66,7 +66,7 @@ void sii_blow_up_expose_event (GtkWidget *frame, GdkEvent *event
    gboolean reconfigured, uncovered, totally_exposed;
    static gboolean new_frames = FALSE;
    GdkRectangle *rect, area;
-   gchar *aa, str[256];
+   gchar *aa, str[256], mess[256];
 
   frame_num = GPOINTER_TO_UINT
     (gtk_object_get_data (GTK_OBJECT(frame), "frame_num" ));
@@ -103,8 +103,9 @@ void sii_blow_up_expose_event (GtkWidget *frame, GdkEvent *event
      strcat (str, "neither ");
    }
 
-   g_message
-     ("bup expose: %s frm:%d gtk:%dx%d sii:%dx%d exp:%dx:%d rc:%d xp:%d"
+# ifdef config_debug
+   sprintf
+     (mess,"bup expose: %s frm:%d gtk:%dx%d sii:%dx%d exp:%dx:%d rc:%d xp:%d"
 	      , str
 	      , frame_num
 	      , alloc.width
@@ -114,6 +115,8 @@ void sii_blow_up_expose_event (GtkWidget *frame, GdkEvent *event
 	      , sfc0->big_reconfig_count
 	      , sfc0->big_expose_count
 	      );
+   sii_append_debug_stuff (mess);
+# endif
    sfc0->big_reconfig_count = 0;
 
 				/*
@@ -287,6 +290,7 @@ void sii_blow_up_config_event(GtkWidget *frame, GdkEvent *event
   guint frame_num = GPOINTER_TO_UINT (data), mark;
   GdkEventConfigure *ce;
   gchar *aa = GTK_WIDGET_SENSITIVE( frame ) ? "sensitive" : "insensitive" ;
+  gchar mess[256];
   gdouble d;
 
   frame_num = GPOINTER_TO_UINT
@@ -297,11 +301,14 @@ void sii_blow_up_config_event(GtkWidget *frame, GdkEvent *event
   frame_configs[0]->big_expose_count = 0;
   frame_configs[0]->big_colorize_count = 0;
 
-  g_message ("bup configure frm %d %dx%d"
+# ifdef config_debug
+  sprintf (mess,"bup configure frm %d %dx%d"
 	     , frame_num
 	     , frame->allocation.width
 	     , frame->allocation.height
 	     );
+	 sii_append_debug_stuff (mess);
+# endif
 }
 
 /* c---------------------------------------------------------------------- */
@@ -412,8 +419,10 @@ void sii_blow_up_mouse_button_event (GtkWidget *frame, GdkEvent *event
 
   /* relative to the origin of this window */
   gdk_window_get_pointer( frame->window, &xx, &yy, &state );
+# ifdef config_debug
   sprintf (mess, "xx:%d yy:%d state:%d", xx, yy, state);
-  g_message (mess);
+  sii_append_debug_stuff (mess);
+# endif
 
   xx /= 2;
   yy /= 2;
@@ -659,7 +668,9 @@ gint sii_blow_up_keyboard_event(GtkWidget *frame, GdkEvent *event
       { F_frame_id = 12; }
     else
       { F_frame_id = kbev->keyval - GDK_F1 +1; }
+# ifdef notyet
     g_message( "bup Caught F key:%d frm:%d", F_frame_id, frame_num );
+# endif
     break;
 
   case 268828432:		/* SunF36 when you punch F11 on Sun Solaris */
@@ -687,6 +698,7 @@ gint sii_frame_keyboard_event(GtkWidget *frame, GdkEvent *event
   * (center and magnification) by using the last N points clicked.
   *
   */
+   gchar mess[256];
 
 # ifdef just_for_info
   /* GDK_SHIFT_MASK | GDK_CONTROL_MASK | GDK_MOD1_MASK */
@@ -768,7 +780,9 @@ gint sii_frame_keyboard_event(GtkWidget *frame, GdkEvent *event
     else
       { F_frame_id = kbev->keyval - GDK_F1 +1; }
     
+# ifdef notyet
     g_message( "Caught F key:%d ", F_frame_id );
+# endif
     break;
 
   case 268828432:		/* SunF36 when you punch F11 on Sun Solaris */
@@ -787,7 +801,9 @@ gint sii_frame_keyboard_event(GtkWidget *frame, GdkEvent *event
     break;
 
   case GDK_Delete:		/* delete the last boundary point */
+# ifdef notyet
     g_message( "Caught Delete " );
+# endif
       break;
 
   case GDK_Right:
@@ -807,7 +823,9 @@ gint sii_frame_keyboard_event(GtkWidget *frame, GdkEvent *event
       if (cursor_frame) {
 	sii_plot_data (cursor_frame-1, FORWARD_ONCE);
       }
+# ifdef notyet
       g_message( "Caught Right " );
+# endif
     }
     break;
     
@@ -824,7 +842,9 @@ gint sii_frame_keyboard_event(GtkWidget *frame, GdkEvent *event
       if (cursor_frame) {
 	sii_plot_data (cursor_frame-1, BACKWARDS_ONCE);
       }
+# ifdef notyet
       g_message( "Caught Left " );
+# endif
     }
     break;
 
@@ -860,9 +880,12 @@ gint sii_frame_keyboard_event(GtkWidget *frame, GdkEvent *event
   if (!aa)
     { aa = "unk"; }
 
-  g_message ("data %d frame: %d keyed k:%d s:%d n:%s aa:%s mod:%s"
-	     , frame_num, cursor_frame
-	     , kbev->keyval, kbev->state, kbev->string, aa, mod);
+# ifdef config_debug
+  sprintf (mess,"data %d frame: %d keyed k:%d s:%d n:%s aa:%s mod:%s"
+	   , frame_num, cursor_frame
+	   , kbev->keyval, kbev->state, kbev->string, aa, mod);
+  sii_append_debug_stuff (mess);
+# endif
 
   return (frame_num > 2 * maxFrames) ? FALSE : TRUE;
 }
