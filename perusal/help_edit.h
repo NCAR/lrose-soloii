@@ -164,6 +164,7 @@ static const gchar * help_messages[] = {
 "remove-aircraft-motion",
 "remove-ring",
 "remove-surface",
+"rewrite",
 "set-bad-flags",
 "threshold",
 "unconditional-delete",
@@ -591,6 +592,8 @@ static const gchar * header_value[] = {
 "    header-value latitude 39.7867 degrees",
 "    header-value longitude -104.5458 degrees",
 "    header-value altitude 1.7102 km.",
+"    header-value agl-altitude 1.7102 km.",
+"    header-value msl-into-agl-corr 0.0 km.",
 "    header-value corr-elevation by 5. degrees",
 "    header-value corr-azimuth by 5. degrees",
 "    header-value corr-rot-angle by 5. degrees",
@@ -742,7 +745,7 @@ static const gchar * remove_surface[] = {
 "    remove-surface in <field>",
 " ",
 "!  Replace angle brackets and argument types with appropriate arguments.",
-"  Other \"one-time\" commands that affect removing the surface are:",
+"!  Other \"one-time\" commands that affect removing the surface are:",
 " ",
 "    optimal-beamwidth is <real> degrees",
 "!  As a default the algorithm uses the beamwidth in the headers but",
@@ -753,6 +756,15 @@ static const gchar * remove_surface[] = {
 "!    optimal-beamwidth is 3.3 degrees",
 "!    for-each-ray (put one-time cmds before this line)",
 "!    remove-surface in VQ",
+};
+
+static const gchar * rewrite[] = {
+"!  Help file for the \"rewrite\" command which has the form:",
+" ",
+"    rewrite",
+" ",
+"!  This command triggers a rewrite of a sweepfile in the absence",
+"!  of any other edit commands that modify the data.",
 };
 
 static const gchar * set_bad_flags[] = {
