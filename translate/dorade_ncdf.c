@@ -25,6 +25,7 @@ static char vcid[] = "$Id$";
 # include <dd_math.h>
 # include <function_decl.h>
 # include <dgi_func_decl.h>
+# include <piraq/piraqx.h>
 # include "piraq.h"
 # include "dd_io_structs.h"
 
@@ -1177,30 +1178,42 @@ strcat( str, "defined in segments of constant cell spacing");
       prqx = (PIRAQX *)xstf_first_item;
     }
 
-    count[0] = 2;
+    count[0] = 1;
+# ifdef obsolete
     f_vals[0] = prqx->h_rconst;
     f_vals[1] = prqx->v_rconst;
+# endif
     
     ii = nc_put_vara_float( ncid, ncp->id_rconst, start, count, f_vals );
     
     f_vals[0] = prqx->receiver_gain;
+# ifdef obsolete
     f_vals[1] = prqx->vreceiver_gain;
+# endif
     ii = nc_put_vara_float( ncid, ncp->id_rcvrg, start, count, f_vals );
     
     f_vals[0] = prqx->antenna_gain;
+# ifdef obsolete
     f_vals[1] = prqx->vantenna_gain;
+# endif
     ii = nc_put_vara_float( ncid, ncp->id_antnag, start, count, f_vals );
     
     f_vals[0] = prqx->noise_power;
+# ifdef obsolete
     f_vals[1] = prqx->vnoise_power;
+# endif
     ii = nc_put_vara_float( ncid, ncp->id_noispwr, start, count, f_vals );
     
     f_vals[0] = prqx->test_pulse_pwr;
+# ifdef obsolete
     f_vals[1] = prqx->vtest_pulse_pwr;
+# endif
     ii = nc_put_vara_float( ncid, ncp->id_tppwr, start, count, f_vals );
     
+# ifdef obsolete
     f_vals[0] = prqx->hxmit_power;
     f_vals[1] = prqx->vxmit_power;
+# endif
     ii = nc_put_vara_float( ncid, ncp->id_xmtpwr, start, count, f_vals );
     
     count[0] = 1;
