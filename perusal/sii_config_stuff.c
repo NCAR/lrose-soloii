@@ -157,6 +157,7 @@ void sii_new_frames ()
    gpointer gptr;
    gchar str[256];
    guint att_opts = GTK_EXPAND | GTK_SHRINK | GTK_FILL;
+   GdkColormap *cmap = gdk_rgb_get_cmap ();
 
    gint event_flags = GDK_BUTTON_PRESS_MASK | GDK_KEY_PRESS_MASK
      | GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK
@@ -165,12 +166,6 @@ void sii_new_frames ()
    
    /* c...code sii_new_frames */
 
-   if( !sii_config_count++ ) {
-# ifdef obsolete
-     sii_reset_config_cells();
-     config_cb (0, (gpointer)22 ); /* 2x2 */
-# endif
-   }
 
    if( main_table ) {		/* this is a gtk table type container
 				 */
@@ -183,7 +178,9 @@ void sii_new_frames ()
   for (fn=0; fn < sii_frame_count; fn++ ) {
 
     sfc = frame_configs[fn];
+    sfc->color_map = cmap;
     sfc->local_reconfig = TRUE;
+    sfc->drag_resize_count = 0;
     ++sfc->new_frame_count;
 
     sfc->frame = gtk_drawing_area_new ();
