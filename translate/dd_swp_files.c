@@ -26,6 +26,7 @@ static char vcid[] = "$Id$";
 
 
 static int sizeof_prev_file=0;
+static int unique_vol_id = NO;
 
 void dd_insert_headers();
 void dd_new_vol();
@@ -35,6 +36,13 @@ void produce_ncdf();
 void dd_tape();
 
 
+
+/* c------------------------------------------------------------------------ */
+
+void dd_set_unique_vol_id()
+{
+   unique_vol_id = YES;
+}
 
 /* c------------------------------------------------------------------------ */
 
@@ -511,10 +519,8 @@ void dd_new_vol(dgi)
 
     dis = dd_return_sweepfile_structs_v3();
     dgi->vol_count++;
-    dgi->vol_num++;
     dgi->new_vol = YES;
     dgi->volume_time_stamp = dgi->vol_time0 = dgi->time;
-    vold->volume_num = dis->editing ? dgi->source_vol_num : dgi->vol_num;
 
     d_unstamp_time(dts);
     vold->year = dts->year;
@@ -523,7 +529,14 @@ void dd_new_vol(dgi)
     vold->data_set_hour = dts->hour;
     vold->data_set_minute = dts->minute;
     vold->data_set_second = dts->second;
-
+    if (unique_vol_id) {
+       vold->volume_num = 
+	 dgi->vol_num = dts->hour * 60 + dts->minute;
+    }
+    else {
+       vold->volume_num = dis->editing ? dgi->source_vol_num : dgi->vol_num;
+       dgi->vol_num++;
+    }
 }
 /* c------------------------------------------------------------------------ */
 
