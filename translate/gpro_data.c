@@ -139,7 +139,7 @@ static struct nc_ac_info *nai=NULL;
 static char *ac_var_tags[MAX_NC_NDX];
 static char ac_var_names[MAX_NC_NDX][16];
 
-void eld_nimbus_fix_asib();
+char *eld_nimbus_fix_asib();
 void ac_nc_nab_this_time_step();
 void ac_nc_apply_fixes();
 int ac_nc_find_tag();
@@ -165,7 +165,7 @@ struct ads_raw_data_que *gpro_initialize();
 
 /* c----------------------------------------------------------------------- */
 
-void
+char *
 eld_nimbus_fix_asib(dts, asib, options, radar_num)
   DD_TIME *dts;
   struct platform_i *asib;
@@ -188,12 +188,12 @@ eld_nimbus_fix_asib(dts, asib, options, radar_num)
 
 
     if(!netcdf_merge)
-	  return;
+	  return (0);
 
     if(!nai) {
 	if(!ac_nc_init()) {
 	    netcdf_merge = NO;
-	    return;
+	    return (0);
 	}
     }
     /* the mission is to try to bracket the time in "dts" and correct
@@ -248,7 +248,7 @@ eld_nimbus_fix_asib(dts, asib, options, radar_num)
 		    dd_append_cat_comment(mess);
 		    printf("%s\n", mess);
 		}
-		return;
+		return (0);
 	    }
 	}
 	if(nai->count >= nai->max_count) {
@@ -267,6 +267,7 @@ eld_nimbus_fix_asib(dts, asib, options, radar_num)
     /* update the asib
      */
     ac_nc_apply_fixes(dts, asib, options, ndx);
+    return ("_MRG");
 
 # endif
     /*
