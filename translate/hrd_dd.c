@@ -75,6 +75,7 @@ static char vcid[] = "$Id$";
 # define     SWEEP_TRIP_DELTA 0x0080
 # define         OVER_ROTATED 0x0100
 # define KEEP_ORTHOGONAL_DATA 0x0200
+# define              MC_DATA 0x0400
 
 # include <dd_defines.h>
 # include "input_limits.h"
@@ -98,6 +99,11 @@ static struct hrd_radar_info *LF, *xLF;
 static struct hrd_radar_info *TA, *xTA;
 static struct hrd_data_rec_header *hdrh, *xhdrh;
 static struct hrd_ray_header *hrh, *xhrh;
+
+static struct mc_ray_header *mrh, *xmrh=NULL;
+static short *mc_flags = NULL;
+static long *mc_lvals = NULL;
+
 static struct hrd_general_info *hgi;
 static struct generic_radar_info *gri;
 static struct hrd_useful_items *hui;
@@ -105,6 +111,8 @@ static struct hrd_generic_header *gh, xgh;
 # ifdef obsolete
 static struct io_stuff *hrd_ios;
 # endif
+
+
 
 struct id_stack_entry {
     int radar_id;
@@ -233,6 +241,7 @@ int hrd_select_ray();
 double hrd_time_stamp();
 int upk_hrd16();
 int hrd_merge_std();
+void hrd_upk_mc_data();
 
 
 /* c------------------------------------------------------------------------ */
@@ -553,9 +562,9 @@ void hrdx_ini()
 # endif
        hdrh = xhdrh = (struct hrd_data_rec_header *)malloc(sizeof(struct hrd_data_rec_header));
        memset(xhdrh, 0, sizeof(struct hrd_data_rec_header));
-       hrh = xhrh = (struct hrd_ray_header *)malloc(sizeof(struct hrd_ray_header));
-       memset(xhrh, 0, sizeof(struct hrd_ray_header));
     }
+    hrh = xhrh = (struct hrd_ray_header *)malloc(sizeof(struct hrd_ray_header));
+    memset(xhrh, 0, sizeof(struct hrd_ray_header));
 
 
     if(a=get_tagged_string("SWEEP_TRIP_ANGLE")) {
@@ -568,6 +577,21 @@ void hrdx_ini()
 	hui->options |= SWEEP_TRIP_DELTA;
     }
     printf( "Sweep trip delta: %.2f\n", hui->sweep_trip_delta);
+
+    if(a=getenv("MC_DATA")) {
+	hui->options |= MC_DATA;
+	if (LittleEndian) {
+	   mrh = xmrh = (struct mc_ray_header *)
+	     malloc(sizeof(struct mc_ray_header));
+	   memset(xmrh, 0, sizeof(struct mc_ray_header));
+	}
+	dd_set_unique_vol_id();
+	mc_flags = (short *)malloc (64 * sizeof (short));
+	memset (mc_flags, 0, 64 * sizeof (short));
+	mc_lvals = (long *)malloc (2048 * sizeof (long));
+	memset (mc_lvals, 0, 2048 * sizeof (long));
+    }
+    printf( "MC_DATA option set\n");
 
     if(a=get_tagged_string("HRD_RANGE_DELAY")) {
 	hui->hrd_range_delay = atoi(a);
@@ -708,6 +732,11 @@ void hrd_nab_data()
 
 
     count++;
+    if (hui->options & MC_DATA) {
+       hrd_upk_mc_data ();
+       return;
+    }
+
     ss = (unsigned short *)(hui->hrd_ray_pointer
 			    + sizeof(struct hrd_ray_header));
     zz = (unsigned short *)(hui->hrd_ray_pointer+hrh->sizeof_ray);
@@ -719,7 +748,7 @@ void hrd_nab_data()
        i = upk_hrd16(words, 0, ss, zz, &final_bad_count);
     }
     /*
-     * seperate and rescale the data
+     * seperate and   rescale the data
      */
     for(i=0; i < gri->num_fields_present; i++ ) {
 	ng = gri->num_bins;
@@ -769,10 +798,12 @@ void hrd_nab_info()
     count++;
     drn = hui->current_radar_ndx;
     hur = hfer[drn];		/* pointer to info for last radar */
+
     gri->time = hrd_time_stamp(hrh, gri->dts);
     gri->altitude_agl = gri->altitude = hrh->altitude_xe3;
     gri->latitude = BA2F( hrh->latitude );
     gri->longitude = BA2F( hrh->longitude );
+
     /* c...mark */
     d = fmod((double)BA2F(hrh->azimuth)+360., (double)360.);
     gri->rotation_angle = gri->corrected_rotation_angle = gri->azimuth = d;
@@ -1146,13 +1177,16 @@ hrd_next_block()
 	    }
 	}
 	aa = irq->top->at;
-
+	
 	if(LittleEndian) {
 	   gh = &xgh;
 	   swack_short(aa, gh, 2);
 	}
 	else {
 	   gh = (struct hrd_generic_header *)aa;
+	}
+	if (hui->options & MC_DATA) {
+	   return (irq->top->sizeof_read);
 	}
 
 	if(!(gh->header_id == 0 || gh->header_id == 1)) {
@@ -1226,6 +1260,7 @@ int hrd_next_ray()
     int hrd_next_block();
     DD_TIME dts;
     double dtime, d_time_stamp();
+    int mc_data_really = NO, ndata, nwords16;
 
 
     if(irq->top->bytes_left < hui->min_ray_size) {
@@ -1257,7 +1292,82 @@ int hrd_next_ray()
 	    dd_stats->MB += BYTES_TO_MB(size);
 	    dd_stats->rec_count++;
 	    rec_num++;
-	    if( gh->header_id == 0 && gh->sizeof_rec == 2048 ) {
+	    if (hui->options & MC_DATA) {
+	       if( strncmp (irq->top->buf, "P3", 2) == 0 &&
+		  irq->top->read_state == 2048 ) {
+		  hrd_grab_header_info();
+	       }
+	       else if (irq->top->read_state == 2048) {
+		  /* this is the cell vector */
+	       }
+	       else if (irq->top->read_state == 84) {
+		  /* ray header (all floats) */
+		  if (LittleEndian) {
+		     swack_long (irq->top->buf, xmrh, 21);
+		  }
+		  else {
+		     mrh = (struct mc_ray_header *)irq->top->buf;
+		  }
+		  /* populate hrd equivalent struct */
+
+# define SCALEANG (1./ANGSCALE)
+# define F2BA(x) ((short)(((x) < 0) ? (x)*SCALEANG-.5 : (x)*SCALEANG +.5))
+		  hrh->year = head->year;
+		  hrh->month = head->month;
+		  hrh->day = head->day;
+		  hrh->sizeof_ray = irq->top->read_state;
+		  ii = REFLECTIVITY_BIT;
+		  ii |= VELOCITY_BIT;
+		  ii |= WIDTH_BIT;
+		  ii |= TA_DATA_BIT;
+		  hrh->code = (unsigned char)(ii >> 8);
+
+		  gri->source_sweep_num = mrh->ntasweep;
+		  hrh->latitude     = F2BA (mrh->latitude);    /* (binary angle) */
+		  hrh->longitude    = F2BA (mrh->longitude);   /* (binary angle)  */
+		  hrh->altitude_xe3 = (mrh->altitude_xe3);     
+		  /* these velocities are scaled by 100. */
+		  hrh->ac_vew_x10   = .1 *  (mrh->ac_vew_x10);   /* east-west velocity */
+		  hrh->ac_vns_x10   = .1 *  (mrh->ac_vns_x10);   /* north-south velocity */
+		  hrh->ac_vud_x10   = .1 *  (mrh->ac_vud_x10);   /* vertical velocity */
+		  hrh->ac_ui_x10    = .1 *  (mrh->ac_ui_x10);    /* east-west wind */
+		  hrh->ac_vi_x10    = .1 *  (mrh->ac_vi_x10);    /* north-south wind */
+		  hrh->ac_wi_x10    = .1 *  (mrh->ac_wi_x10);    /* vertical wind */
+		  hrh->elevation    = F2BA (mrh->elevation);   /* (binary angle) */
+		  hrh->azimuth      = F2BA (mrh->azimuth);     /* (binary angle) word_12 */
+		  hrh->ac_pitch     = F2BA (mrh->ac_pitch);    /* (binary angle) */
+		  hrh->ac_roll      = F2BA (mrh->ac_roll);     /* (binary angle) */
+		  hrh->ac_drift     = F2BA (mrh->ac_drift);    /* (binary angle) */
+		  hrh->ac_heading   = F2BA (mrh->ac_heading);  /* (binary angle) word_16 */
+		  hrh->hour         =  (mrh->hour);                                           
+		  hrh->minute       =  (mrh->minute);          
+		  hrh->seconds_x100 =  (mrh->seconds_x100);    
+		  mark = 0;
+	       }
+	       else {
+		  /* flags plus data */
+		  mc_data_really = YES;
+		  nwords16 = (int)mrh->nwords16;
+		  ndata = (int)mrh->ndata;
+
+		  if (LittleEndian) {
+		     nn = nwords16 * sizeof (short);
+		     swack_short (irq->top->buf, mc_flags, nwords16);
+		     swack_long (irq->top->buf+nn, mc_lvals, ndata);
+		  }
+		  else {
+		     memcpy (mc_flags, irq->top->buf, nn);
+		     memcpy (mc_lvals, irq->top->buf+nn, ndata*sizeof(long));
+		  }
+	       }
+
+		irq->top->bytes_left = 0;
+		whats_left = 0;
+	       if (mc_data_really)
+		 { break;}
+	       continue;
+	    }
+	    else if( gh->header_id == 0 && gh->sizeof_rec == 2048 ) {
 		/* Header!
 		 */
 		hrd_grab_header_info();
@@ -1324,12 +1434,14 @@ int hrd_next_ray()
     dp = dd_return_next_packet(irq);
     dp->len = hrh->sizeof_ray;
     irq->top->at += hrh->sizeof_ray;
-    irq->top->bytes_left -= hrh->sizeof_ray;
+    if (!(hui->options & MC_DATA)) {
+       irq->top->bytes_left -= hrh->sizeof_ray;
+       whats_left -= hrh->sizeof_ray;
+    }
 
     if(head)
 	  hrd_nab_info();
 
-    whats_left -= hrh->sizeof_ray;
     return((int)hrh->sizeof_ray);
 }
 /* c------------------------------------------------------------------------ */
@@ -2140,6 +2252,68 @@ void hrd_upk_data( fn, nf, nb, src, dst )
 }
 /* c------------------------------------------------------------------------ */
 
+void hrd_upk_mc_data()
+{
+   /*
+    * unpacks compressed mc data
+    * "ng" is the number of bins
+    * inside mc_data are 64 shorts followed by "ng" or less 32-bit longs
+    */
+   float ff;
+   unsigned int ii, jj=0, kk, nn, gg, ng, mark, nbits;
+   unsigned int mask9 = 0x1ff, mask14 = 0x3fff;
+   unsigned short flag, mask1 = 0x8000;
+   short *dbz, *vel, *sw, sval, *src16;
+   unsigned int *src32, ival;
+   int nwords16 = (int)mrh->nwords16;
+   int ndata = (int)mrh->ndata;
+
+# define S100(x) ((x)*100.0+0.5)
+   
+   ng = gri->num_bins;
+
+   for(ii=0; ii < gri->num_fields_present; ii++ ) {
+      if (gri->fields_present[ii] == REFLECTIVITY_BIT) {
+	 dbz = gri->scaled_data[ii];
+      }
+      if (gri->fields_present[ii] == VELOCITY_BIT) {
+	 vel = gri->scaled_data[ii];
+      }
+      if (gri->fields_present[ii] == WIDTH_BIT) {
+	 sw = gri->scaled_data[ii];
+      }
+  }
+   mark = 0;
+
+    for(gg = 0, jj = 0; gg < ndata ; gg++) {
+       ii = gg/16;
+       nbits = gg % 16;
+       flag = (unsigned short)(mask1 >> nbits);
+
+       if (mc_flags[ii] & (unsigned short)(mask1 >> nbits)) {
+	  /*
+	  memcpy (&ival, src32+jj++, sizeof (long));
+	   */
+	  ival = mc_lvals[jj++];
+
+	  ff = .1 * ((ival) & mask9);
+	  sw[gg] = S100 (ff);
+	  ff = .01 * ( (int)((ival >> 9) & mask14) -8000);
+	  vel[gg] = S100 (ff);
+	  ff = .25 * ( (int)((ival >> 23) & mask9) -120);
+	  dbz[gg] = S100 (ff);
+       }
+       else {
+	  dbz[gg] = vel[gg] = sw[gg] = EMPTY_FLAG;
+       }
+    }
+
+   mark = 0;
+   for (; gg < ng; gg++)
+     { dbz[gg] = vel[gg] = sw[gg] = EMPTY_FLAG; }
+}
+/* c------------------------------------------------------------------------ */
+
 int upk_hrd16(dd, bad_val, ss, zz, bads)
   unsigned short *dd, *ss, *zz;
   int bad_val, *bads;
@@ -2272,6 +2446,23 @@ int upk_hrd16LE(dd, bad_val, ss, zz, bads) /* LittleEndian version! */
 /* c------------------------------------------------------------------------ */
 
 /* c------------------------------------------------------------------------ */
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
+	
+	
 
-
+    
