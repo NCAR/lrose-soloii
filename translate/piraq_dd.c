@@ -11,11 +11,13 @@ static char vcid[] = "$Id$";
 # include "generic_radar_info.h"
 # include "run_sum.h"
 # include <dorade_share.h>
-# include "piraq.h"
 # include <dd_math.h>
 # include <Platform.h>
 # include <function_decl.h>
 # include <errno.h>
+# include <piraq/piraqx.h>
+
+# include "piraq.h"
 
 # ifndef M_PI
 #define M_E             2.7182818284590452354
@@ -692,8 +694,10 @@ piraq_dd_conv(interactive_mode)
 	    
 	    r_consts.h_rconst = h_rconst;
 	    r_consts.v_rconst = v_rconst;
+	    /*
 	    prqx->h_rconst = h_rconst;
 	    prqx->v_rconst = v_rconst;
+	     */
 	    
 	    dd_stuff_ray();	/* pass it off to dorade code */
 	}
@@ -6006,8 +6010,11 @@ void update_prqx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel)
   prqx->gates           = dwel->gates;
   prqx->hits            = dwel->hits;
   prqx->rcvr_pulsewidth = dwel->rcvr_pulsewidth;
+# ifdef obsolete
   prqx->prt             = dwel->prt;
+# endif
 
+# ifdef obsolete
   prqx->delay           = dwel->delay;
   prqx->clutterfilter   = dwel->clutterfilter;
   prqx->timeseries      = dwel->timeseries;
@@ -6015,28 +6022,35 @@ void update_prqx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel)
 
   prqx->time            = dwel->time;
   prqx->subsec          = dwel->subsec;
+# endif
   prqx->az              = dwel->az;
   prqx->el              = dwel->el;
 
   prqx->radar_longitude = dwel->radar_longitude; 
-  prqx->radar_lattitude = dwel->radar_lattitude;
+  prqx->radar_latitude = dwel->radar_lattitude;
   prqx->radar_altitude  = dwel->radar_altitude;
   prqx->ew_velocity     = dwel->ew_velocity;
 
   prqx->ns_velocity     = dwel->ns_velocity;
   prqx->vert_velocity   = dwel->vert_velocity;
   prqx->dataformat      = dwel->dataformat;
+# ifdef obsolete
   prqx->prt2            = dwel->prt2;
+# endif
 
   prqx->fxd_angle       = dwel->fxd_angle;
   prqx->scan_type       = dwel->scan_type;
   prqx->scan_num        = dwel->scan_num;
   prqx->vol_num         = dwel->vol_num;
 
+# ifdef obsolete
   prqx->ray_count       = dwel->ray_count;
+# endif
   prqx->transition      = dwel->transition;
+# ifdef obsolete
   prqx->hxmit_power     = dwel->hxmit_power;
   prqx->vxmit_power     = dwel->vxmit_power;
+# endif
 
   prqx->yaw             = dwel->yaw;
   prqx->pitch           = dwel->pitch;
@@ -6053,24 +6067,30 @@ void update_prqx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel)
   prqx->test_pulse_frq   = rhdr->test_pulse_frq;
   prqx->frequency        = rhdr->frequency;
  
+# ifdef obsolete
   prqx->peak_power       = rhdr->peak_power;
+# endif
   prqx->noise_figure     = rhdr->noise_figure;
   prqx->noise_power      = rhdr->noise_power;
   prqx->receiver_gain    = rhdr->receiver_gain;
 
   prqx->data_sys_sat     = rhdr->data_sys_sat;
   prqx->antenna_gain     = rhdr->antenna_gain;
+# ifdef obsolete
   prqx->horz_beam_width  = rhdr->horz_beam_width;
   prqx->vert_beam_width  = rhdr->vert_beam_width;
+# endif
 
   prqx->xmit_pulsewidth  = rhdr->xmit_pulsewidth;
   prqx->rconst           = rhdr->rconst ;
   prqx->phaseoffset      = rhdr->phaseoffset;
+# ifdef obsolete
   prqx->vreceiver_gain   = rhdr->vreceiver_gain;
 
   prqx->vtest_pulse_pwr  = rhdr->vtest_pulse_pwr;
   prqx->vantenna_gain    = rhdr->vantenna_gain;
   prqx->vnoise_power     = rhdr->vnoise_power;
+# endif
   prqx->zdr_fudge_factor = rhdr->zdr_fudge_factor;
 
   prqx->mismatch_loss    = rhdr->mismatch_loss;
