@@ -147,6 +147,7 @@ static struct input_read_info *irq;
 static int pbuf_max=2000;
 static char preamble[24], postamble[64];
 static char *current_file_name;
+static char *tmp_radar_name = "XXXX";
 
 void uf_dd_conv();
 void map_uf_ptrs();
@@ -644,6 +645,7 @@ int uf_next_ray()
     DD_TIME *dts=gri->dts;
     double d, d_time_stamp();
     UF_FLD_HED *fh;
+    struct rename_str *rns;
 
 # define ENABLE_BINARY_IO
 
@@ -726,7 +728,26 @@ int uf_next_ray()
 
     /* identify the radar
      */
+    str_terminate(gri->radar_name, man->radar, 8);
+    if (strlen (gri->radar_name) < 1)
+      { strcpy (gri->radar_name, tmp_radar_name); }
+
+    if(rns=uui->top_ren) {
+	for(;;) {
+	    if(strstr(gri->radar_name, rns->old_name)) {
+		strcpy(gri->radar_name, rns->new_name);
+		break;
+	    }
+	    if((rns=rns->next) == uui->top_ren)
+		  break;
+	}
+    }    
+    strcpy (radar_name, gri->radar_name);
+# ifdef obsolete
     str_terminate(radar_name, man->radar, 8);
+    if (strlen (radar_name) < 1)
+      { strcpy (radar_name, tmp_radar_name); }
+# endif
 
     for(rdn=0; rdn < uui->radar_count; rdn++ ) {
 	if(strcmp(radar_name, ufer[rdn]->radar_name) == 0) {
@@ -1903,8 +1924,10 @@ void uf_vol_update()
     float unscale, r, gs;
     struct rename_str *rns;
 
-    strncpy(gri->radar_name, man->radar, 8);
-    gri->radar_name[8] = '\0';
+# ifdef obsolete
+    str_terminate(gri->radar_name, man->radar, 8);
+    if (strlen (gri->radar_name) < 1)
+      { strcpy (gri->radar_name, tmp_radar_name); }
 
     if(rns=uui->top_ren) {
 	for(;;) {
@@ -1916,6 +1939,7 @@ void uf_vol_update()
 		  break;
 	}
     }    
+# endif
     strncpy(gri->project_name, opt->project_id, 8);
     gri->project_name[8] = '\0';
     
