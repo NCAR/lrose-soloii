@@ -693,6 +693,7 @@ solo_return_wwptr(ww_num)
     next->view->rng_annot_at_deg = 45.;
     next->view->ts_magnification = 
 	  next->view->x_tic_mag = next->view->y_tic_mag = 1.;
+    next->view->angular_fill_pct = 120.;
     
     next->radar_location = solo_malloc_pisp();
     strcpy(next->radar_location->id, "SOL_RAD_LOC");
