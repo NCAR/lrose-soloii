@@ -14,6 +14,7 @@ enum {
 };
 
 void sii_links_widget( guint frame_num, guint widget_id, LinksInfo *linkfo );
+void sii_view_update_links (guint frame_num, int li_type);
 
 /* c---------------------------------------------------------------------- */
 
@@ -121,7 +122,7 @@ void sii_links_widget_cb ( GtkWidget *w, gpointer   data )
 						     , "link_info");
    guint task = GPOINTER_TO_UINT (gtk_object_get_data (GTK_OBJECT(button)
 						       , "button_wid"));
-   gint active;
+   gint active, jj, li_type;
 
    switch (task) {
 
@@ -139,7 +140,16 @@ void sii_links_widget_cb ( GtkWidget *w, gpointer   data )
        case FRAME_VIEW_LINKS:
        case FRAME_CTR_LINKS:
        case FRAME_LMRK_LINKS:
+
 	 sii_update_linked_view_widgets (li->frame_num);
+	 if (li->widget_id != FRAME_VIEW_LINKS) {
+	   li_type = (li->widget_id == FRAME_CTR_LINKS) ? LI_CENTER : LI_LANDMARK;
+	   for (jj=0; jj < maxFrames; jj++) {
+	     if (jj != li->frame_num) {
+	        sii_view_update_links(jj, li_type);
+	     }
+	   }
+	 }
 	 break;
        case FRAME_PARAM_LINKS:
 	 sii_set_param_info (li->frame_num);
