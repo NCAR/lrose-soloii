@@ -2488,7 +2488,12 @@ int eld_next_ray()
    if(eui->options & ELD_TIME_SERIES && tmsr) {
        if (!ts_count++) {
 	  slash_path(str, get_tagged_string("DORADE_DIR"));
+	  dd_file_name ("tmsr", (long)dgi->time, dgi->radar_name, 0
+			, str+strlen(str));
+	  strcat (str, ".xml");
+	  /*
 	  strcat (str, "time_series.xml");
+	   */
 	  strm = fopen (str, "w+");
 	  if (aa = get_tagged_string("SELECT_RADARS")) {
 	     strcpy (select_radars, aa);
@@ -2611,8 +2616,8 @@ int ts_xml_out (struct dd_general_info *dgi, FILE *strm
   short i2, gate_dist[16];
   fpos_t fpos;
   long loffs;
-  RTIME dtime;
   char *f2 = "%.2f", *f4="%.4f", *f6="%.6f";
+  RTIME dtime;
 
 
   if (!buf) {
@@ -2680,6 +2685,9 @@ int ts_xml_out (struct dd_general_info *dgi, FILE *strm
   xml_open_element (buf, &bsize, ardr);
   xml_append_attribute (buf, &bsize, "name", dgi->radar_name);
   
+  sprintf (str, "%d", dgi->radar_num);
+  xml_append_attribute (buf, &bsize, "radar_number", str);
+  
   sprintf (str, f4, dds->radd->radar_const);
   xml_append_attribute (buf, &bsize, "radar_const", str);
   
@@ -2690,8 +2698,14 @@ int ts_xml_out (struct dd_general_info *dgi, FILE *strm
   ff = dds->frib->x_band_gain;
   sprintf (str, f4, ff);
   xml_append_attribute (buf, &bsize, "x_band_gain", str);
-  xml_end_attributes (buf, &bsize, empty_element = NO);
   
+  dtime = dts->day_seconds -rtime;
+  sprintf (str, f4, dts->day_seconds -rtime);
+  xml_append_attribute (buf, &bsize, "et_seconds", str);
+
+  xml_end_attributes (buf, &bsize, empty_element = NO);
+
+
   strcpy (name, ns); strcat (name, "AntennaPosition");
   xml_open_element (buf, &bsize, name);
   
