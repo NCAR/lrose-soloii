@@ -2901,6 +2901,133 @@ struct solo_list_mgmt *slm;
 /* c------------------------------------------------------------------------ */
 
 void
+dor_print_frib(frib, slm)
+  struct field_radar_i *frib;
+  struct solo_list_mgmt *slm;
+{
+  char *sptrs[128], str[512], mess[256];
+  int i, jj, nn;
+  char *aa=mess, c[128], *str_terminate();
+  
+  solo_add_list_entry(slm, " ", 1);
+  solo_add_list_entry(slm, " ", 1);
+  sprintf(aa, "Contents of the field radar descriptor  len: %d\n"
+	  , sizeof(struct field_radar_i));
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "field_radar_info[4] %.4s"
+	  , frib->field_radar_info);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "field_radar_info_len %d"
+	  , frib->field_radar_info_len);
+  solo_add_list_entry(slm, aa, strlen(aa));
+
+  sprintf(aa, "data_sys_id %d"
+	  , frib->data_sys_id);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "loss_out %f		"
+	  , frib->loss_out		);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "loss_in %f		"
+	  , frib->loss_in		);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "loss_rjoint %f		"
+	  , frib->loss_rjoint		);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "ant_v_dim %f		"
+	  , frib->ant_v_dim		);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "ant_h_dim %f		"
+	  , frib->ant_h_dim		);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "ant_noise_temp %f	"
+	  , frib->ant_noise_temp	);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "r_noise_figure %f	"
+	  , frib->r_noise_figure	);
+  solo_add_list_entry(slm, aa, strlen(aa));
+
+  sprintf(aa, "xmit_power[5]");
+  for(i=0; i < 5; i++) {
+    sprintf(aa+strlen(aa), " %f", frib->xmit_power[i]);
+  }
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "x_band_gain %f", frib->x_band_gain);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "receiver_gain[5]");
+  for(i=0; i < 5; i++) {
+    sprintf(aa+strlen(aa), " %f", frib->receiver_gain[i]);
+  }
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "if_gain[5]");
+  for(i=0; i < 5; i++) {
+    sprintf(aa+strlen(aa), " %f", frib->if_gain[i]);
+  }
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "conversion_gain %f", frib->conversion_gain);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "scale_factor[5]");
+  for(i=0; i < 5; i++) {
+    sprintf(aa+strlen(aa), " %f", frib->scale_factor[i]);
+  }
+  solo_add_list_entry(slm, aa, strlen(aa));
+
+  sprintf(aa, "processor_const %f      "
+	  , frib->processor_const      );
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "dly_tube_antenna %d	"
+	  , frib->dly_tube_antenna	);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "dly_rndtrip_chip_atod %d"
+	  , frib->dly_rndtrip_chip_atod);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "dly_timmod_testpulse %d"
+	  , frib->dly_timmod_testpulse);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "dly_modulator_on %d	"
+	  , frib->dly_modulator_on	);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "dly_modulator_off %d	"
+	  , frib->dly_modulator_off	);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "peak_power_offset %f    "
+	  , frib->peak_power_offset    );
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "test_pulse_offset %f    "
+	  , frib->test_pulse_offset    );
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "E_plane_angle %f        "
+	  , frib->E_plane_angle        );
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "H_plane_angle %f        "
+	  , frib->H_plane_angle        );
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "encoder_antenna_up %f   "
+	  , frib->encoder_antenna_up   );
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "pitch_antenna_up %f     "
+	  , frib->pitch_antenna_up     );
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "indepf_times_flg %d	"
+	  , frib->indepf_times_flg	);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "indep_freq_gate %d	"
+	  , frib->indep_freq_gate	);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  sprintf(aa, "time_series_gate %d	"
+	  , frib->time_series_gate	);
+  solo_add_list_entry(slm, aa, strlen(aa));
+
+
+  str_terminate (c, frib->file_name, sizeof (frib->file_name));
+  sprintf(aa, "file_name %s", c);
+  solo_add_list_entry(slm, aa, strlen(aa));
+  solo_add_list_entry(slm, " ", 1);
+  return;
+}
+
+/* c------------------------------------------------------------------------ */
+
+void
 dor_print_radd(radd, slm)
   struct radar_d *radd;
   struct solo_list_mgmt *slm;
