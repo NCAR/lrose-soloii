@@ -946,10 +946,12 @@ void dd_get_difs(difs)
 		   , difs->els[jj]->upper);
 	}
     }
+# ifdef obsolete
     if(a=get_tagged_string("MIN_FREE_MB")) {
 	if((d = atof(a)) > 0) 
 	      difs->min_free_MB = d;
     }
+# endif
     if(a=get_tagged_string("SWEEP_SKIP")) {
 	if((ii = atoi(a)) > 0) 
 	      difs->sweep_skip = ii+1;
