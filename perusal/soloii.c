@@ -44,7 +44,7 @@ SiiFrameConfig *frame_configs[2*maxFrames +1];
 GdkColor *frame_border_colors[maxFrames];
 
 guint sii_table_widget_width = DEFAULT_WIDTH;
-guint sii_table_widget_height = DEFAULT_SLIDE_HEIGHT;
+guint sii_table_widget_height = DEFAULT_WIDTH;
 
 guint previous_F_keyed_frame = 0;
 
@@ -1165,6 +1165,7 @@ static GtkItemFactoryEntry menu_items[] = {
   { "/Center/Electric",        NULL,       sii_menu_cb,SII_MAIN_CTR_TOGGLE,  "<CheckItem>" },
   { "/Center/Ctr CrossHairs",  NULL,       sii_menu_cb,SII_MAIN_XHAIRS_TOGGLE,  "<CheckItem>" },
   { "/Config",                 NULL,              NULL,	    0,  "<Branch>" },
+  { "/Config/Default Config",  NULL,  custom_config_cb,	 2022,  NULL },
   { "/Config/1x1",             NULL,         config_cb,	   11,  NULL },
   { "/Config/1x2",             NULL,         config_cb,	   12,  NULL },
   { "/Config/1x3",             NULL,         config_cb,	   13,  NULL },
@@ -1188,6 +1189,9 @@ static GtkItemFactoryEntry menu_items[] = {
   { "/Config/Slide Shaped",    NULL,          shape_cb,	   43,  NULL },
   { "/Config/VSlide Shaped",   NULL,          shape_cb,	   34,  NULL },
   { "/Config/sep3",            NULL,              NULL,	    0,  "<Separator>" },
+# ifdef notyet
+  { "/Config/2x2 512x512",     NULL,  custom_config_cb,	 4022,  NULL },
+# endif
   { "/Config/1 Big 2v Small",  NULL,  custom_config_cb,	 1012,  NULL },
   { "/Config/1 Big 2h Small",  NULL,  custom_config_cb,	 2012,  NULL },
   { "/Config/1 Big 3 Small",   NULL,  custom_config_cb,	 1013,  NULL },
