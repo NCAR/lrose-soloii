@@ -1170,6 +1170,7 @@ char *nex_next_block()
     int bytes_left = 0, bytes_used = 0, header_plus = 0;
     int eof_count = 0, err_count = 0, packet_size = NEX_PACKET_SIZE;
     char *at, *aa, *bb, *arch2 = "ARCHIVE2", *top = NULL;
+    char *arch2_2 = "AR2V0001.";
     struct io_packet *dd_return_next_packet(), *dp;
     struct CTM_info *ctm;
     static struct CTM_info *prior_ctm = 0;
@@ -1267,25 +1268,27 @@ char *nex_next_block()
 	else {
 	  at = iri->top->at;
 	  bytes_used = NEX_PACKET_SIZE;
-       }
+	}
+	
+	if((strncmp(at, arch2, strlen(arch2)) == 0) || 
+	   (strncmp(at, arch2_2,strlen(arch2)) == 0)) { /* start of a volume */
 
-	if( strncmp(at, arch2, strlen(arch2)) == 0) { /* start of a volume */
-	  nn = sizeof(struct nexrad_vol_scan_title);
+	    nn = sizeof(struct nexrad_vol_scan_title);
 
-	  if( bytes_left > 0 ) {
-	    if(( header_plus = bytes_left -nn ) > 0 ) {
-	      /* we have the header and a partial packet in tmp_at */
-	      at = tmp_at + nn;
+	    if( bytes_left > 0 ) {
+		if(( header_plus = bytes_left -nn ) > 0 ) {
+		    /* we have the header and a partial packet in tmp_at */
+		    at = tmp_at + nn;
+		}
+		else {
+		    iri->top->at += nn -bytes_left;
+		    iri->top->bytes_left -= nn -bytes_left;
+		    header_plus = 0;
+		}
 	    }
 	    else {
-	      iri->top->at += nn -bytes_left;
-	      iri->top->bytes_left -= nn -bytes_left;
-	      header_plus = 0;
+		iri->top->at += nn; iri->top->bytes_left -= nn;
 	    }
-	  }
-	  else {
-	    iri->top->at += nn; iri->top->bytes_left -= nn;
-	  }
 	  continue;
 	}
 
