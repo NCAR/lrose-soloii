@@ -122,6 +122,7 @@ struct dds_structs {
     struct radar_angles *ra;
     struct radar_d *radd;
     struct field_radar_i *frib;
+    struct waveform_d *wave;
     struct ray_i *ryib;
     struct sweepinfo_d *swib;
     struct super_SWIB *sswb;
