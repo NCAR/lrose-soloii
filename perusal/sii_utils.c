@@ -5,8 +5,62 @@
 # include "sii_utils.h"
 # include "sii_overlays.h"
 # include <stdio.h>
+static GString *dbgs = NULL;
+static gint nlines = 0;
 
 /* c---------------------------------------------------------------------- */
+
+void sii_dump_debug_stuff ()
+{
+   if (dbgs && dbgs->len > 0) {
+      printf ("%s", dbgs->str);
+      g_string_truncate (dbgs, 0);
+      g_string_append (dbgs, "\n");
+      nlines = 0;
+   }
+}
+
+/* c---------------------------------------------------------------------- */
+
+void sii_append_debug_stuff (gchar *gch)
+{
+   gchar *aa, *bb;
+   gint len, mm, nn, max=777, slack=111;
+
+# ifdef notyet
+   if (!dbgs)
+     { dbgs = g_string_new (""); }
+
+   if (gch && strlen (gch) > 0) {
+      mm = dbgs->len;
+      g_string_append (dbgs, gch);
+      g_string_append (dbgs, "\n");
+      nn = dbgs->len;
+
+      for (aa = dbgs->str; aa && mm < nn; mm++) {
+	 if (aa[mm] == '\n')
+	   { ++nlines; }
+      }
+
+      if (nlines > max+slack) {
+	 while (nlines > max) {
+	    nn = dbgs->len;
+	    for (aa=dbgs->str,mm=0; mm < nn; mm++) {
+	       if (aa[mm] == '\n') {
+		  mm++;
+		  break;
+	       }
+	    }
+	    if (mm < dbgs->len) {
+	       g_string_erase (dbgs, 0, mm);
+	       --nlines;
+	    }
+	 }	 
+      }
+   }
+# endif
+}
+
 /* c------------------------------------------------------------------------ */
 
 void sii_glom_strings (const gchar **cptrs, int nn, GString *gs)
