@@ -19,6 +19,7 @@
 # define         VORTEX_FIXES 0x20000
 # define         FASTEX_FIXES 0x40000
 # define      ROT_ANG_SECTORS 0x80000
+# define      ELD_TIME_SERIES 0x100000
 
 # define           LIDAR_DATA 0x0001
 # define           NAILS_DATA 0x0002
