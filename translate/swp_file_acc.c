@@ -98,6 +98,7 @@ int dd_absorb_header_info(dgi)
     dis->sweep_count++;
     dis->file_count++;
     dgi->num_parms = 0;
+    printf ("dd_absorb_header\n");
 
     for(;;) {
 	loop_count++;
@@ -249,7 +250,19 @@ int dd_absorb_header_info(dgi)
 	   dgi->ignore_cfacs = NO;
 	   /* get CFAC stuff
 	    */
-	   if (cfw = ddswp_nab_cfacs (radar_name)) { /* external cfac files */
+	   aa = getenv ("DEFAULT_CFAC_FILES");
+	   if (!aa) { aa = getenv ("DEFAULT_CFAC_FILE");}
+	   if (aa) {
+	     /* external default cfac files (read in each time) */
+	     memset (dgi->dds->cfac, 0, sizeof (*dgi->dds->cfac));
+	     strncpy( dgi->dds->cfac->correction_des, "CFAC", 4 );
+	     dgi->dds->cfac->correction_des_length = sizeof(*dgi->dds->cfac);
+	     printf ("Absorbing CFAC file\n");
+	     dd_absorb_cfac( aa, radar_name, dgi->dds->cfac);
+	     dgi->ignore_cfacs = YES;
+	   }
+	   else if (cfw = ddswp_nab_cfacs (radar_name)) {
+	     /* external cfac files */
 	      cfac_id = (frib) ? frib->file_name : "default";
 
 	      for(; cfw ; cfw = cfw->next ) {
