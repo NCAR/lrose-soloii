@@ -50,6 +50,8 @@ static char vcid[] = "$Id$";
 
 /* c------------------------------------------------------------------------ */
 
+# include <sys/time.h>
+# include <signal.h>
 # include <sys/types.h>
 # include <sys/file.h>
 # include <sys/mtio.h>
@@ -116,6 +118,130 @@ int dd_really_skip_recs();
 char * solo_list_entry();
 
 
+/* c------------------------------------------------------------------------ */
+static void
+Alarm (int v)
+{ /* yawn */ }
+/* c------------------------------------------------------------------------ */
+static void
+QuickSleep (int ms)
+//
+// Sleep for the given number of milliseconds.
+//
+{
+	struct itimerval iv;
+//
+// Set up an alarm.
+//
+	iv.it_interval.tv_sec = iv.it_interval.tv_usec = 0;
+	iv.it_value.tv_sec = ms >= 1000 ? ms/1000 : 0;
+	iv.it_value.tv_usec = (ms % 1000) * 1000;
+	signal (SIGALRM, Alarm);
+	setitimer (ITIMER_REAL, &iv, 0);
+//
+// Wait for it to come through.
+//
+	pause ();
+}
+/* c------------------------------------------------------------------------ */
+
+int ffb_skip_one_fwd (FILE *strm)
+{
+   int ii, jj;
+   long nab0, nab, size_read, offset;
+
+   size_read = fread((void *)&nab0, 1, sizeof(nab), strm );
+   if (feof (strm) || size_read < sizeof (nab)) {
+      return (-1);
+   }
+   if (ferror (strm)) {
+      perror ("Forward skip error");
+      return (-1);
+   }
+   if (LittleEndian)
+     { swack4 (&nab0, &nab); }
+   else
+     { nab = nab0; }
+   if ((jj = fseek( strm, nab+sizeof(nab), SEEK_CUR )) == 0)
+     { return (nab); }
+
+   return (-1);
+}
+
+/* c------------------------------------------------------------------------ */
+
+int ffb_skip_one_bkw (FILE *strm)
+{
+   int ii, jj;
+   long nab0, nab, size_read, offset;
+
+   jj = fseek( strm, -sizeof(nab), SEEK_CUR );
+   size_read = fread((void *)&nab0, 1, sizeof(nab), strm );
+   if (ferror (strm)) {
+      perror ("Backward skip error");
+      return (-1);
+   }
+   if (size_read < sizeof (nab)) {
+      return (-1);
+   }
+   if (LittleEndian)
+     { swack4 (&nab0, &nab); }
+   else
+     { nab = nab0; }
+   if ((jj = fseek( strm, -(nab +2*sizeof(nab)), SEEK_CUR )) == 0)
+     { return (nab); }
+
+   return (-1);
+}
+
+
+/* c------------------------------------------------------------------------ */
+
+int ffb_read( fin, buf, count )
+    FILE * fin;
+  int count;
+  char *buf;
+{
+    /* fortran-binary read routine
+     */
+    long int size_rec=0, rlen1, rlen2=0, nab;
+    size_t len_read, len2;
+
+    /* read the record size */
+    rlen1 = fread((void *)&nab, 1, sizeof(nab), fin );
+
+    if( rlen1 < sizeof(nab))
+	  return(rlen1);
+
+    if(LittleEndian) {
+       swack4(&nab, &size_rec);
+    }
+    else {
+       size_rec = nab;
+    }
+
+    if( size_rec > 0 ) {
+	/* read the record
+	 * (the read may be less than the size of the record)
+	 */
+	rlen2 = size_rec <= count ? size_rec : count;
+
+	rlen1 = fread( (void *)buf, sizeof(char), rlen2, fin );
+	if( rlen1 < 1 )
+	      return(rlen1);
+	rlen2 = rlen1 < size_rec ?
+	      size_rec-rlen1 : 0; /* set up skip to end of record */
+    }
+    else
+	  rlen1 = 0;
+    
+    rlen2 += sizeof(size_rec);
+
+    /* skip thru the end of record */
+    rlen2 = fseek( fin, rlen2, SEEK_CUR );
+    rlen2 = ftell( fin );
+    return(rlen1);
+}
 /*c----------------------------------------------------------------------*/
 
 int cdcode( s, n, ival, rval ) /* try to decode the string */
@@ -617,7 +743,10 @@ dd_init_io_structs(index, fmt)
 void dd_input_read_close(iri)
   struct input_read_info *iri;
 {
-    close(iri->fid);
+   if (iri->io_type == PHYSICAL_TAPE)
+     { close(iri->fid); }
+   else
+     { fclose (iri->strm); }
 }
 /* c------------------------------------------------------------------------ */
 
@@ -628,6 +757,7 @@ int dd_input_read_open(iri, dev_name)
     int ii;
     long *lp, keep, keep2;
     char *aa=dev_name, *bb, *cc, *get_tagged_string();
+    fpos_t fpos;
 
     dd_reset_ios(iri, 1);
     iri->sizeof_file = 0;
@@ -643,21 +773,35 @@ int dd_input_read_open(iri, dev_name)
 	strcpy(iri->dev_name, iri->directory_name);
 	strcat(iri->dev_name, dev_name);
     }
-
-    printf( "Input file name: %s\n", iri->dev_name);
-    if((iri->fid = open(iri->dev_name, 0 )) < 0) { 
-	printf( "Could not open input file %s  error=%d\n"
-	       , iri->dev_name, iri->fid);
-	exit(1);
-    }
     if(strstr(iri->dev_name, "/dev/")) {
 	iri->io_type = PHYSICAL_TAPE;
     }
     else {
-	iri->sizeof_file = lseek(iri->fid, 0L, SEEK_END);
-	iri->current_offset = lseek(iri->fid, 0L, SEEK_SET); /* back to zero */
 	iri->io_type = BINARY_IO;
-	
+     }
+    printf( "Input file name: %s\n", iri->dev_name);
+
+    if (iri->io_type == PHYSICAL_TAPE) {
+       if((iri->fid = open(iri->dev_name, 0 )) < 0) { 
+	  printf( "Could not open input file %s  error=%d\n"
+		 , iri->dev_name, iri->fid);
+	  exit(1);
+       }
+    }
+    else {
+       if(!(iri->strm = fopen(iri->dev_name, "r" ))) { 
+	  perror (iri->dev_name);
+	  exit(1);
+       }
+    }
+
+    if (iri->io_type != PHYSICAL_TAPE) {
+
+       ii = fseek(iri->strm, 0L, SEEK_END);
+       iri->sizeof_file = ftell(iri->strm);
+       ii = fseek(iri->strm, 0L, SEEK_SET); /* postion back to beginning */
+       iri->current_offset = ftell(iri->strm);
+
 	if(cc = get_tagged_string("IO_TYPE")) {
 	    if(strstr(cc, "FB_IO"))
 		  iri->io_type = FB_IO;
@@ -689,7 +833,7 @@ int dd_input_read_open(iri, dev_name)
 	    dd_rewind_dev(iri);
 	}	
     }
-    return(iri->fid);
+    return((iri->io_type == PHYSICAL_TAPE) ? iri->fid : 1);
 }
 /* c------------------------------------------------------------------------ */
 
@@ -702,7 +846,8 @@ void dd_io_reset_offset(iri, offset)
      * and forget read ahead records
      */
     iri->read_count -= iri->read_ahead_count;
-    iri->current_offset = lseek(iri->fid, offset, SEEK_SET);
+    nn = fseek(iri->strm, offset, SEEK_SET);
+    iri->current_offset = ftell (iri->strm);
 }
 /* c------------------------------------------------------------------------ */
 
@@ -785,22 +930,31 @@ int dd_phys_read(iri)
 	}
     }
     else if(iri->io_type == FB_IO) {
-	iri->top->offset = lseek(iri->fid, 0L, SEEK_CUR);
+	iri->top->offset = ftell(iri->strm);
 	if(iri->current_offset >= iri->sizeof_file) 
 	      iri->top->read_state = -1;
 	else 
-	      iri->top->read_state = fb_read(iri->fid, iri->top->buf
+	      iri->top->read_state = ffb_read(iri->strm, iri->top->buf
 					     , iri->sizeof_bufs);
-	iri->current_offset = lseek(iri->fid, 0L, SEEK_CUR);
+	iri->current_offset = ftell(iri->strm);
     }
     else if(iri->io_type == BINARY_IO) {
-	iri->top->offset = lseek(iri->fid, 0L, SEEK_CUR);
+	iri->top->offset = ftell(iri->strm);
 	if(iri->current_offset >= iri->sizeof_file) 
 	      iri->top->read_state = -1;
-	else 
-	      iri->top->read_state = read(iri->fid, iri->top->buf
-				    , iri->sizeof_bufs);
-	iri->current_offset = lseek(iri->fid, 0L, SEEK_CUR);
+	else { 
+	   iri->top->read_state = fread((void *)iri->top->buf, 1
+					, iri->sizeof_bufs, iri->strm);
+	   iri->current_offset = ftell(iri->strm);
+
+	   if (feof(iri->strm)) {
+	      iri->top->read_state = 0;
+	   }
+	   else if (ferror (iri->strm)) {
+	      iri->top->read_state = -1;
+	      perror ("Input dev error");
+	   }
+	}
     }    
     else {
 	printf("iri->io_type: %d has gone awry\n", iri->io_type);
@@ -844,73 +998,44 @@ int dd_really_skip_recs(iri, direction, skip_count)
     else if(iri->io_type == FB_IO) {
 	/* record headers and trailers should be 4 bytes
 	 */
-	if(direction == FORWARD) {
-	    for(; skip_count > 0; skip_count--) {
-		/* read the next record header */
-		if((nn=read(iri->fid, &rlen, sizeof(rlen))) < sizeof(rlen)) {
-		    break;
-		}
-		/* skip over the current record plus trailer
-		 */
-		if((iri->current_offset =
-		    lseek(iri->fid, rlen+sizeof(rlen), SEEK_CUR)) <= 0) {
-		    break;
-		}
-	    }
-	}
-	else if((iri->current_offset =
-		 lseek(iri->fid, 0, SEEK_CUR)) < 8) { /* at BOF */
-	    mark = 0;
-	}
-	else {
-	    for(; skip_count > 0; skip_count--) {
-		/* back over the trailing record length indicator
-		 */
-		iri->current_offset =
-		      lseek(iri->fid, -sizeof(rlen), SEEK_CUR);
-		/* read the trailer (tells record length)
-		 */
-		nn = read(iri->fid, &rlen, sizeof(rlen));
-		/* now back over the whole record plus header and trailer
-		 */
-		if((iri->current_offset =
-		    lseek(iri->fid, -(rlen+2*sizeof(rlen)), SEEK_CUR)) < 8){
-		    break;
-		}
-	    }
-	}
+       for (ii=0; ii < skip_count; ii++) {
+	  mark = (direction == FORWARD) ? ffb_skip_one_fwd (iri->strm) :
+	    ffb_skip_one_bkw (iri->strm);  
+	  iri->current_offset = ftell (iri->strm);
+	  if (mark < 0)
+	    { break; }
+       }
+       iri->top->skip_state = ii;
 	if(skip_count > 0) {
 	    mark = 0;
 	}
     }
     else {
 	/* assume binary io */
-	iri->current_offset = lseek(iri->fid, 0L, SEEK_CUR);
-	if(direction == FORWARD) {
-	    iri->sizeof_file = lseek(iri->fid, 0L, SEEK_END);
+	iri->current_offset = ftell(iri->strm);
 
-	    if(iri->current_offset + skip_count*iri->sizeof_bufs <
-	       iri->sizeof_file) {
-		iri->current_offset = lseek
-		      (iri->fid
-		       , iri->current_offset+skip_count*iri->sizeof_bufs
-		       , SEEK_SET);
-		skip_count = 0;
-	    }
+	if(direction == FORWARD) {
+	    if(iri->current_offset +skip_count*iri->sizeof_bufs <
+	       iri->sizeof_file)
+	      {
+		 ii = fseek (iri->strm, skip_count*iri->sizeof_bufs
+			     , SEEK_CUR);
+		 iri->current_offset = ftell (iri->strm);
+		 iri->top->skip_state = skip_count;
+	      }
 	    else {
-		iri->current_offset = lseek(iri->fid, 0L, SEEK_END);
+	       iri->top->skip_state = -1;
 	    }
-	}
-	else {
+	 }
+	else {			/* backward */
 	    if(iri->current_offset -skip_count*iri->sizeof_bufs >= 0) {
-		iri->current_offset = lseek
-		      (iri->fid
-		       , iri->current_offset -skip_count*iri->sizeof_bufs
-		       , SEEK_SET);
-		skip_count = 0;
+		ii = fseek(iri->strm, -skip_count*iri->sizeof_bufs
+			   , SEEK_CUR);
+		iri->current_offset = ftell (iri->strm);
+		iri->top->skip_state = skip_count;
 	    }
 	    else {
-		iri->current_offset = lseek(iri->fid, 0L, SEEK_SET);
+		iri->top->skip_state = -1;
 	    }
 	}
     }
@@ -1090,7 +1215,7 @@ void dd_rewind_dev(iri)
 {
     struct mtop op;
     char mess[256];
-
+    int mark;
 
     dd_reset_ios(iri, 1);
 
@@ -1104,7 +1229,8 @@ void dd_rewind_dev(iri)
 	}
     }
     else {
-	iri->current_offset = lseek(iri->fid, 0L, SEEK_SET);
+	mark = fseek(iri->strm, 0L, SEEK_SET);
+	iri->current_offset = ftell (iri->strm);
     }
 }
 /* c------------------------------------------------------------------------ */
@@ -1131,68 +1257,34 @@ void dd_skip_files(iri, direction, skip_count)
 		    , iri->fid, iri->top->skip_state);
 	    perror(mess);
 	}
-    }
+     }
     else if(iri->io_type == FB_IO) {
 	/* record headers and trailers should be 4 bytes
 	 */
 	if(direction == FORWARD) {
 	    for(; skip_count > 0; skip_count--) {
-		for(;;) {
-		    /* read the next record header */
-		    if((ll=read(iri->fid, &rlen, sizeof(rlen))) < sizeof(rlen)) {
-			ok = NO;
-			break;
-		    }
-		    /* skip over the current record plus trailer
-		     */
-		    if((ll = lseek(iri->fid, rlen+sizeof(rlen), SEEK_CUR)) <= 0) {
-			ok = NO;
-			break;
-		    }
-		    if(rlen == 0) /* this is a logical EOF */
-			  break; 
+		for(ok=YES;;) {
+		   mark = (direction == FORWARD) ? ffb_skip_one_fwd (iri->strm)
+		     : ffb_skip_one_bkw (iri->strm);
+                   if (mark <= 0) {
+		      if (mark < 0)
+			{ ok = NO; }
+		      break;
+		   }
 		}
 		if(!ok) {
 		    break;
 		}
 	    }
-	}
-	else if((ll=lseek(iri->fid, 0, SEEK_CUR)) < 8) { /* at BOF */
-	    mark = 0;
-	}
-	else {
-	    for(; skip_count > 0; skip_count--) {
-		for(;;) {
-		    /* back over the trailing record length indicator
-		     */
-		    ll = lseek(iri->fid, -sizeof(rlen), SEEK_CUR);
-		    /* read in the trailer (tells record length)
-		     */
-		    ll = read(iri->fid, &rlen, sizeof(rlen));
-		    /* now back over the whole record plus header and trailer
-		     */
-		    if((ll=lseek(iri->fid, -(rlen+2*sizeof(rlen))
-				 , SEEK_CUR)) < 8) {
-			ok = NO;
-			break;
-		    }
-		    if(rlen == 0) /* this is a logical EOF */
-			  break; 
-		}
-		if(!ok)
-		      break;
-	    }
-	}
-	if(skip_count > 0) {
-	    mark = 0;
-	}
-    }
+	    iri->top->skip_state = (ok) ?  0: -1;
+	 }
+     }
     else {
 	/* assume binary io */
 	sprintf(mess, "NO file skipping capability in binary io\n");
 	perror(mess);
-    }
-}
+     }
+ }
 /* c------------------------------------------------------------------------ */
 
 int dd_skip_recs(iri, direction, skip_count)
@@ -1267,6 +1359,7 @@ void dd_unwind_dev(iri)
   struct input_read_info *iri;
 {
     char mess[256];
+    int ii;
 
     dd_reset_ios(iri, 0);
 
@@ -1275,8 +1368,8 @@ void dd_unwind_dev(iri)
 	    perror(mess);
     }
     else {
-	iri->current_offset = iri->sizeof_file = 
-	      lseek(iri->fid, 0L, SEEK_END);
+       fseek(iri->strm, 0L, SEEK_END);
+	iri->current_offset = iri->sizeof_file = ftell(iri->strm);
     }
 }
 /*c----------------------------------------------------------------------*/
