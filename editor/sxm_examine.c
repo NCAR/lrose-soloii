@@ -961,6 +961,7 @@ sxm_list_descriptors(frme)
     dor_print_ryib(dgi->dds->ryib, slm);
     dor_print_asib(dgi->dds->asib, slm);
     dor_print_sswb(dgi->dds->sswb, slm);
+    dor_print_rktb((struct rot_ang_table *)dgi->source_rat, slm);
     se_refresh_examine_widgets(frme, slm);
 }
 /* c------------------------------------------------------------------------ */
