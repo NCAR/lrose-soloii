@@ -414,7 +414,7 @@ sii_update_param_widget (guint frame_num);
 
 struct solo_perusal_info *
 solo_return_winfo_ptr();
-
+void solo_sort_slm_entries (slm);
 /* c...mark */
 
 /* c---------------------------------------------------------------------- */
@@ -4095,6 +4095,7 @@ void sii_update_param_widget (guint frame_num)
 
    solo_gen_parameter_list (frame_num);
    slm = spi->list_parameters;
+   solo_sort_slm_entries (slm);
    gs = pd->param_names_list;
    g_string_truncate (gs, 0);
 
