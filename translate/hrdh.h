@@ -456,7 +456,7 @@ struct hrd_ray_header {
     char month;
     char day;
     unsigned char raycode;
-    signed char hour;
+    char hour;
     short minute;
     short seconds_x100;
     short latitude;	/* (binary angle) */
