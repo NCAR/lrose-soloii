@@ -119,6 +119,8 @@ typedef struct {
    guint max_cells;
    guint max_possible_cells;
    guint max_chars_per_line;
+   guint prior_display;
+   guint prior_num_entries;
 
    gfloat r0_km;
    gfloat gs_km;
@@ -127,6 +129,8 @@ typedef struct {
 
    GString *log_dir;
 
+   GtkWidget *label_bar0;
+   GtkWidget *label_bar1;
    GtkWidget **label_items;
 
 } ExamData;
@@ -210,9 +214,10 @@ void se_refresh_examine_list(int frame_num, struct solo_list_mgmt  *slm)
    ExamData *xmd = (ExamData *)frame_configs[frame_num]->exam_data;
    WW_PTR wwptr = solo_return_wwptr (frame_num);
    gint jj, nn = 64, gate, lim;
-   gchar *aa, str[256];
+   gchar *aa, *bb, str[256];
    GtkWidget *label, *widget;
    GtkAdjustment *adj;
+   GtkLabel *lbl;
    gint value;
    guint height;
    float f;
@@ -237,15 +242,33 @@ void se_refresh_examine_list(int frame_num, struct solo_list_mgmt  *slm)
    }
 
    for (jj=0; jj < lim; jj++) {
-      aa = solo_list_entry (slm, jj);
+      aa = bb = solo_list_entry (slm, jj);
       if (!aa)
 	{ break; }
+# ifndef notyet
+      if (jj < 2) {
+	label = (jj == 0) ? xmd->label_bar0 : xmd->label_bar1;
+	if (xmd->display_state == EXAM_DATA) 
+	  { bb = ""; }
+	else 
+	  { aa = ""; }
+	gtk_label_set_text (GTK_LABEL (label), aa );
+	gtk_label_set_text (GTK_LABEL (xmd->label_items[jj]), bb ); 
+      }
+      else {
+	gtk_label_set_text (GTK_LABEL (xmd->label_items[jj]), aa );
+      }
+# else
       gtk_label_set_text (GTK_LABEL (xmd->label_items[jj]), aa );
+# endif
    }
-   aa = "";
-   for (; jj < xmd->max_possible_cells && nn--; jj++) {
-      gtk_label_set_text (GTK_LABEL (xmd->label_items[jj]), aa );
+   if (lim < xmd->prior_num_entries) {
+     aa = "";
+     for (; jj < xmd->prior_num_entries; jj++) {
+       gtk_label_set_text (GTK_LABEL (xmd->label_items[jj]), aa );
+     }
    }
+   xmd->prior_num_entries = lim;
 
    if (xmd->clicked_range_km > 0 && xmd->display_state == EXAM_DATA) {
      /* shift data display to clicked range */
@@ -922,6 +945,7 @@ void sii_exam_widget( guint frame_num )
   GtkWidget *hbox3;
   GtkWidget *hbbox;
 
+  GtkWidget *vbox00;
   GtkWidget *vbox0;
   GtkWidget *vbox1;
   GtkWidget *vbox2;
@@ -1121,7 +1145,7 @@ void sii_exam_widget( guint frame_num )
 
   widget_id = EXAM_CLEAR_CHANGES;
   xmdata->equiv_solo_state[widget_id] = EX_CLEAR_CHANGES;
-  button = gtk_button_new_with_label ("Clear Changes");
+  button = gtk_button_new_with_label ("Clear Edits");
   gtk_box_pack_start (GTK_BOX (hbox0), button, TRUE, TRUE, 0 );
   nn = frame_num * TASK_MODULO + widget_id;
   gtk_signal_connect (GTK_OBJECT(button)
@@ -1143,7 +1167,7 @@ void sii_exam_widget( guint frame_num )
 
   widget_id = EXAM_APPLY_CHANGES;
   xmdata->equiv_solo_state[widget_id] = EX_COMMIT;
-  button = gtk_button_new_with_label ("Apply Changes");
+  button = gtk_button_new_with_label ("Apply Edits");
   gtk_box_pack_start (GTK_BOX (hbox0), button, TRUE, TRUE, 0 );
   nn = frame_num * TASK_MODULO + widget_id;
   gtk_signal_connect (GTK_OBJECT(button)
@@ -1211,24 +1235,37 @@ void sii_exam_widget( guint frame_num )
   g_free( bb );
   gtk_container_border_width (GTK_CONTAINER (window), 0);
 
+  vbox00 = gtk_vbox_new (FALSE, 4);
+  gtk_container_add (GTK_CONTAINER(window), vbox00);
+
+  font = med_fxd_font;
+  if (!style) {
+     defstyle = gtk_widget_get_default_style ();
+     style = gtk_style_copy (defstyle);
+     style->font = font;
+  }
+# ifndef notyet
+  xmdata->label_bar0 = label = gtk_label_new ( "" );
+  gtk_container_add (GTK_CONTAINER(vbox00), label);
+  gtk_widget_set_style (label, style);
+  gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
+
+  xmdata->label_bar1 = label = gtk_label_new ( "" );
+  gtk_container_add (GTK_CONTAINER(vbox00), label);
+  gtk_widget_set_style (label, style);
+  gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
+# endif
   /* set keyboard events for this window to signal
    * arrows used for scrolling
    */
   vbox0 = gtk_vbox_new (FALSE, 4);
-  gtk_container_add (GTK_CONTAINER(window), vbox0);
+  gtk_container_add (GTK_CONTAINER(vbox00), vbox0);
 
   scrolledwindow = gtk_scrolled_window_new (NULL, NULL);
   xmdata->data_widget[EXAM_SCROLLED_WIN] = scrolledwindow;
   gtk_widget_set_usize (scrolledwindow, 800, 440);
   gtk_container_add (GTK_CONTAINER (vbox0), scrolledwindow);
 
-  font = med_fxd_font;
-
-  if (!style) {
-     defstyle = gtk_widget_get_default_style ();
-     style = gtk_style_copy (defstyle);
-     style->font = font;
-  }
   nn = xmdata->max_possible_cells;
   xmdata->label_height = 
     height = font->ascent + font->descent+1;
@@ -1262,6 +1299,7 @@ void sii_exam_widget( guint frame_num )
      xmdata->label_items[mm] = label;
      gtk_widget_set_style (label, style);
      gtk_label_set_justify ((GtkLabel *)label, GTK_JUSTIFY_LEFT );
+     gtk_misc_set_alignment (GTK_MISC (label), 0.0, 0.5);
 
      gtk_signal_connect (GTK_OBJECT(event),"button_press_event",
 			 (GtkSignalFunc) sii_exam_list_event
@@ -1292,15 +1330,15 @@ static GtkItemFactoryEntry exam_menu_items[] = {
   { "/Display/Metadata",      NULL, sii_exam_menu_cb,     EXAM_METADATA,  "/Display/Cell Values" },
   { "/Display/Edit Hist",     NULL, sii_exam_menu_cb,     EXAM_EDT_HIST,  "/Display/Cell Values" },
 
-  { "/Operation",             NULL,             NULL,                 0,  "<Branch>" },
-  { "/Operation/Apply",       NULL,             NULL,                 0,  "<Title>" },
-  { "/Operation/Delete",      NULL, sii_exam_menu_cb,       EXAM_DELETE,  "<RadioItem>" },
-  { "/Operation/- Fold",      NULL, sii_exam_menu_cb,     EXAM_NEG_FOLD,  "/Operation/Delete" },
-  { "/Operation/+ Fold",      NULL, sii_exam_menu_cb,     EXAM_POS_FOLD,  "/Operation/Delete" },
-  { "/Operation/Delete Ray",  NULL, sii_exam_menu_cb,   EXAM_DELETE_RAY,  "/Operation/Delete" },
-  { "/Operation/- Fold Ray",  NULL, sii_exam_menu_cb, EXAM_NEG_FOLD_RAY,  "/Operation/Delete" },
-  { "/Operation/+ Fold Ray",  NULL, sii_exam_menu_cb, EXAM_POS_FOLD_RAY,  "/Operation/Delete" },
-  { "/Operation/Zap Gnd Spd", NULL, sii_exam_menu_cb,  EXAM_ZAP_GND_SPD,  "/Operation/Delete" },
+  { "/Edit",                  NULL,             NULL,                 0,  "<Branch>" },
+  { "/Edit/Options",          NULL,             NULL,                 0,  "<Title>" },
+  { "/Edit/Delete",           NULL, sii_exam_menu_cb,       EXAM_DELETE,  "<RadioItem>" },
+  { "/Edit/- Fold",           NULL, sii_exam_menu_cb,     EXAM_NEG_FOLD,  "/Edit/Delete" },
+  { "/Edit/+ Fold",           NULL, sii_exam_menu_cb,     EXAM_POS_FOLD,  "/Edit/Delete" },
+  { "/Edit/Delete Ray",       NULL, sii_exam_menu_cb,   EXAM_DELETE_RAY,  "/Edit/Delete" },
+  { "/Edit/- Fold Ray",       NULL, sii_exam_menu_cb, EXAM_NEG_FOLD_RAY,  "/Edit/Delete" },
+  { "/Edit/+ Fold Ray",       NULL, sii_exam_menu_cb, EXAM_POS_FOLD_RAY,  "/Edit/Delete" },
+  { "/Edit/Zap Gnd Spd",      NULL, sii_exam_menu_cb,  EXAM_ZAP_GND_SPD,  "/Edit/Delete" },
 
   { "/Options",               NULL,             NULL,                 0,  "<Branch>" },
   { "/Options/List By",       NULL,             NULL,                 0,  "<Title>" },
@@ -1381,7 +1419,7 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
   gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (menuitem), FALSE );
    
 
-   submenu = sii_submenu ( "Operations", mbar );
+   submenu = sii_submenu ( "Edit", mbar );
    radio_group = NULL;
    radio_num = 0;
    
@@ -1515,7 +1553,7 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
 
    widget_id = EXAM_HLP_OPRS;
    xmdata->data_widget[widget_id] = menuitem =
-     sii_submenu_item ( "Operations", submenu, widget_id
+     sii_submenu_item ( "Edit", submenu, widget_id
 		       , sii_exam_menu_cb, frame_num );
 
    widget_id = EXAM_HLP_OPTIONS;
