@@ -19,7 +19,9 @@ type:
 
 configure --exec_prefix=/rdss --bindir=/rdss/bin
 
-After you have invoked the configure script type "make".
+After you have invoked the configure script type "make" to build the
+complete package or if you're only interested in the translaters or
+translater library, cd to ./translate and type "make install".
 
 The executable is named soloii and will have been placed in /rdss/bin
 based on the above example. The environment variable DORADE_DIR should
