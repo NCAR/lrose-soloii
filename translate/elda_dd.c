@@ -1468,7 +1468,7 @@ int eld_next_ray()
     static int minRecSize = sizeof(struct volume_d)
 	  + sizeof(struct radar_d) +sizeof(struct parameter_d);
     static int count=0, eld_bytes_left=0, eof_count=0, rlen=0, ts_count=0;
-    static int ts_fid = -1, tape_count = 0;
+    static int ts_fid = -1, tape_count = 0, bad_desc_count = 0;
     static char *eld_next_block=NULL;
     static int source_vol_num=-1, counttrip=84, ray_trip=1322;
     static struct volume_d *vold=NULL;
@@ -1667,14 +1667,16 @@ int eld_next_ray()
 	    
 	    param_count = 0;
 	    ryib_flag = NO;
-	    str_terminate(dname, eld_next_block, 4);
-	    sprintf(str
-		    , "*** Bad desc. size: %d for %s  bytes left: %d ***"
-		    , gd->sizeof_struct
-		    , str_terminate(dname, eld_next_block, 4), eld_bytes_left);
-	    dd_append_cat_comment(str);
-	    printf("%s\n", str);
-		frad = (struct field_parameter_data *)eld_next_block;
+	    if (++bad_desc_count < 7) {
+	       str_terminate(dname, eld_next_block, 4);
+	       sprintf(str
+		       , "*** Bad desc. size: %d for %s  bytes left: %d ***"
+		       , gd->sizeof_struct
+		       , str_terminate(dname, eld_next_block, 4), eld_bytes_left);
+	       dd_append_cat_comment(str);
+	       printf("%s\n", str);
+	    }
+	    frad = (struct field_parameter_data *)eld_next_block;
 	    gd->sizeof_struct = 0;
 	    eld_bytes_left = irq->top->bytes_left = 0;
 	    continue;
@@ -1810,8 +1812,10 @@ int eld_next_ray()
 		      memcpy((char *)dds->frad, eld_next_block
 			     , ncopy);
 		   }
+		   /*
 		   dds->frad->first_rec_gate = 
 		     dds->frad->last_rec_gate = 0;
+		    */
 		}
 	    }
 	    /*
@@ -3007,10 +3011,6 @@ int eld_stuff_data( dgi, parm_num)
     if(difs->catalog_only)
 	  return( celv->number_cells*iri->sizeof_fparm[parm_num]);
 
-# ifdef NEW_ALLOC_SCHEME
-# else
-# endif
-
     dgi->dds->field_present[pn] = YES;
 # ifdef NEW_ALLOC_SCHEME
     dst = (char *)dds->qdat_ptrs[pn];
@@ -3019,15 +3019,12 @@ int eld_stuff_data( dgi, parm_num)
 # endif
     sizeof_datum = iri->sizeof_fparm[parm_num];
     nb = frad->field_param_data_len - sizeof(struct field_parameter_data);
-    nc = celv->number_cells;
+    ng = nc = celv->number_cells;
     frg = frad->first_rec_gate > 0 ? frad->first_rec_gate : 0;
-# ifdef obsolete
-    lrg = ng = dgi->clip_gate+1;
-# else
-    lrg = ng = nc;
-# endif
-    if(frad->last_rec_gate > 0 && frad->last_rec_gate < lrg)
-	  { lrg = frad->last_rec_gate; }
+    lrg = frad->last_rec_gate > 0 ? frad->last_rec_gate : nc;
+    if (lrg <= frg)
+      { frg = 0; lrg = nc; }
+
     lut = iri->xlate_lut[parm_num];
     d = dds->raw_data +iri->fparm_offset[parm_num];
 
@@ -3036,7 +3033,8 @@ int eld_stuff_data( dgi, parm_num)
 	bbad = parm->bad_data;
 	break;
     case 2:			/* 2 bytes */
-	for(ss=(short *)dst,sbad=parm->bad_data,i=0; i < frg; i++)
+	sbad=parm->bad_data;
+	for(ss=(short *)dst,i=0; i < frg; i++)
 	      *ss++ = sbad;
 	k = iri->num_parms;	/* assumes all parms are 2 bytes */
 	clen = k*sizeof(short);
@@ -3049,8 +3047,8 @@ int eld_stuff_data( dgi, parm_num)
 
 	for(s=(unsigned short *)d; n--; s+=k)
 	      *ss++ = *(lut+ *s);
-	for(; lrg++ < nc; *ss++ = sbad);
 
+	for(; lrg++ < nc; *ss++ = sbad);
 	break;
     case 4:			/* 4 bytes */
 	lbad = parm->bad_data;
