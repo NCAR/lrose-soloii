@@ -156,8 +156,10 @@
 # define              SE_XY_STUFF 428
 # define         EX_SEG_PLUS_FOLD 429
 # define        EX_SEG_MINUS_FOLD 430
+# define          EX_GT_PLUS_FOLD 431
+# define         EX_GT_MINUS_FOLD 432
 
-# define       SE_MAX_PROCESS_NUM 430
+# define       SE_MAX_PROCESS_NUM 432
 
 /*
  * adding a ui command entails:
