@@ -1209,7 +1209,9 @@ int solo_parameter_setup(frme)
        || wwptr->parameter_scale !=
        dgi->dds->parm[pnum]->parameter_scale
        || wwptr->parameter_bias !=
-       dgi->dds->parm[pnum]->parameter_bias
+       dgi->dds->parm[pnum]->parameter_bias 
+       || wwptr->parameter_bad_val != 
+       dgi->dds->parm[wwptr->parameter_num]->bad_data
        )
 	  {
 	      wwptr->parameter->changed = YES;
