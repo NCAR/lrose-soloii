@@ -1634,6 +1634,9 @@ piraq_ini()
     if((aa=get_tagged_string("TAPE_DIR"))) {
       slm = solo_malloc_list_mgmt(256);
       nt = generic_sweepfiles( aa, slm, "", ".tape", 0 );
+      if ( nt < 1 ) {		/* Josh's CDs */
+	 nt = generic_sweepfiles( aa, slm, "", "z", 0 );
+      }
       bb = dd_est_src_dev_names_list("PRQ", slm, aa );
     }
     else if((aa=get_tagged_string("SOURCE_DEV"))) {
