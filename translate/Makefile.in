@@ -57,7 +57,7 @@ XLT_OBJS = ddin.o ddout.o dd_uf.o dd_ncdf.o \
 	gneric_dd.o hrd_dd.o sigm_dd.o uf_dd.o nex_dd.o \
 	toga_dd.o elda_dd.o eldb_dd.o gpro_data.o ground_echo.o \
 	stdhrd.o xwsrqc.o fof_dd.o piraq_dd.o tdwr_dd.o etl_dd.o \
-	cimm_dd.o nc_dd.o
+	cimm_dd.o nc_dd.o piraqx_dd.o
 
 PROD_OBJS = by_products.o dd_catalog.o gecho.o dorade_uf.o \
 	product_x.o dd_der_flds.o nssl_mrd.o dd_swp_files.o \
