@@ -149,7 +149,7 @@ void sii_new_frames ()
 {
    int fn, jj, kk, mm, nn, width, height;
    gboolean nonhomogeneous = FALSE, homogeneous = TRUE;
-   SiiFrameConfig *sfc = frame_configs[0];
+   SiiFrameConfig *sfc, *sfc0 = frame_configs[0];
    sii_table_parameters *stp;
    GtkWidget *frame;
    GtkAllocation allocation;
@@ -176,7 +176,7 @@ void sii_new_frames ()
       gtk_widget_destroy( main_table );
    }
 
-   main_table = gtk_table_new (sfc->nrows, sfc->ncols, homogeneous);
+   main_table = gtk_table_new (sfc0->nrows, sfc0->ncols, homogeneous);
    gtk_container_add (GTK_CONTAINER (main_event_box), main_table);
 # ifdef notyet
    gtk_box_pack_start (GTK_BOX (main_event_box), main_table, TRUE, TRUE, 0);
@@ -185,17 +185,23 @@ void sii_new_frames ()
 
   for (fn=0; fn < sii_frame_count; fn++ ) {
 
-    ++frame_configs[fn]->new_frame_count;
-    frame_configs[fn]->frame = frame = gtk_drawing_area_new ();
+    sfc = frame_configs[fn];
+    ++sfc->new_frame_count;
+    sfc->frame = frame = gtk_drawing_area_new ();
     gtk_widget_set_events (frame, event_flags );
     
-    stp = &frame_configs[fn]->tbl_parms;
+    stp = &sfc->tbl_parms;
     mm = stp->right_attach - stp->left_attach;
     nn = stp->bottom_attach - stp->top_attach;
 
     width = mm * sii_table_widget_width;
     height = nn * sii_table_widget_height;
-    g_message ("new_frame %d  %dx%d", fn, width, height );
+    sprintf (str, "new_frame %d  %dx%d", fn, width, height );
+    sii_append_debug_stuff (str);
+
+    sfc->width = sfc->data_width = width;
+    sfc->height = sfc->data_height = height;
+
     gtk_drawing_area_size (GTK_DRAWING_AREA (frame)
 			   , width
 			   , height );
