@@ -1741,6 +1741,14 @@ void fof_ini()
 		break;
 	    }
 	}
+	if(!srsf) {
+	   for(derf=NULL,srsf=sources_top; srsf; srsf = srsf->next) {
+	      if(MATCH2(str_ptrs[fn], srsf->source_name)) {
+		 field_name = srsf->source_name;
+		 break;
+	      }
+	   }
+	}
 	if(!srsf) {		/* look through the derived fields */
 	    for(derf=dfields_top; derf; derf = derf->next) {
 		if(MATCH2(str_ptrs[fn], derf->field_name)) {
