@@ -2593,6 +2593,7 @@ void sii_param_menu_cb ( GtkWidget *w, gpointer   data )
 	     (GTK_CHECK_MENU_ITEM (check_item), active );
 	}
 	solo_return_wwptr(jj)->parameter->changed = YES;
+	sii_set_param_info (jj);
      }
      break;
 
@@ -3632,17 +3633,31 @@ sii_set_param_info (guint frame_num)
   gint nt, nn, jj;
   WW_PTR wwptr = solo_return_wwptr(frame_num);
 
-  widget = sii_get_widget_ptr (frame_num, FRAME_PARAMETERS);
-
-  if (!widget)
-    { return TRUE; }
-
-  sii_param_process_changes (frame_num);
-
   memset (&pwi, 0, sizeof (pwi));
 
   pwi.frame_num = frame_num;
   pwi.changed = (its_changed) ? YES : NO;
+
+  li = frame_configs[frame_num]->link_set[LI_PARAM];
+  for (jj=0; jj < maxFrames; jj++) {
+    pwi.linked_windows[jj] = (li->link_set[jj]) ? 1 : 0;
+  }
+  wwptr->color_bar_location = 0;
+  if (pd->cb_loc == PARAM_CB_LEFT)
+    {  wwptr->color_bar_location = -1; }
+  else if (pd->cb_loc == PARAM_CB_RIGHT)
+    {  wwptr->color_bar_location = 1; }
+  
+  wwptr->color_bar_symbols = (pd->toggle[PARAM_CB_SYMBOLS]) ? YES : NO;
+
+  widget = sii_get_widget_ptr (frame_num, FRAME_PARAMETERS);
+
+  if (!widget) {
+     nn = solo_set_parameter_info (&pwi);
+     return (nn) ? FALSE : TRUE;
+  }
+
+  sii_param_process_changes (frame_num);
 
   aa = gtk_entry_get_text (GTK_ENTRY (pd->data_widget[PARAM_PALETTE]));
   strcpy (pwi.palette_name, aa);
@@ -3661,6 +3676,7 @@ sii_set_param_info (guint frame_num)
   pwi.emphasis_zone_lower = ff;
   pwi.emphasis_zone_upper = gg;
 
+# ifdef notyet
   li = frame_configs[frame_num]->link_set[LI_PARAM];
   for (jj=0; jj < maxFrames; jj++) {
     pwi.linked_windows[jj] = (li->link_set[jj]) ? 1 : 0;
@@ -3672,7 +3688,7 @@ sii_set_param_info (guint frame_num)
     {  wwptr->color_bar_location = 1; }
   
   wwptr->color_bar_symbols = (pd->toggle[PARAM_CB_SYMBOLS]) ? YES : NO;
-
+# endif
   nn = solo_set_parameter_info (&pwi);
 
   sii_update_param_widget (frame_num);
