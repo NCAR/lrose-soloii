@@ -67,6 +67,8 @@ static struct ts_linked_frames *linked_frames[2*SOLO_MAX_WINDOWS];
 void sp_change_cursor();
 void sii_xfer_images ();
 void sii_update_frame_info (guint frame_num);
+guint sii_frame_sync_num (guint frame_num);
+guint sii_config_sync_num (guint frame_num);
 
 
 /* external routines */
@@ -141,6 +143,7 @@ int sp_ts_data_loop(tsLink0, usi)
    struct ts_ray_table *tsrt;
    struct ts_sweep_info *tssi;
    struct ts_ray_info *tsri, *tsri_right;
+   guint frame_sync_nums[SOLO_MAX_WINDOWS];
 
 
    wwptr = solo_return_wwptr(lead_frame);
@@ -155,6 +158,7 @@ int sp_ts_data_loop(tsLink0, usi)
       ww = tsl->wwptr->window_num;
       if (ww >= sii_return_frame_count())
 	{ break; }
+      frame_sync_nums[ww] = sii_frame_sync_num (ww);
       sii_update_frame_info(ww);
       tsl->width = tsl->wwptr->view->width_in_pix;
       tsl->height = tsl->wwptr->view->height_in_pix;
@@ -309,6 +313,8 @@ int sp_ts_data_loop(tsLink0, usi)
 	       sp_tsYpixel_info(tsl, top_down);
 	    }
 	    ww = tsl->wwptr->window_num;
+	    if (frame_sync_nums[ww] != sii_config_sync_num ((guint)ww))
+	      { return -1; }
 	    solo_color_cells(ww); /* assign colors */
 	    tsl->at = tsl->frame_image_ptr + x_pxl +
 	      tsl->py0 * tsl->width;
