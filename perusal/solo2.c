@@ -105,7 +105,6 @@ static int Solo_Busy_Signal=NO;
 static struct solo_perusal_info *solo_perusal_info=NULL;
 static GString *gs = NULL;
 static gboolean redraw_bnd = TRUE;
-static guint sii_sync_num = 0;
 static struct solo_list_mgmt *tmp_slm = NULL;
 
 				/* c...mark */
@@ -161,18 +160,44 @@ gboolean sii_reset_frame_sizes ()
 
 /* c------------------------------------------------------------------------ */
 
+void sii_reset_reconfig_flags(int frame_num)
+{
+  SiiFrameConfig *sfc = frame_configs[frame_num];
+  /*
+   * Record the frame size for reference later if
+   * not a drag resize
+   */
+  if (!(sfc->reconfig_flag & FrameDragResize)) {
+     sfc->x_drag_ref = sfc->width;
+     sfc->y_drag_ref = sfc->height;
+  }
+  sfc->reconfig_count = 0;
+  sfc->local_reconfig = 0;
+  sfc->reconfig_flag = 0;
+}
+
+/* c------------------------------------------------------------------------ */
+
 void sii_reset_reconfig_count(int frame_num)
 {
   SiiFrameConfig *sfc;
   frame_configs[frame_num]->reconfig_count = 0;
 }
+
 /* c------------------------------------------------------------------------ */
 
-guint sii_set_sync_num (guint frame_num)
+guint sii_frame_sync_num (guint frame_num)
 {
   SiiFrameConfig *sfc = frame_configs[frame_num];
-  sfc->sync_num = ++sii_sync_num;
-  return sii_sync_num;
+  return (sfc->sync_num);
+}
+
+/* c------------------------------------------------------------------------ */
+
+guint sii_config_sync_num (guint frame_num)
+{
+  SiiFrameConfig *sfc = frame_configs[frame_num];
+  return (sfc->config_sync_num);
 }
 
 /* c------------------------------------------------------------------------ */
@@ -2036,85 +2061,45 @@ void sii_update_frame_info (guint frame_num)
 
 /* c------------------------------------------------------------------------ */
 
-void sii_plot_data (guint frame_num, guint plot_function)
+void sii_check_image_size (guint frame_num)
 {
-  /* Update and or modify image sizes */
   SiiFrameConfig *sfc = frame_configs[frame_num];
-  guint fn = 0, size, width, height, cwidth, cheight, maxsize = 0, ndx;
-  gint idx, idy, mark, mm, nn;
-  GtkWidget *frame;
+  guint size;
   gchar str[256];
-  sii_table_parameters *stp;
-    
-  fn = frame_num;
-  fn = 0;
-  ndx = frame_configs[fn]->cfg_que_ndx;
-  width = frame_configs[fn]->width;  height = frame_configs[fn]->height;
-  cwidth = frame_configs[fn]->cfg_width[ndx];  
-  cheight = frame_configs[fn]->cfg_height[ndx];
 
-  idx = abs ((gint)width - (gint)cwidth);
-  idy = abs ((gint)height - (gint)cheight);
 
+  size = sfc->width * sfc->height;
+
+  if (size > sfc->max_image_size) {
 # ifdef config_debug
-     sprintf (str, "sii_plot_data idx:%d idy:%d  cfg:%dx%d frm:%dx%d"
-	      , idx, idy, cwidth, cheight, width, height);
-     sii_append_debug_stuff (str);
+     sprintf (str, "Enlarge Image %d %d %d -> %d"
+	      , frame_num, sii_frame_count, sfc->max_image_size, size);    
 # endif
-
-  if (idx > 0 || idy > 0) {
-     mark = 0;
-     stp = &frame_configs[0]->tbl_parms;
-     mm = stp->right_attach - stp->left_attach;
-     nn = stp->bottom_attach - stp->top_attach;
-     sii_table_widget_width = (guint)((gdouble)cwidth/mm);
-     sii_table_widget_height = (guint)((gdouble)cheight/nn);
-# ifndef notyet
-     sii_check_def_widget_sizes ();
-     sii_new_frames ();
-# endif
-  }
-
-  /* make sure the image is big enought for the frame size */
-
-  for (fn=0; fn < sii_frame_count; fn++) {
-    sfc = frame_configs[fn];
-    size = sfc->width * sfc->height;
-    if (!fn) {			/* frame zero */
-      width = sfc->width;
-      height = sfc->height;
-      uniform_frame_shape = TRUE;
-    }
-    else if (width != sfc->width || abs ((int)(height -sfc->height)) > 3)
-      { uniform_frame_shape = FALSE; }
-
-    if (size > sfc->max_image_size) {
-# ifdef config_debug
-      sprintf (str, "Enlarge Image %d %d %d -> %d"
-	       , fn, sii_frame_count, sfc->max_image_size, size);    
-# endif
-      if (sfc->image) {
+     if (sfc->image) {
 	if (sfc->image->data)
 	  { g_free (sfc->image->data); }
-      }
-      else {
+     }
+     else {
 	sfc->image = (SiiImage *)g_malloc0 (sizeof (SiiImage));
-      }
-      sfc->image->data = g_malloc0 (size * 4);
+     }
+     sfc->image->data = g_malloc0 (size * 4);
 # ifdef config_debug
-      sprintf (str+strlen(str), " data:%d", sfc->image->data);
-				/*
-      g_message (str);
-				 */
-      sii_append_debug_stuff (str);
+     sprintf (str+strlen(str), " data:%d", sfc->image->data);
+     /*
+     g_message (str);
+      */
+     sii_append_debug_stuff (str);
 # endif
-      sfc->max_image_size = size;
-      if (sfc->max_image_size > maxsize)
-	{ maxsize = sfc->max_image_size; }
-    }
-    sfc->image_size = size;
+     sfc->max_image_size = size;
   }
+  sfc->sync_num = sfc->config_sync_num;
+  sfc->image_size = size;
+}
 
+/* c------------------------------------------------------------------------ */
+
+void sii_plot_data2 (guint frame_num, guint plot_function)
+{
   if (plot_function < 0)
     { return; }
 
@@ -2132,6 +2117,69 @@ void sii_plot_data (guint frame_num, guint plot_function)
      sp_replot_all ();
      break;
   };
+}
+
+/* c------------------------------------------------------------------------ */
+
+void sii_recalc_default_frame ()
+{
+   gint fn, mm, nn, ndx;
+   gdouble d, multiple, mx_x_change = 0, mx_y_change = 0;
+   sii_table_parameters *stp;
+   SiiFrameConfig *sfc;
+
+   /* find the max changes in the frames */
+
+   for (fn=0; fn < sii_frame_count; fn++) {
+      sfc = frame_configs[fn];
+      stp = &sfc->tbl_parms;
+      ndx = sfc->cfg_que_ndx;
+      
+      multiple = stp->right_attach - stp->left_attach;
+      d = (sfc->cfg_width[ndx] - sfc->x_drag_ref)/multiple;
+      if (d > mx_x_change) mx_x_change = d;
+      
+      multiple = stp->bottom_attach - stp->top_attach;
+      d = (sfc->cfg_height[ndx] - sfc->y_drag_ref)/multiple;
+      if (d > mx_y_change) mx_y_change = d;
+   }
+   sii_table_widget_width += (guint)(mx_x_change);
+   sii_table_widget_height += (guint)(mx_y_change);
+   sii_check_def_widget_sizes ();
+}
+
+/* c------------------------------------------------------------------------ */
+
+void sii_plot_data (guint frame_num, guint plot_function)
+{
+  /* Update and or modify image sizes */
+  SiiFrameConfig *sfc = frame_configs[frame_num];
+  guint fn;
+  gint idx, idy, mark, mm, nn;
+  GtkWidget *frame;
+  gchar str[256];
+    
+  if (sfc->local_reconfig) {
+     mark = 0;
+  }
+  else if (sfc->drag_resize_count > 0 &&
+	   !(sfc->reconfig_flag & FrameDragResize)) {
+
+     /* next plot after a drag resize. Do a local reconfig
+      * in case the frame sizes are not consistant
+      */
+     sii_recalc_default_frame();
+
+     for (fn=0; fn < sii_frame_count; fn++ ) {
+	sfc = frame_configs[fn];
+	sfc->drag_resize_count = 0;
+     }
+     sii_new_frames ();
+  }
+
+  
+  sii_plot_data2 (frame_num, plot_function);
+
 }
 
 /* c---------------------------------------------------------------------- */
