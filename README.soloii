@@ -1,5 +1,9 @@
 This file is named .../soloii/README.soloii.
 
+The current version of soloii and the xltrsii is soloii103.tar.gz for
+version 1.03. You might find newer versions in this directory which
+should be ok.
+
 soloii requires the GTK+ headers and libraries! Also if you will be
 reading or writing netCDF files make sure the netcdf libraries have
 been loaded.
@@ -11,13 +15,13 @@ each directory. The solo distribution is now independent of any
 external files. All code needed by solo is included in the
 distribution and is part of the solo directory tree.
 
-The Soloii distribution needs to be untarred into a directory such as
-"/rdss" (for example).  Untarring the soloii distribution will build a
-directory tree starting with the "soloii" directory. To configure the
-Makefiles in all directories, you should invoke the configure script
-in the soloii directory. There are two relevent arguments for the
-configure script. Only "--exec_prefix" is necessary. Thus you might
-type:
+The Soloii distribution needs to be gunzipped and untarred into a
+directory such as "/rdss" (for example).  Untarring the soloii
+distribution will build a directory tree starting with the "soloii"
+directory. To configure the Makefiles in all directories, you should
+invoke the configure script in the soloii directory. There are two
+relevent arguments for the configure script. Only "--exec_prefix" is
+necessary. Thus you might type:
 
 configure --exec_prefix=/rdss --bindir=/rdss/bin
 
@@ -25,11 +29,11 @@ After you have invoked the configure script type "make" to build the
 complete package or if you're only interested in the translaters or
 translater library, cd to ./translate and type "make install".
 
-You can ignore warnings about "changing search order..." and
-depricated features.
-
 The executable is named soloii and will have been placed in /rdss/bin
 based on the above example. The environment variable DORADE_DIR should
 point to a directory containing DORADE sweepfiles. If you start soloii
 from a directory containing sweepfiles, you do not have to set
 DORADE_DIR.
+
+For help information check the Help menus in the menu bars of most
+widgets. 
