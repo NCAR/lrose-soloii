@@ -440,6 +440,7 @@ void dd_stuff_ray()
 
     switch (gri->source_format) {
     case APIRAQ_FMT:
+    case PIRAQX_FMT:
       if (!dds->xstf) {
 	/* extra stuff */
  	nn = sizeof (XTRA_STUFF) + gri->sizeof_gpptr4;
