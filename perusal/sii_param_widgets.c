@@ -9,19 +9,6 @@
 # include <math.h>
 # include <stdio.h>
 
-static gchar *test_param_names =
-" FAKE
- NAMES
- DZ
- VE
- RHOHV
- PHIDP
- ZDR
- LDR
- DX
- DM
- NCP
-";
 
 static gchar *param_names = NULL;
 static gchar *param_palette_names = NULL;
@@ -334,6 +321,9 @@ sii_palette_for_param (gchar *name);
 
 void
 sii_palette_prepend_usual_param ( SiiPalette *pal, gchar *name);
+
+void 
+sii_palette_remove_usual_param ( SiiPalette *palx, gchar *name);
 
 SiiLinkedList *
 sii_palette_seek (gchar *p_name);
@@ -1909,6 +1899,7 @@ SiiLinkedList *sii_new_palette_for_param (gchar *p_name, gchar *name)
    }
    pal = (SiiPalette *)item->data;
    sii_palette_prepend_usual_param (pal, name);
+   sii_palette_remove_usual_param (pal, name);
    sii_ll_push (&palette_stack, item);
    sii_new_palettes_list ();
    return item;
@@ -2005,7 +1996,7 @@ SiiLinkedList *sii_palette_for_param (gchar *name)
 
 /* c---------------------------------------------------------------------- */
 
-void sii_palette_prepend_usual_param ( SiiPalette *pal, gchar *name)
+void sii_palette_prepend_usual_param (SiiPalette *pal, gchar *name)
 {
    /*
     * Or shift the name to the front
@@ -2029,6 +2020,47 @@ void sii_palette_prepend_usual_param ( SiiPalette *pal, gchar *name)
 	{ continue; }		/* ignore if already there */
       g_string_append (pal->usual_parms, sptrs[jj]);
       g_string_append (pal->usual_parms, COMMA);
+   }
+}
+
+/* c---------------------------------------------------------------------- */
+
+void sii_palette_remove_usual_param ( SiiPalette *palx, gchar *name)
+{
+   /*
+    * remove the name from all other palettes except this one
+    */
+   SiiPalette *pal = NULL;
+   SiiLinkedList *item = palette_stack;
+   gchar str[512], *sptrs[64];
+   int jj, nt, nn;
+   
+   if (!palx)
+     { return; }
+
+   for(; item; item = item->next) {
+
+      pal = (SiiPalette *)item->data;
+      if (pal == palx)
+	{ continue;}
+      strcpy (str, pal->usual_parms->str);
+      nt = dd_tokenz (str, sptrs, COMMA);
+      nn = sii_str_seek (sptrs, nt, name);
+
+      if (nn < 0 || nt < 1)
+	{ continue; }
+
+      g_string_truncate (pal->usual_parms, 0);
+      if (nt == 1) {
+	 g_string_append (pal->usual_parms, COMMA);
+	 continue;
+      }
+      for (jj=0; jj < nt; jj++) {
+	 if( nn >= 0 && jj == nn)
+	   { continue; }	/* ignore if already there */
+	 g_string_append (pal->usual_parms, sptrs[jj]);
+	 g_string_append (pal->usual_parms, COMMA);
+      }
    }
 }
 
