@@ -703,18 +703,18 @@ int sp_data_loop(flink0)
 			      , dgi->source_ray_num
 			      , (float)0);
        
-       if(FABS(ddrc->sector) > max_sector) {
+       if (ang_fill && ang_fill < 1.) {
+	  sector = ddrc->sector < 0 ? -ang_fill : ang_fill;
+	  angle0 = FMOD360(ddrc->rotation_angle -.5*sector);
+	  angle1 = FMOD360(ddrc->rotation_angle +.5*sector);
+       }
+       else if(FABS(ddrc->sector) > max_sector) {
 	  sector = ddrc->sector < 0 ? -max_sector*.5 : max_sector*.5;
 	  angle0 = (prev_angle1 != EMPTY_FLAG) ? prev_angle1 :
 	    FMOD360 (ddrc->rotation_angle -.5*sector);
 	  angle1 = FMOD360 (ddrc->rotation_angle +.5*sector);
 	  prev_angle1 = EMPTY_FLAG;
        }
-	else if (ang_fill && ang_fill < 1.) {
-	   sector = ddrc->sector < 0 ? -ang_fill : ang_fill;
-	   angle0 = FMOD360(ddrc->rotation_angle -.5*sector);
-	   angle1 = FMOD360(ddrc->rotation_angle +.5*sector);
-	}
 	else {
 	   sector = ddrc->sector;
 	   angle0 = ddrc->angle0;
