@@ -301,6 +301,10 @@ sii_get_clip_rectangle (guint frame_num, Rectangle *clip
 			, gboolean blow_up);
 gint
 sii_get_ctr_and_inc (guint frame_num, float *ctr, float *inc);
+
+gint
+sii_get_emph_min_max (guint frame_num, float *zmin, float *zmax);
+
 GdkColor *
 sii_grid_color (guint frame_num, gint exposed);
 
@@ -1731,6 +1735,18 @@ gint sii_get_ctr_and_inc (guint frame_num, float *ctr, float *inc)
 
   *ctr = pd->pal->ctrinc[0];
   *inc = pd->pal->ctrinc[1];
+  return pd->pal->num_colors;
+}
+
+/* c---------------------------------------------------------------------- */
+
+gint sii_get_emph_min_max (guint frame_num, float *zmin, float *zmax)
+{
+  WW_PTR wwptr;
+  ParamData *pd = (ParamData *)frame_configs[frame_num]->param_data;
+
+  *zmin = pd->pal->emphasis_zone[0];
+  *zmax = pd->pal->emphasis_zone[1];
   return pd->pal->num_colors;
 }
 
