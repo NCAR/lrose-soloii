@@ -30,8 +30,14 @@
 #define DATA_SHRTPUL    12 /* same as MAX_POL with gate averaging */
 #define DATA_SMHVSIM    13 /* 2000 DOW4 copolar matrix for simultaneous H-V (no iq average) */
 #define DATA_DUALPP     15 /* DOW dual prt pulse pair ABP,ABP */
-#define	PIRAQ_ABPDATA   16 /* ABP data computed in piraq3: rapidDOW project */
-#define DATA_TYPE_MAX PIRAQ_ABPDATA /* limit of data types */ 
+/* ABP data computed in piraq3: rapidDOW * project */
+#define	PIRAQ_ABPDATA   16
+
+/* Staggered PRT ABP data computed  in piraq3: rapidDOW project */
+#define    PIRAQ_ABPDATA_STAGGER_PRT 17
+
+
+#define DATA_TYPE_MAX PIRAQ_ABPDATA_STAGGER_PRT /* limit of data types */ 
 
 #define DATA_POL_PLUS_CMP 29	/* full pol plus */
 #define DATA_MAX_POL_CMP  30	/* same as full plus plus more gates */
@@ -222,7 +228,20 @@ at the epoch. beamnumber = pulsenumber / hits.
     float4 transform_matrix[2][2][2];
     float4 stokes[4]; 
     
+# ifdef obsolete
     float4 spare[20];
+# else
+    float4 vxmit_power;
+    float4 vtest_pulse_pwr;
+    float4 vnoise_power;
+    float4 vreceiver_gain;
+    float4 vantenna_gain;
+    float4 h_rconst;
+    float4 v_rconst;
+    float4 peak_power;            /* added by JVA -  needed for
+                                     v/h_channel_radar_const */
+    float4 spare[12];
+# endif
 
     /*
     // always append new items so the alignment of legacy variables
@@ -231,6 +250,7 @@ at the epoch. beamnumber = pulsenumber / hits.
 };
 
 typedef struct piraqX_header_rev1 PIRAQX;
+
 /* to ease the transition for legacy DRX code */
 typedef struct piraqX_header_rev1 INFOHEADER;
 
