@@ -4,6 +4,7 @@
 # include "sii_externals.h"
 # include "sii_enums.h"
 # include <gdk/gdkkeysyms.h>
+# define config_debug
 
 /* c---------------------------------------------------------------------- */
 /* c---------------------------------------------------------------------- */
@@ -30,6 +31,9 @@ void solo_set_halt_flag();
 void sii_set_geo_coords ( int frame_num, gdouble dx, gdouble dy);
 
 void sii_check_def_widget_sizes ();
+
+void sii_dump_debug_stuff();
+
 
 /* c---------------------------------------------------------------------- */
 
@@ -146,6 +150,7 @@ void sii_frame_expose_event(GtkWidget *frame, GdkEvent *event
    if(!gs)
      { gs = g_string_new (""); }
    g_string_truncate (gs, 0);
+   g_string_append (gs, "XPZ");
 
    sfc = frame_configs[frame_num];
    ++sfc->expose_count;
@@ -196,9 +201,8 @@ void sii_frame_expose_event(GtkWidget *frame, GdkEvent *event
    else if (!sfc->reconfig_count && totally_exposed) {
       sii_xfer_images (frame_num, &area);
    }
-# ifdef config_dbug
-   g_message (gs->str);
-# endif
+
+   /* the reconfig_count is reset once it's been plotted by sii_displayq() */
 
    while (sfc->reconfig_count) {
      
@@ -214,24 +218,35 @@ void sii_frame_expose_event(GtkWidget *frame, GdkEvent *event
 	 sfc->data_height = alloc.height;
 	 sfc->local_reconfig = FALSE;
 	 g_string_append (gs, " X0");
+# ifdef config_debug
+	 sii_append_debug_stuff (gs->str);
+# endif
 	 sii_plot_data (frame_num, REPLOT_THIS_FRAME);
 	 break;
        }
-     
+				/*
      if (sfc->reconfig_count > 2)
+				 */
+     if (sfc->expose_count == 1)
        {
 	 /* We've rebuilt the tables and this is the last expose,
 	  * now plot the data
 	  */
+# ifdef obsolete
 	 sfc->width = alloc.width;
 	 sfc->height = alloc.height;
 	 sfc->data_width = alloc.width;
 	 sfc->data_height = alloc.height;
+# endif
+	 g_string_append (gs, " X1");
+# ifdef config_debug
+	 sii_append_debug_stuff (gs->str);
+# endif
 	 sii_plot_data (frame_num, REPLOT_THIS_FRAME);
 	 break;
        }
 
-     if (sfc->expose_count == 2)
+     if (0 && sfc->expose_count == 2)
        {
 
 	 if (frame_num == 0) {
@@ -246,11 +261,19 @@ void sii_frame_expose_event(GtkWidget *frame, GdkEvent *event
 	   sii_table_widget_height =
 	     (guint)((gdouble)alloc.height/nn);
 	   
+	   g_string_append (gs, " X2");
+# ifdef config_debug
+	 sii_append_debug_stuff (gs->str);
+# endif
 	   sii_check_def_widget_sizes ();
 	   sii_new_frames ();
 	 }
 	 break;
        }
+# ifdef config_debug
+     g_string_append (gs, " X3");
+     sii_append_debug_stuff (gs->str);
+# endif
      break;
    }
 }
@@ -287,7 +310,7 @@ void sii_frame_config_event(GtkWidget *frame, GdkEvent *event
 			      , gpointer data )
 {
 				/* c...config */
-  guint frame_num = GPOINTER_TO_UINT (data), mark;
+  guint frame_num = GPOINTER_TO_UINT (data), mark, ndx;
   GdkEventConfigure *ce;
   gchar *aa = GTK_WIDGET_SENSITIVE( frame ) ? "sensitive" : "insensitive" ;
   gchar *bb, mess[256];
@@ -298,8 +321,13 @@ void sii_frame_config_event(GtkWidget *frame, GdkEvent *event
   ++frame_configs[frame_num]->reconfig_count;
   frame_configs[frame_num]->colorize_count = 0;
 
-# ifdef conf_dbug
-  g_message ("CONFIG frm:%d %dx%d gtk:%dx%d  ec:%d cc:%d nf:%d et:%d se:%d"
+  ndx = (frame_configs[frame_num]->cfg_que_ndx +1) % CFG_QUE_SIZE;
+  frame_configs[frame_num]->cfg_que_ndx = ndx;
+  frame_configs[frame_num]->cfg_width[ndx] = frame->allocation.width;
+  frame_configs[frame_num]->cfg_height[ndx] = frame->allocation.height;
+
+# ifdef config_debug
+  sprintf (mess, "CFG frm:%d %dx%d gtk:%dx%d  ec:%d cc:%d nf:%d et:%d se:%d"
 	     , frame_num
 	     , frame_configs[frame_num]->width
 	     , frame_configs[frame_num]->height
@@ -311,6 +339,7 @@ void sii_frame_config_event(GtkWidget *frame, GdkEvent *event
 	     , event->type
 	     , ce->send_event
 	     );
+  sii_append_debug_stuff (mess);
 # endif
   frame_configs[frame_num]->expose_count = 0;
 }
@@ -701,6 +730,11 @@ gint sii_frame_keyboard_event(GtkWidget *frame, GdkEvent *event
   case GDK_D:
   case GDK_d:
     sii_edit_zap_last_bnd_point();
+    break;
+
+  case GDK_J:
+  case GDK_j:
+    sii_dump_debug_stuff();
     break;
 
   case GDK_Control_L:
