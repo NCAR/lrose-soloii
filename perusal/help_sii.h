@@ -59,8 +59,7 @@ static const gchar * hlp_sii_file[] = {
 "in the \"Sweepfiles Widget\"",
 " ",
 "To save a configuration, you can modify the \"Comment\" and then click",
-"\"Save Config\". Because there are more frames possible in soloii,",
-"configuration files from the old solo will not work in soloii.",
+"\"Save Config\".",
 " ",
 "To make a PNG image of the soloii display click the button labeled",
 "\"Make PNG Image\" in the Initialization widget. Be sure the data",
@@ -73,7 +72,7 @@ static const gchar * hlp_sii_file[] = {
 "images of all the sweepfiles in the source directory, you will likely",
 "want to set the SOLO_WINDOW_INFO environment variable and the",
 "WINDOW_DUMP_DIR variable.",
-};
+}; 
 
 static const gchar * hlp_sii_zoom[] = {
 "With this menu you can zoom or unzoom the data or the size of the data",
