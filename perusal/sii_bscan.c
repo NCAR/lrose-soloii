@@ -648,9 +648,7 @@ int tsDisplay(click_frme, command)
 				      , wwptrx->sweep->stop_time);
 	    if(nn <= 0) {
 	       sprintf(mess,
-		       "Unable to produce sweep file list for radar: %s
-in %s
-From %s to %s"
+		       "Unable to produce sweep file list for radar: %s\nin %s\nFrom %s to %s"
 		       , wwptrx->sweep->radar_name
 		       , wwptrx->sweep->directory_name
 		       , aa, bb
