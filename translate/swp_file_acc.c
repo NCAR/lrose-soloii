@@ -98,7 +98,6 @@ int dd_absorb_header_info(dgi)
     dis->sweep_count++;
     dis->file_count++;
     dgi->num_parms = 0;
-    printf ("dd_absorb_header\n");
 
     for(;;) {
 	loop_count++;
@@ -263,10 +262,12 @@ int dd_absorb_header_info(dgi)
 	   }
 	   else if (cfw = ddswp_nab_cfacs (radar_name)) {
 	     /* external cfac files */
-	      cfac_id = (frib) ? frib->file_name : "default";
-
-	      for(; cfw ; cfw = cfw->next ) {
-		 if( strstr (cfw->frib_file_name, cfac_id)) {
+	     cfac_id = "default";
+	     if (cfw->ok_frib && frib)
+	       { cfac_id = frib->file_name; }
+	     
+	     for(; cfw ; cfw = cfw->next ) {
+		 if( strstr (cfac_id, cfw->frib_file_name)) {
 		    memcpy( dgi->dds->cfac, cfw->cfac, sizeof( *cfw->cfac ));
 		    dgi->ignore_cfacs = YES;
 		    break;
@@ -1153,21 +1154,23 @@ struct cfac_wrap *ddswp_nab_cfacs (radar_name)
    strncpy( cfac->correction_des, "CFAC", 4 );
    cfac->correction_des_length = sizeof(*cfac);
 
-   if (aa=getenv("ELD_CFAC_FILES")) {
-      first_cfac = dd_absorb_cfacs (aa, radar_name);
-      dis->cfac_wrap[dis->num_cfac_sets++] = first_cfac;
-      return (first_cfac);
-   }
    aa = getenv ("CFAC_FILES");
    bb = getenv ("CFAC_FILE");
 
-   if (!(aa || bb))
-     { return (first_cfac); }
+   if (!(aa || bb)) {
+     if (aa=getenv("ELD_CFAC_FILES")) {
+       first_cfac = dd_absorb_cfacs (aa, radar_name);
+       dis->cfac_wrap[dis->num_cfac_sets++] = first_cfac;
+       return (first_cfac);
+     }
+     return (first_cfac);
+   }
 
    aa = (aa) ? aa : bb;
 
    dd_absorb_cfac(aa, radar_name, cfac);
    cfw = first_cfac = (struct cfac_wrap *)malloc(sizeof(*cfw));
+   cfw->ok_frib = NO;
    cfw->next = 0;
    cfw->cfac = (struct correction_d *)malloc( sizeof( *cfac ));
    memcpy( cfw->cfac, cfac, sizeof( *cfac ));
