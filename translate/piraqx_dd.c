@@ -699,7 +699,7 @@ piraqx_next_block()
     gh = (TOP *)aa;
     recordlen = LittleEndian ? gh->recordlen : PX4(gh->recordlen);
 
-    dwel_record = !strncmp("DWLX", aa, 4);
+    dwel_record = !strncmp("DWLX", aa, 4) || !strncmp("DWEL", aa, 4);
 
     if (!(dwel_record)) {
       if((illegal_header_count++ % 3) == 0 ) {
@@ -1836,6 +1836,8 @@ void products()
 	mark = 0;
 	break;
      }
+   dwlx->h_rconst = h_rconst;
+   dwlx->v_rconst = v_rconst;
 }
 # define LIGHT_SPEED SPEED_OF_LIGHT   
 
@@ -1860,7 +1862,8 @@ void simplepp()
    short *dbzcp=gri->scaled_data[5];
    float f, scale=100., bias=0;
    
-   rconst = dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
+   h_rconst = rconst = 
+     dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
    noise = (dwlx->noise_power > -10.0) ? 0.0 : 0.0;
    velconst = LIGHT_SPEED / (2.0 * dwlx->frequency * 2.0 * M_PI * dwlx->prt[0]);
    pcorrect = dwlx->data_sys_sat
@@ -1939,7 +1942,8 @@ int simplepp2()
    short *dbzcp=gri->scaled_data[5];
    float f, scale=100., bias=0;
 
-   rconst = dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
+   h_rconst = rconst =
+     dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
    noise = (dwlx->noise_power > -10.0) ? 0.0 : 0.0;
    velconst = LIGHT_SPEED / (2.0 * dwlx->frequency * 2.0 * M_PI * dwlx->prt[0]);
    pcorrect = dwlx->data_sys_sat - dwlx->receiver_gain;
@@ -2019,7 +2023,8 @@ size_t newsimplepp()
    scale2db = 0.004 / scale2ln;         // from natural log to 10log10() 
 # define LIGHT_SPEED SPEED_OF_LIGHT
    velconst = LIGHT_SPEED / (2.0 * dwlx->frequency * 2.0 * fabs(dwlx->prt[0]) * 32768.0);
-   rconst = dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
+   h_rconst = rconst =
+     dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
    pcorrect = dwlx->data_sys_sat
 	    - 20.0 * log10(0x10000) 
 	    - dwlx->receiver_gain;
@@ -2092,7 +2097,8 @@ xnewsimplepp()
    scale2ln = 0.004 * log(10.0) / 10.0;  // from counts to natural log 
    scale2db = 0.004 / scale2ln;         // from natural log to 10log10() 
    velconst = SPEED_OF_LIGHT / (2.0 * dwlx->frequency * 2.0 * fabs(dwlx->prt[0]) * 32768.0);
-   rconst = dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
+   h_rconst = rconst =
+     dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
    pcorrect = dwlx->data_sys_sat
 	    - 20.0 * log10(0x10000) 
 	    - dwlx->receiver_gain;
