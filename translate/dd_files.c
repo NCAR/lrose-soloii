@@ -39,9 +39,14 @@ static char vcid[] = "$Id$";
  * 
  * 
  */
+# include <sys/types.h>
 # include <dirent.h>
 # include <time.h>
 # include <sys/time.h>
+
+# ifdef osx
+#  include <sys/vstat.h>
+# endif
 
 # include <dd_defines.h>
 # include "dd_files.h"

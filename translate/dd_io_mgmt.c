@@ -62,6 +62,10 @@ static char vcid[] = "$Id$";
 # include <sys/ioccom.h>
 # endif
 
+# ifdef osx
+# include <sys/ioccom.h>
+# endif
+
 # ifdef SVR4
 # include <fcntl.h>
 # endif
