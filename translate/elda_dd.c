@@ -60,6 +60,7 @@ static char vcid[] = "$Id$";
 # include "LidarParam.h"
 # include "FieldLidar.h"
 # include "FieldRadar.h"
+# include "Waveform.h"
 
 # define UPPER(c) ((c) >= 'A' && (c) <= 'Z')
 
@@ -77,6 +78,7 @@ static struct dd_input_filters *difs;
 static struct dd_stats *dd_stats=NULL;
 static char desc_ids[512];
 static RTIME D950502=0;
+static RTIME D20030501=0;
 
 static struct input_read_info *irq;
 static int source_vol_count=0;
@@ -123,6 +125,9 @@ void eld_thr_flds();
 
 char *dd_establish_source_dev_names();
 char *dd_next_source_dev_name();
+struct solo_list_mgmt *solo_malloc_list_mgmt();
+char *dd_est_src_dev_names_list();
+int generic_sweepfiles();
 
 /* c------------------------------------------------------------------------ */
 
@@ -286,7 +291,9 @@ int dde_desc_fwd_sync(aa, ii, jj)
     int cuc;
     static char dname[8]={0,0,0,0,0,0,0,0};
 
+# ifdef obsolete
     if(LittleEndian) {
+# endif
 	for(cuc=0; ii < jj; ii++) {
 	    if(UPPER((int)(*(aa+ii)))) {
 		if(++cuc == 4) {
@@ -297,6 +304,7 @@ int dde_desc_fwd_sync(aa, ii, jj)
 	    }
 	    else { cuc=0; }
 	}
+# ifdef obsolete
     }
     else {
 	for(; ii < jj;) {
@@ -318,6 +326,7 @@ int dde_desc_fwd_sync(aa, ii, jj)
 	    ii++;
 	}
     }
+# endif
     return(-1);
 }
 /* c------------------------------------------------------------------------ */
@@ -714,6 +723,7 @@ void eldx_ini()
     struct time_dependent_fixes *fx;
     float f;
     double d_time_stamp();
+    char *dd_establish_source_dev_names(), *dd_next_source_dev_name();
     DD_TIME dts;
 
 
@@ -728,12 +738,18 @@ void eldx_ini()
      * descriptor ids for searching later
      */
     strcpy(desc_ids, DD_ID_LIST);
-    strcat(desc_ids, ",NDDS,SITU,ISIT,TIME,INDF,MINI,LDAT,LIDR,FLIB");
+    strcat(desc_ids, ",NDDS,SITU,ISIT,TIME,INDF,MINI,LDAT,LIDR,FLIB,RAWD");
     dd_clear_dts( &dts );
     dts.year = 1995;
     dts.month = 5;
     dts.day = 2;
     D950502 = d_time_stamp( &dts );
+    dd_clear_dts( &dts );
+    dts.year = 2003;
+    dts.month = 5;
+    dts.day = 1;
+    D20030501 = d_time_stamp( &dts );
+    
     
 
     /*
@@ -884,11 +900,26 @@ void eldx_ini()
 	dd_input_read_close(irq);
     }
 
-    if((aa=get_tagged_string("SOURCE_DEV"))) {
-	aa = dd_establish_source_dev_names("ELD", aa);
-	aa = dd_next_source_dev_name("ELD");
-	current_file_name = aa;
-	dd_input_read_open(irq, aa);
+    if((aa=get_tagged_string("TAPE_DIR"))) {
+      slm = solo_malloc_list_mgmt(256);
+      nt = generic_sweepfiles( aa, slm, "", ".tape", 0 );
+      if (nt < 1) {
+	 nt = generic_sweepfiles( aa, slm, "eldora", "", 0 );
+      }
+      if ( nt < 1 ) {		/* Josh's CDs */
+	 nt = generic_sweepfiles( aa, slm, "", "z", 0 );
+      }
+      bb = NULL;
+      if (nt > 0) {
+	 bb = dd_est_src_dev_names_list("ELD", slm, aa );
+      }
+    }
+    else if((aa=get_tagged_string("SOURCE_DEV"))) {
+	bb = dd_establish_source_dev_names("ELD", aa);
+    }
+    if( aa && bb ) {
+      current_file_name = dd_next_source_dev_name("ELD");
+      dd_input_read_open(irq, current_file_name );
     }
     else {
 	printf("SOURCE_DEV not defined!\n");
@@ -910,6 +941,7 @@ void eldx_ini()
     }
 }
 /* c------------------------------------------------------------------------ */
+
 
 void eld_init_sweep(dgi, current_time, new_vol)
   struct dd_general_info *dgi;
@@ -1436,12 +1468,13 @@ int eld_next_ray()
     static int minRecSize = sizeof(struct volume_d)
 	  + sizeof(struct radar_d) +sizeof(struct parameter_d);
     static int count=0, eld_bytes_left=0, eof_count=0, rlen=0, ts_count=0;
-    static int ts_fid = -1;
+    static int ts_fid = -1, tape_count = 0;
     static char *eld_next_block=NULL;
     static int source_vol_num=-1, counttrip=84, ray_trip=1322;
     static struct volume_d *vold=NULL;
     static struct time_series *tmsr;
     static struct indep_freq *indf;
+    static struct waveform_d *wave;
     static struct dd_general_info *dgi=NULL;
     struct field_radar_i *frib = 0;
     struct generic_descriptor xgd;
@@ -1458,12 +1491,12 @@ int eld_next_ray()
     time_t t, todays_date();
     short tdate[6];
     double d, dorade_time_stamp(), angdiff();
-    float gs=0;
+    float gs=0, f;
 
     struct dd_general_info *dgii, *dd_get_structs();
     struct field_parameter_data *frad;
     struct lidar_parameter_data *ldat=NULL;
-    struct radar_d *radd;
+    static struct radar_d *radd;
     struct lidar_d *lidr=NULL;
     struct parameter_d *parm;
     struct dds_structs *dds;
@@ -1520,7 +1553,9 @@ int eld_next_ray()
 		  continue;
 	       }
 	       dd_input_read_close(irq);
-
+	       if (tape_count++ > 18) {
+		 mark = 0;
+	       }
 	       if(aa = dd_next_source_dev_name("ELD")) {
 		  current_file_name = aa;
 		  if((ii = dd_input_read_open(irq, aa)) <= 0) {
@@ -1546,6 +1581,7 @@ int eld_next_ray()
 		      return(1);
 
 		else if( ++eof_count >= 4 ) {
+		  dd_input_read_close(irq);
 		   if(aa = dd_next_source_dev_name("ELD")) {
 		      current_file_name = aa;
 		      if((ii = dd_input_read_open(irq, aa)) <= 0) {
@@ -1606,6 +1642,9 @@ int eld_next_ray()
 	eld_next_block = at = irq->top->at;
 	eld_bytes_left = irq->top->bytes_left;
 	gd = (struct generic_descriptor *)eld_next_block;
+	if (!strncmp(eld_next_block, "RAWD", 4)) {
+	  mark = 0;
+	}
 
 	if(LittleEndian) {
 	   gd = &xgd;
@@ -1771,6 +1810,8 @@ int eld_next_ray()
 		      memcpy((char *)dds->frad, eld_next_block
 			     , ncopy);
 		   }
+		   dds->frad->first_rec_gate = 
+		     dds->frad->last_rec_gate = 0;
 		}
 	    }
 	    /*
@@ -1957,6 +1998,27 @@ int eld_next_ray()
 		}
 	    }
 	}
+	else if(strncmp(eld_next_block,"RAWD",4)==0 ) {
+
+	    if(eui->options & ELD_DESC_SEARCH) {
+		ndx = dde_desc_fwd_sync
+		      (eld_next_block, sizeof(struct generic_descriptor)
+		       , eld_bytes_left);
+		if(ndx > 0 && ndx != gd->sizeof_struct) {
+		   sprintf(str, "Descriptor length error: %s says %d is %d"
+			   , gd->name_struct, gd->sizeof_struct, ndx);
+		   dd_append_cat_comment(str);
+		   printf("%s\n", str);
+		   gdsos = ndx;
+		}
+		if(ndx < 0) {
+		    irq->top->bytes_left = gdsos = eld_bytes_left = 0;
+		}
+		else if(ndx % 4) {
+		    mark = *deep6; /* have lost alignment */
+		}
+	    }
+	}
 	else if(strncmp(eld_next_block,"FRIB",4)==0 ) {
 	   dds = dgi->dds;
 	   frib = (struct field_radar_i *)eld_next_block;
@@ -2010,8 +2072,19 @@ int eld_next_ray()
 	      }
 	   }
 	}
+	else if(strncmp(eld_next_block,"WAVE",4)==0 ) {
+	  wave = (struct waveform_d*) eld_next_block;
+	  ii = wave->repeat_seq_dwel;
+	  ii = wave->num_chips[0];
+          /* radd->num_freq_trans * 2 * wave->repeat_seq_dwel *
+	   * wave->num_chips[0] = number of floating pt values
+	   * in the time series descriptor ("TIME")
+	   * frib->time_series_gate (68) is the gate number
+	   */
+
+	}
 	else if(ryib_flag && strncmp(eld_next_block,"TIME",4)==0 ) {
-	   tmsr = ( struct time_series *)eld_next_block;
+	    tmsr = ( struct time_series *)eld_next_block;
 	    if(eui->options & ELD_DESC_SEARCH) {
 		ndx = dde_desc_fwd_sync
 		      (eld_next_block, sizeof(struct generic_descriptor)
@@ -2029,6 +2102,9 @@ int eld_next_ray()
 		else if(ndx % 4) {
 		    mark = *deep6;
 		}
+	    }
+	    else if (dgi->time > D20030501) {
+	      irq->top->bytes_left = gdsos = eld_bytes_left = 0;
 	    }
 	    if(eui->options & ELD_TIME_SERIES) {
 	       if (!ts_count++) {
