@@ -129,6 +129,7 @@ static int sidelobe_ring=0;
 static int hail_test = YES;
 static int hail_hits = 0;
 static long D950502;
+static long D970401;
 static DD_TIME dts;
 
 
@@ -226,6 +227,11 @@ void dd_derived_fields(dgi)
 	dts.month = 5;
 	dts.day = 2;
 	D950502 = d_time_stamp( &dts );
+	dd_clear_dts( &dts );
+	dts.year = 1997;
+	dts.month = 4;
+	dts.day = 1;
+	D970401 = d_time_stamp( &dts );
 	
 
 
@@ -1672,8 +1678,9 @@ int dd_single_prf_vortex_vels(dgi, fn, dname)
     ss = (short *)dgi->dds->qdat_ptrs[fn];
     nc = dgi->clip_gate +1;
     zz = ss + nc;
-    
-    if( strstr(dgi->radar_name, "TA") ) { /* aft antenna! */
+
+    if( strstr(dgi->radar_name, "TA") && dgi->time < D970401) {
+       /* aft antenna! */
 	parm = dgi->dds->parm[fn_vr];
 	scale = dgi->dds->parm[fn_vr]->parameter_scale;
 	bias = dgi->dds->parm[fn_vr]->parameter_bias;
@@ -1726,7 +1733,7 @@ int dd_fix_vortex_vels(dgi, fn, dname)
     char *vl="VL", *vs="VS";
     int fn_vl, fn_vs, *ctr, level_bias;
     float *fptr, *ipptr, X, Y, scale, bias, rcp_scale;
-    static float f_err;
+    static float f_err = 1.0;
     int vorfast_fix = NO;
 
     struct fix_vortex_vels *fvv;
@@ -1765,6 +1772,10 @@ int dd_fix_vortex_vels(dgi, fn, dname)
 	    vorfast_fix = YES;
 	}
     }
+    if (dgi->time > D970401) {
+       vorfast_fix = NO;
+    }
+    
 
 
     if(dgi->new_vol) {
