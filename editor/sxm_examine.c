@@ -934,6 +934,8 @@ sxm_list_descriptors(frme)
     for(pn=0; pn < dgi->num_parms; pn++) {
 	dor_print_parm(dgi->dds->parm[pn], slm);
     }
+    if (dgi->dds->frib)
+      { dor_print_frib(dgi->dds->frib, slm); }
     dor_print_cfac(dgi->dds->cfac, slm);
     dor_print_celv(dgi->dds->celvc, slm);
     dor_print_swib(dgi->dds->swib, slm);
