@@ -2126,6 +2126,10 @@ void edit_cmds_help_widget (guint frame_num )
   sii_glom_strings (remove_ring, nn, gen_gs);
   put_edit_cmds_help ("remove-ring", gen_gs);
 
+  nn = sizeof (rewrite)/sizeof (char *);
+  sii_glom_strings (rewrite, nn, gen_gs);
+  put_edit_cmds_help ("rewrite", gen_gs);
+
   nn = sizeof (remove_surface)/sizeof (char *);
   sii_glom_strings (remove_surface, nn, gen_gs);
   put_edit_cmds_help ("remove-surface", gen_gs);
