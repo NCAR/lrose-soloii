@@ -169,7 +169,8 @@ int displayq(click_frme, command)
 	return(ii);
     }
 
-    printf ("Enter displayq(%d,%d)\n", click_frme, command);
+    sprintf (mess, "Enter displayq(%d,%d)", click_frme, command);
+    sii_append_debug_stuff (mess);
     solo_set_busy_signal();
     sp_change_cursor(NO);
     spi = solo_return_winfo_ptr();
