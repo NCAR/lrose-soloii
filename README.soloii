@@ -25,6 +25,9 @@ After you have invoked the configure script type "make" to build the
 complete package or if you're only interested in the translaters or
 translater library, cd to ./translate and type "make install".
 
+You can ignore warnings about "changing search order..." and
+depricated features.
+
 The executable is named soloii and will have been placed in /rdss/bin
 based on the above example. The environment variable DORADE_DIR should
 point to a directory containing DORADE sweepfiles. If you start soloii
