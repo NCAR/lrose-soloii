@@ -1089,7 +1089,7 @@ defined in segments of constant cell spacing");
     ii = nc_put_var_double( ncid, ncp->id_alt, &d );
   }
    if (dds->frib) { 
-      strcpy (str, dds->frib->file_name);
+      strncpy (str, dds->frib->file_name, sizeof (dds->frib->file_name));
       ii = nc_put_var_text( ncid, frib_name_id, str );
    }
   f = swib->fixed_angle;
