@@ -5,6 +5,7 @@ static char vcid[] = "$Id$";
 #endif /* lint */
 
 # include <errno.h>
+# include <sys/types.h>
 # include <dirent.h>
 
 # include <dorade_headers.h>

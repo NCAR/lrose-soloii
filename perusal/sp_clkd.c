@@ -16,6 +16,7 @@ static char vcid[] = "$Id$";
  */
 
 # include <errno.h>
+# include <sys/types.h>
 # include <dirent.h>
 # include <dorade_headers.h>
 # include "solo_window_structs.h"

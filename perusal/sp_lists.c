@@ -17,6 +17,7 @@ static char vcid[] = "$Id$";
  */
 
 # include <errno.h>
+# include <sys/types.h>
 # include <dirent.h>
 # include <solo_defs.h>
 # include <dd_files.h>
