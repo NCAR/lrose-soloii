@@ -41,6 +41,7 @@ void eld_dd_conv();
 void toga_dd_conv();
 void fof_dd_conv();
 void piraq_dd_conv();
+void piraqx_dd_conv();
 void tdwr_dd_conv();
 void ddout_loop();
 void dd_uf_conv();
@@ -137,6 +138,9 @@ main()
 	}
 	else if(strstr(afmt, "PIRAQ_FORMAT")) {
 	    piraq_dd_conv(which_mode);
+	}
+	else if(strstr(afmt, "PIRAQX_FORMAT")) {
+	    piraqx_dd_conv(which_mode);
 	}
 	else if(strstr(afmt, "TDWR_FORMAT")) {
 	    tdwr_dd_conv(which_mode);
