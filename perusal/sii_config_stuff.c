@@ -172,24 +172,23 @@ void sii_new_frames ()
 # endif
    }
 
-   if( main_table ) {		/* this is a gtk table type container */
+   if( main_table ) {		/* this is a gtk table type container
+				 */
       gtk_widget_destroy( main_table );
    }
-
    main_table = gtk_table_new (sfc0->nrows, sfc0->ncols, homogeneous);
    gtk_container_add (GTK_CONTAINER (main_event_box), main_table);
-# ifdef notyet
-   gtk_box_pack_start (GTK_BOX (main_event_box), main_table, TRUE, TRUE, 0);
-   xwin_table = GDK_WINDOW_XWINDOW (GTK_WIDGET (main_table->window));
-# endif
+
 
   for (fn=0; fn < sii_frame_count; fn++ ) {
 
     sfc = frame_configs[fn];
+    sfc->local_reconfig = TRUE;
     ++sfc->new_frame_count;
-    sfc->frame = frame = gtk_drawing_area_new ();
+
+    sfc->frame = gtk_drawing_area_new ();
+    frame = sfc->frame;
     gtk_widget_set_events (frame, event_flags );
-    
     stp = &sfc->tbl_parms;
     mm = stp->right_attach - stp->left_attach;
     nn = stp->bottom_attach - stp->top_attach;
@@ -201,11 +200,12 @@ void sii_new_frames ()
 
     sfc->width = sfc->data_width = width;
     sfc->height = sfc->data_height = height;
+    sii_check_image_size (fn);
 
     gtk_drawing_area_size (GTK_DRAWING_AREA (frame)
 			   , width
 			   , height );
-    
+
     /* --- Signals! --- */
     gtk_signal_connect (GTK_OBJECT (frame), "expose_event",
 			(GtkSignalFunc) sii_frame_expose_event, (gpointer)fn);
@@ -239,7 +239,6 @@ void sii_new_frames ()
 		      );
     
   }
-
    gtk_widget_show_all (main_window);
    nn = 0;
 }
