@@ -758,6 +758,16 @@ void ddout_headers_dump( usix, all )
 		else { cc = (char *)dds->celv; }
 		mark = ddout_hedr_saver(ddout_fid, cc, dds->celv->cell_des_len);
 		
+		if (dds->frib) {
+		  if(LittleEndian) {
+		    ddin_crack_frib((char *)dds->frib, swap_buf, (int)0);
+		    cc = swap_buf;
+		  }
+		  else { cc = (char *)dds->frib; }
+		  mark = ddout_hedr_saver
+		    (ddout_fid, cc, dds->frib->field_radar_info_len);
+		}
+
 		if(LittleEndian) {
 		   ddin_crack_cfac((char *)dds->cfac, swap_buf, (int)0);
 		   cc = swap_buf;
