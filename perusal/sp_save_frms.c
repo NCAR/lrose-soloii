@@ -61,10 +61,10 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
     size_t len, lenx;
     FILE *stream;
     char *a, *b, *c, *buf, *e, str[256], mess[256], atts[256], *sptrs[32];
-    char *cbuf;
+    char *cbuf, *aa, *bb, *cc;
     struct solo_generic_window_struct *gws, gwx;
     struct point_in_space *pisp;
-    struct solo_view_info *view;
+    struct solo_view_info view;
     WW_PTR wwptr, solo_return_wwptr();
     struct solo_palette spal;
     struct solo_perusal_info *spi, *solo_return_winfo_ptr();
@@ -72,8 +72,24 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
     sii_table_parameters stp;
     gchar *png_dir;
     char *aptrs[16];
-    int na, nt, nc;
-    
+    int na, nt, nc, h_frames, v_frames, solo_width=372;
+    int h_default, v_default;
+    double d;
+
+    struct landmark_info0 slmk0;
+    struct res_landmark_info0 res_slmk0;
+    struct frame_ctr_info0 sctr0;
+    struct res_frame_ctr_info0 res_sctr0;
+    struct solo_sweep_file0 ssfi0;
+    struct res_solo_sweep_file0 res_ssfi0;
+
+    struct solo_parameter_info0 spmi0;    
+    struct res_solo_parameter_info0 res_spmi0;    
+    struct solo_view_info0 swvi0;
+    struct res_solo_view_info0 res_swvi0;
+    struct solo_plot_lock0 sptl0;
+
+
 
     spi = solo_return_winfo_ptr();
     for(kk=0; kk < SOLO_MAX_WINDOWS; spi->active_windows[kk++] = NO);
@@ -106,14 +122,38 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
     fclose(stream);
     e = c+len;
     sii_reset_config_cells ();
+    gws = &gwx;
+
+    /* count the number of frames
+     */
+    for(c = buf;;) {
+	memcpy (&gwx, c, sizeof (struct solo_generic_window_struct));
+	gdsos = gws->sizeof_struct;
+	gww = gws->window_num;
+
+	if(gdsos > MAX_REC_SIZE) {
+	   gottaSwap = YES;
+	   swack4(&gws->sizeof_struct, &gdsos);
+	   swack4(&gws->window_num, &gww);
+	}
+	if(!strncmp(c, "SSFI", 4)) { /* sweep file info */
+	    frame_count++;
+	}
+	c += gdsos; 
+	if(c >= e) {
+	    break;
+	}
+	if(count > 1000) {
+	    mark = 0;
+	    break;
+	}
+    }
 
     /* read in window info
      */
-    for(;;) {
+    for(c = buf;;) {
 	count++;
-	gws = (struct solo_generic_window_struct *)c;
 	memcpy (&gwx, c, sizeof (struct solo_generic_window_struct));
-	gws = &gwx;
 	gdsos = gws->sizeof_struct;
 	gww = gws->window_num;
 
@@ -165,15 +205,22 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	    old_sos = gdsos != sizeof(struct solo_sweep_file);
 	    if(gottaSwap) {
 	      if (old_sos)
-		{ sp_crack_ssfi0 (c, wwptr->sweep, (int)0, YES); }
+		{ sp_crack_ssfi0 (c, &ssfi0, (int)0); }
 	      else
 		{ sp_crack_ssfi (c, wwptr->sweep, (int)0); }
 	    }
 	    else {
 	      if (old_sos)
-		{ sp_crack_ssfi0 (c, wwptr->sweep, (int)0, NO); }
+		{ memcpy (&ssfi0, c, sizeof (ssfi0)); }
 	      else
 		{ memcpy(wwptr->sweep, c, gdsos); }
+	    }
+	    if (old_sos) {
+	       memcpy (wwptr->sweep, &ssfi0, sizeof (ssfi0));
+	       memcpy (&wwptr->sweep->sweep_count, &ssfi0.sweep_count
+		       , sizeof (res_ssfi0));
+	      for (jj = frame_count; jj < SOLO_MAX_WINDOWS; jj++)
+		{ wwptr->sweep->linked_windows[jj] = 1; }
 	    }
 	    wwptr->sweep->sizeof_struct = sizeof(struct solo_sweep_file);
 	    wwptr->sweep->changed = YES;
@@ -186,18 +233,18 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	    old_sos = gdsos != sizeof(struct solo_plot_lock);
 	    if(gottaSwap) {
 	      if (old_sos)
-		{ sp_crack_sptl0 (c, wwptr->lock, (int)0, YES); }
+		{ sp_crack_sptl0 (c, &sptl0, (int)0); }
 	      else
 		{ sp_crack_sptl (c, wwptr->lock, (int)0); }
 	    }
 	    else {
 	      if (old_sos)
-		{ sp_crack_sptl0 (c, wwptr->lock, (int)0, NO); }
+		{ memcpy (&sptl0, c, sizeof (sptl0)); }
 	      else
 		{ memcpy(wwptr->lock, c, gdsos); }
 	    }
 	    if (old_sos) {
-	      for (jj = 6; jj < SOLO_MAX_WINDOWS; jj++)
+	      for (jj = frame_count; jj < SOLO_MAX_WINDOWS; jj++)
 		{ wwptr->lock->linked_windows[jj] = 1; }
 	    }
 	    wwptr->lock->sizeof_struct = sizeof(struct solo_plot_lock);
@@ -207,28 +254,25 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	}
 	else if(!strncmp(c, "SPMI", 4)) { /* parameter info */
 	    wwptr = solo_return_wwptr(gww);
-	    if(gottaSwap) {
-	       sp_crack_spmi (c, wwptr->parameter, (int)0);
-	    }
-	    else {
-	       memcpy(wwptr->parameter, c, gdsos);
-	    }
 	    old_sos = gdsos != sizeof(struct solo_parameter_info);
 	    if(gottaSwap) {
 	      if (old_sos)
-		{ sp_crack_spmi0 (c, wwptr->parameter, (int)0, YES); }
+		{ sp_crack_spmi0 (c, wwptr->parameter, (int)0); }
 	      else
 		{ sp_crack_spmi (c, wwptr->parameter, (int)0); }
 	    }
 	    else {
 	      if (old_sos)
-		{ sp_crack_spmi0 (c, wwptr->parameter, (int)0, NO); }
+		{ memcpy (&spmi0, c, sizeof (spmi0)); }
 	      else
 		{ memcpy(wwptr->parameter, c, gdsos); }
 	    }
 	    if (old_sos) {
-	      for (jj = 6; jj < SOLO_MAX_WINDOWS; jj++)
-		{ wwptr->parameter->linked_windows[jj] = 0; }
+	       memcpy (wwptr->parameter, &spmi0, sizeof (spmi0));
+	       memcpy (wwptr->parameter->parameter_name, spmi0.parameter_name
+		       , sizeof (res_spmi0));
+	       for (jj = frame_count; jj < SOLO_MAX_WINDOWS; jj++)
+		 { wwptr->parameter->linked_windows[jj] = 0; }
 	    }
 	    wwptr->parameter->sizeof_struct =
 		  sizeof(struct solo_parameter_info);
@@ -236,16 +280,13 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	}
 	else if(!strncmp(c, "SWVI", 4)) { /* view info */
 	    wwptr = solo_return_wwptr(gww);
-	    view = (struct solo_view_info *)c;
 	    if(gottaSwap)
-	      { sp_crack_swvi (c, wwptr->view, (int)0); }
+	      { sp_crack_swvi (c, &view, (int)0); }
 	    else
-	      { memcpy(wwptr->view, c, gdsos); }
+	      { memcpy(&view, c, sizeof (view)); }
 
-	    if( gww == 0 && wwptr->view->frame_config > 100)
-	      { new_config = YES; no_config = NO; }
-	    else if (new_config && wwptr->view->frame_config < 101)
-	      { no_config = YES; }
+	    if( gww == 0 && view.frame_config > 100)
+	      { new_config = YES; }
 
 	    /* smallest value in the new configuration is 0101
 	     * and luckily the frame_config is before the linked_windows
@@ -253,23 +294,26 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	     */
 	    if(gottaSwap) {
 	      if (new_config)
-		{ sp_crack_swvi (c, wwptr->view, (int)0); }
+		{ memcpy (wwptr->view, &view, sizeof (view)); }
 	      else
-		{ sp_crack_swvi0 (c, wwptr->view, (int)0, YES); }
+		{ sp_crack_swvi0 (c, &swvi0, (int)0); }
 	    }
 	    else {
 	      if (new_config)
 		{ memcpy(wwptr->view, c, gdsos); }
 	      else
-		{ sp_crack_swvi0 (c, wwptr->view, (int)0, NO); }
+		{ memcpy (&swvi0, c, sizeof (swvi0)); }
 	    }
 	    if (!new_config) {
-	      for (jj = 6; jj < SOLO_MAX_WINDOWS; jj++)
-		{ wwptr->view->linked_windows[jj] = 1; }
+	       memcpy (wwptr->view, &swvi0, sizeof (swvi0));
+	       memcpy (&wwptr->view->type_of_annot, &swvi0.type_of_annot
+		       , sizeof (res_swvi0));
+	       for (jj = frame_count; jj < SOLO_MAX_WINDOWS; jj++)
+		 { wwptr->view->linked_windows[jj] = 1; }
 	    }
 	    wwptr->view->sizeof_struct = sizeof(struct solo_view_info);
 	    wwptr->view->changed = YES;
-	    frame_count++;
+
 	    b = c +wwptr->view->offset_to_pisps;
 	    for(ii=0; ii < wwptr->view->num_pisps; ii++) {
 		pisp = (struct point_in_space *)b;
@@ -329,15 +373,22 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	    old_sos = gdsos != sizeof(struct landmark_info);
 	    if(gottaSwap) {
 	      if (old_sos)
-		{ sp_crack_slmk0 (c, wwptr->landmark_info, (int)0, YES); }
+		{ sp_crack_slmk0 (c, wwptr->landmark_info, (int)0); }
 	      else
 		{ sp_crack_slmk (c, wwptr->landmark_info, (int)0); }
 	    }
 	    else {
 	      if (old_sos)
-		{ sp_crack_slmk0 (c, wwptr->landmark_info, (int)0, NO); }
+		{ memcpy (&slmk0, c, sizeof (slmk0)); }
 	      else
 		{ memcpy(wwptr->landmark_info, c, gdsos); }
+	    }
+	    if (old_sos) {
+	       memcpy (wwptr->landmark_info, &slmk0, sizeof (slmk0));
+	       memcpy (&wwptr->landmark_info->landmark_options
+		       , &slmk0.landmark_options, sizeof (res_slmk0));
+	      for (jj = frame_count; jj < SOLO_MAX_WINDOWS; jj++)
+		{ wwptr->landmark_info->linked_windows[jj] = 1; }
 	    }
 	    wwptr->landmark_info->sizeof_struct =
 		  sizeof(struct landmark_info);
@@ -347,15 +398,22 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	    old_sos = gdsos != sizeof(struct frame_ctr_info);
 	    if(gottaSwap) {
 	      if (old_sos)
-		{ sp_crack_sctr0 (c, wwptr->frame_ctr_info, (int)0, YES); }
+		{ sp_crack_sctr0 (c, wwptr->frame_ctr_info, (int)0); }
 	      else
 		{ sp_crack_sctr (c, wwptr->frame_ctr_info, (int)0); }
 	    }
 	    else {
 	      if (old_sos)
-		{ sp_crack_sctr0 (c, wwptr->frame_ctr_info, (int)0, NO); }
+		{  memcpy (&sctr0, c, sizeof (sctr0)); }
 	      else
 		{ memcpy(wwptr->frame_ctr_info, c, gdsos); }
+	    }
+	    if (old_sos) {
+	       memcpy (wwptr->frame_ctr_info, &sctr0, sizeof (sctr0));
+	       memcpy (&wwptr->frame_ctr_info->centering_options, &sctr0.centering_options
+		       , sizeof (res_sctr0));
+	      for (jj = frame_count; jj < SOLO_MAX_WINDOWS; jj++)
+		{ wwptr->frame_ctr_info->linked_windows[jj] = 1; }
 	    }
 	    wwptr->frame_ctr_info->sizeof_struct =
 		  sizeof(struct frame_ctr_info);
@@ -431,7 +489,23 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
      *
      */
     if (config_count > 0) {
-
+       h_frames = 1;
+       h_default = solo_width;
+       v_frames = 1;
+       v_default = (int)(solo_width * .75 +.5); /* slide proportions */
+       v_default = ((v_default +3)/4) * 4;
+       cfg = solo_return_wwptr(0)->view->frame_config;
+       if (cfg == LARGE_SQUARE_FRAME || cfg == LARGE_SLIDE_FRAME) {
+	  config_count = 1;
+       }
+       switch (cfg) {
+	case LARGE_SQUARE_FRAME:
+	case SQUARE_FRAME:
+	case LARGE_HALF_HEIGHT_FRAME:
+	  v_default = h_default;
+	  break;
+       }
+       
       for (ww = 0; ww < config_count; ww++) {
 
 	sfc = frame_configs[ww];
@@ -441,10 +515,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	switch (cfg) {
 
 	case SMALL_RECTANGLE:
-	case LARGE_SLIDE_FRAME:
 	case SQUARE_FRAME:
-	case LARGE_SQUARE_FRAME:
-	  
 	  if (ww & 1) 		/* odd => right frame */
 	    { la = 1; ra = 2; }
 	  else		/* left frame */
@@ -458,9 +529,16 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	    { ta = 2; ba = 3; }
 	  break;
 
+	case LARGE_SLIDE_FRAME:
+	  la = 0; ra = 3;
+	  ta = 0; ba = 3;
+	  break;
+	case LARGE_SQUARE_FRAME:
+	  la = 0; ra = 2;
+	  ta = 0; ba = 2;
+	  break;
 	case DOUBLE_WIDE_FRAME:
-	case LARGE_HALF_HEIGHT_FRAME:
-	  la = 0; ra = 1;
+	  la = 0; ra = 2;
 	  if (ww == 0)		/* one frame per row */
 	    { ta = 0; ba = 1; }
 	  else if (ww == 1)
@@ -468,8 +546,14 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	  else
 	    { ta = 2; ba = 3; }
 	  break;
+	case LARGE_HALF_HEIGHT_FRAME:
+	  la = 0; ra = 3;
+	  if (ww == 0)		/* one frame per row */
+	    { ta = 0; ba = 1; }
+	  else
+	    { ta = 1; ba = 2; }
+	  break;
 	};
-
 	
 	stp.bottom_attach = ba;
 	stp.top_attach = ta;
@@ -480,10 +564,8 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	nn = stp.bottom_attach - stp.top_attach;
 	
 	if (ww == 0) {
-	  sii_table_widget_width = wwptr->view->width_in_pix/mm;
-	  sii_table_widget_height = wwptr->view->height_in_pix/nn;
-	  sii_table_widget_width = DEFAULT_WIDTH;
-	  sii_table_widget_height = DEFAULT_HEIGHT;
+	  sii_table_widget_width = h_default;
+	  sii_table_widget_height = v_default;
 	}
 	ii = stp.top_attach * maxConfigCols;
 	for (; nn--; ii += maxConfigCols) {
@@ -494,18 +576,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
       }	/* end if (config_count > 0) */
     }
 
-    /* Set dangling links */
-
-    wwptr = solo_return_wwptr(0);
-
-    for (ww=frame_count; ww < SOLO_MAX_WINDOWS; ww++) {
-      wwptr->sweep->linked_windows[ww] = 1;
-      wwptr->lock->linked_windows[ww] = 1;
-      wwptr->parameter->linked_windows[ww] = 0;
-      wwptr->view->linked_windows[ww] = 1;
-      wwptr->landmark_info->linked_windows[ww] = 1;
-      wwptr->frame_ctr_info->linked_windows[ww] = 1;
-    }
+    /* Set dangling frames */
 
     for (ww=frame_count; ww < SOLO_MAX_WINDOWS; ww++) {
       solo_cpy_sweep_info(0, ww);

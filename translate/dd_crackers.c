@@ -270,18 +270,12 @@ void sp_crack_slmk0 (srs, dst, limit, swap_em)
       {   16,    3,    4,    1,    1,    1,   16},
       {   20,    3,    4,    1,    1,    1,   20},
       {   24,    3,    4,    6,    6,    1,   24},
-      {   48,    3,    4,    1,    1,    1,   72},
-      {   52,    3,    4,    1,    1,    1,   76},
+      {   48,    3,    4,    1,    1,    1,   48},
+      {   52,    3,    4,    1,    1,    1,   52},
    };
 
-   if (swap_em) {
-     crackers(srs, dst, item_count, ndx_count, crk_landmark_info
-	      , offs_ndx, sparc_ndx, limit);
-   }
-   else {			/* reshuffle the old to the new */
-     piraq_crackers(srs, dst, item_count, ndx_count, crk_landmark_info
-		    , offs_ndx, sparc_ndx, limit);
-   }
+   crackers(srs, dst, item_count, ndx_count, crk_landmark_info
+	    , offs_ndx, sparc_ndx, limit);
 }
 /* c------------------------------------------------------------------------ */
 
@@ -324,18 +318,12 @@ void sp_crack_sctr0 (srs, dst, limit, swap_em)
       {   16,    3,    4,    1,    1,    1,   16},
       {   20,    3,    4,    1,    1,    1,   20},
       {   24,    3,    4,    6,    6,    1,   24},
-      {   48,    3,    4,    1,    1,    1,   72},
-      {   52,    3,    4,    1,    1,    1,   76},
+      {   48,    3,    4,    1,    1,    1,   48},
+      {   52,    3,    4,    1,    1,    1,   52},
    };
 
-   if (swap_em) {
-     crackers(srs, dst, item_count, ndx_count, crk_frame_ctr_info
-	      , offs_ndx, sparc_ndx, limit);
-   }
-   else {			/* reshuffle the old to the new */
-     piraq_crackers(srs, dst, item_count, ndx_count, crk_frame_ctr_info
-		    , offs_ndx, sparc_ndx, limit);
-   }
+   crackers(srs, dst, item_count, ndx_count, crk_frame_ctr_info
+	    , offs_ndx, sparc_ndx, limit);
 }
 /* c------------------------------------------------------------------------ */
 
@@ -380,14 +368,8 @@ void sp_crack_sptl0 (srs, dst, limit, swap_em)
       {   24,    3,    4,    6,    6,    1,   24},
    };
 
-   if (swap_em) {
-     crackers(srs, dst, item_count, ndx_count, crk_solo_plot_lock
-	      , offs_ndx, sparc_ndx, limit);
-   }
-   else {			/* reshuffle the old to the new */
-     piraq_crackers(srs, dst, item_count, ndx_count, crk_solo_plot_lock
-		    , offs_ndx, sparc_ndx, limit);
-   }
+   crackers(srs, dst, item_count, ndx_count, crk_solo_plot_lock
+	    , offs_ndx, sparc_ndx, limit);
 }
 /* c------------------------------------------------------------------------ */
 
@@ -430,32 +412,26 @@ void sp_crack_ssfi0 (srs, dst, limit, swap_em)
       {   24,    5,    8,    1,    1,    1,   24},
       {   32,    4,    4,    1,    1,    1,   32},
       {   36,    3,    4,    6,   15,   10,   36},
-      {   60,    3,    4,    1,    1,    1,   84},
-      {   64,    3,    4,    1,    1,    1,   88},
-      {   68,    3,    4,    1,    1,    1,   92},
-      {   72,    3,    4,    1,    1,    1,   96},
-      {   76,    3,    4,    1,    1,    1,  100},
-      {   80,    3,    4,    1,    1,    1,  104},
-      {   84,    3,    4,    1,    1,    1,  108},
-      {   88,    3,    4,    1,    1,    1,  112},
-      {   92,    3,    4,    1,    1,    1,  116},
-      {   96,    1,    1,  128,  128,    1,  120},
-      {  224,    1,    1,  128,  128,    1,  248},
-      {  352,    1,    1,   16,   16,    1,  376},
-      {  368,    1,    1,   16,   16,    1,  392},
-      {  384,    3,    4,    1,    2,    2,  408},
-      {  388,    3,    4,    1,    1,    1,  412},
-      {  392,    5,    8,    1,    1,    1,  416},
+      {   60,    3,    4,    1,    1,    1,   60},
+      {   64,    3,    4,    1,    1,    1,   64},
+      {   68,    3,    4,    1,    1,    1,   68},
+      {   72,    3,    4,    1,    1,    1,   72},
+      {   76,    3,    4,    1,    1,    1,   76},
+      {   80,    3,    4,    1,    1,    1,   80},
+      {   84,    3,    4,    1,    1,    1,   84},
+      {   88,    3,    4,    1,    1,    1,   88},
+      {   92,    3,    4,    1,    1,    1,   92},
+      {   96,    1,    1,  128,  128,    1,   96},
+      {  224,    1,    1,  128,  128,    1,  224},
+      {  352,    1,    1,   16,   16,    1,  352},
+      {  368,    1,    1,   16,   16,    1,  368},
+      {  384,    3,    4,    1,    2,    2,  384},
+      {  388,    3,    4,    1,    1,    1,  388},
+      {  392,    5,    8,    1,    1,    1,  392},
    };
 
-   if (swap_em) {
-     crackers(srs, dst, item_count, ndx_count, crk_solo_sweep_file
-	      , offs_ndx, sparc_ndx, limit);
-   }
-   else {			/* reshuffle the old to the new */
-     piraq_crackers(srs, dst, item_count, ndx_count, crk_solo_sweep_file
-		    , offs_ndx, sparc_ndx, limit);
-   }
+   crackers(srs, dst, item_count, ndx_count, crk_solo_sweep_file
+	    , offs_ndx, sparc_ndx, limit);
 }
 /* c------------------------------------------------------------------------ */
 
@@ -539,6 +515,46 @@ void sp_crack_ssfiLE (srs, dst, limit)
 }
 /* c------------------------------------------------------------------------ */
 
+void sp_crack_ssfiLE0 (srs, dst, limit)
+  char *srs, *dst;
+  int limit;
+{
+   int sizeof_struct=400;
+   int item_count=25;
+
+   static int crk_solo_sweep_file [][7] = {
+      {    0,    1,    1,    4,    4,    1,    0},
+      {    4,    3,    4,    1,    5,    5,    4},
+      {    8,    3,    4,    1,    1,    1,    8},
+      {   12,    3,    4,    1,    1,    1,   12},
+      {   16,    3,    4,    1,    1,    1,   16},
+      {   20,    3,    4,    1,    1,    1,   20},
+      {   24,    5,    8,    1,    1,    1,   24},
+      {   32,    4,    4,    1,    1,    1,   32},
+      {   36,    3,    4,    6,   15,   10,   36},
+      {   60,    3,    4,    1,    1,    1,   60},
+      {   64,    3,    4,    1,    1,    1,   64},
+      {   68,    3,    4,    1,    1,    1,   68},
+      {   72,    3,    4,    1,    1,    1,   72},
+      {   76,    3,    4,    1,    1,    1,   76},
+      {   80,    3,    4,    1,    1,    1,   80},
+      {   84,    3,    4,    1,    1,    1,   84},
+      {   88,    3,    4,    1,    1,    1,   88},
+      {   92,    3,    4,    1,    1,    1,   92},
+      {   96,    1,    1,  128,  128,    1,   96},
+      {  224,    1,    1,  128,  128,    1,  224},
+      {  352,    1,    1,   16,   16,    1,  352},
+      {  368,    1,    1,   16,   16,    1,  368},
+      {  384,    3,    4,    1,    2,    2,  384},
+      {  388,    3,    4,    1,    1,    1,  388},
+      {  392,    5,    8,    1,    1,    1,  392},
+   };
+
+   crackers(srs, dst, item_count, ndx_count, crk_solo_sweep_file
+	    , sparc_ndx, offs_ndx, limit);
+}
+/* c------------------------------------------------------------------------ */
+
 void sp_crack_spmi0 (srs, dst, limit, swap_em)
   char *srs, *dst;
   int limit, swap_em;
@@ -554,18 +570,12 @@ void sp_crack_spmi0 (srs, dst, limit, swap_em)
       {   16,    3,    4,    1,    1,    1,   16},
       {   20,    3,    4,    1,    1,    1,   20},
       {   24,    3,    4,    6,    6,    1,   24},
-      {   48,    1,    1,   16,   32,    2,   72},
-      {   64,    1,    1,   16,   16,    1,   88},
+      {   48,    1,    1,   16,   32,    2,   48},
+      {   64,    1,    1,   16,   16,    1,   64},
    };
 
-   if (swap_em) {
-     crackers(srs, dst, item_count, ndx_count, crk_solo_parameter_info
-	      , offs_ndx, sparc_ndx, limit);
-   }
-   else {			/* reshuffle the old to the new */
-     piraq_crackers(srs, dst, item_count, ndx_count, crk_solo_parameter_info
-		    , offs_ndx, sparc_ndx, limit);
-   }
+   crackers(srs, dst, item_count, ndx_count, crk_solo_parameter_info
+	    , offs_ndx, sparc_ndx, limit);
 }
 /* c------------------------------------------------------------------------ */
 
@@ -654,43 +664,37 @@ void sp_crack_swvi0 (srs, dst, limit, swap_em)
       {   36,    3,    4,    1,    1,    1,   36},
       {   40,    3,    4,    1,    1,    1,   40},
       {   44,    3,    4,    6,    6,    1,   44},
-      {   68,    3,    4,    1,    1,    1,   92},
-      {   72,    3,    4,    1,    1,    1,   96},
-      {   76,    3,    4,    1,    1,    1,  100},
-      {   80,    4,    4,    1,   14,   14,  104},
-      {   84,    4,    4,    1,    1,    1,  108},
-      {   88,    4,    4,    1,    1,    1,  112},
-      {   92,    4,    4,    1,    1,    1,  116},
-      {   96,    4,    4,    1,    1,    1,  120},
-      {  100,    4,    4,    1,    1,    1,  124},
-      {  104,    4,    4,    1,    1,    1,  128},
-      {  108,    4,    4,    1,    1,    1,  132},
-      {  112,    4,    4,    1,    1,    1,  136},
-      {  116,    4,    4,    1,    1,    1,  140},
-      {  120,    4,    4,    1,    1,    1,  144},
-      {  124,    4,    4,    1,    1,    1,  148},
-      {  128,    4,    4,    1,    1,    1,  152},
-      {  132,    4,    4,    1,    1,    1,  156},
-      {  136,    3,    4,    1,    2,    2,  160},
-      {  140,    3,    4,    1,    1,    1,  164},
-      {  144,    1,    1,   48,   48,    1,  168},
-      {  192,    3,    4,    1,    1,    1,  216},
-      {  196,    4,    4,    1,    6,    6,  220},
-      {  200,    4,    4,    1,    1,    1,  224},
-      {  204,    4,    4,    1,    1,    1,  228},
-      {  208,    4,    4,    1,    1,    1,  232},
-      {  212,    4,    4,    1,    1,    1,  236},
-      {  216,    4,    4,    1,    1,    1,  240},
+      {   68,    3,    4,    1,    1,    1,   68},
+      {   72,    3,    4,    1,    1,    1,   72},
+      {   76,    3,    4,    1,    1,    1,   76},
+      {   80,    4,    4,    1,   14,   14,   80},
+      {   84,    4,    4,    1,    1,    1,   84},
+      {   88,    4,    4,    1,    1,    1,   88},
+      {   92,    4,    4,    1,    1,    1,   92},
+      {   96,    4,    4,    1,    1,    1,   96},
+      {  100,    4,    4,    1,    1,    1,  100},
+      {  104,    4,    4,    1,    1,    1,  104},
+      {  108,    4,    4,    1,    1,    1,  108},
+      {  112,    4,    4,    1,    1,    1,  112},
+      {  116,    4,    4,    1,    1,    1,  116},
+      {  120,    4,    4,    1,    1,    1,  120},
+      {  124,    4,    4,    1,    1,    1,  124},
+      {  128,    4,    4,    1,    1,    1,  128},
+      {  132,    4,    4,    1,    1,    1,  132},
+      {  136,    3,    4,    1,    2,    2,  136},
+      {  140,    3,    4,    1,    1,    1,  140},
+      {  144,    1,    1,   48,   48,    1,  144},
+      {  192,    3,    4,    1,    1,    1,  192},
+      {  196,    4,    4,    1,    6,    6,  196},
+      {  200,    4,    4,    1,    1,    1,  200},
+      {  204,    4,    4,    1,    1,    1,  204},
+      {  208,    4,    4,    1,    1,    1,  208},
+      {  212,    4,    4,    1,    1,    1,  212},
+      {  216,    4,    4,    1,    1,    1,  216},
    };
 
-   if (swap_em) {
-     crackers(srs, dst, item_count, ndx_count, crk_solo_view_info
-	      , offs_ndx, sparc_ndx, limit);
-   }
-   else {			/* reshuffle the old to the new */
-     piraq_crackers(srs, dst, item_count, ndx_count, crk_solo_view_info
-		    , offs_ndx, sparc_ndx, limit);
-   }
+   crackers(srs, dst, item_count, ndx_count, crk_solo_view_info
+	    , offs_ndx, sparc_ndx, limit);
 }
 /* c------------------------------------------------------------------------ */
 
