@@ -11,7 +11,7 @@ static const gchar * hlp_exam_overview[] = {
 "commands applied to the sweepfile.",
 " ",
 "It is also possible to edit individual cells by applying selected",
-"\"Operations\". ",
+"operations under the \"Edit\" menu. ",
 " ",
 "When displaying cell values, hitting the left arrow key changes",
 "the display to start one ray earlier and right arrow moves every",
@@ -30,17 +30,10 @@ static const gchar * hlp_exam_overview[] = {
 "displayed at the top of the \"Examine Display Widget\".  Likewise",
 "typing a \"Cell\" number shifts the display be begin at the cell",
 "entered.",
-" ",
-"CAUTION!",
-"If the width of the data display is shorted to less than two variables",
-"and five rays (11 columns), the current display does not right justfy",
-"properly and clicking in the data causes unpredictable results.",
-"Resizing the widget slightly causes the columns to right justify again.",
-"There can be on the order of 30 columns of data.",
 };
 
 static const gchar * hlp_exam_operations[] = {
-"The \"Operations\" submenu enables flagging individual cells as bad",
+"The \"Edit\" submenu enables flagging individual cells as bad",
 "or subtracting or adding the Nyquist interval to clicked cells or",
 "removing the aircraft motion from a velocity cell of aircraft data.",
 " ",
