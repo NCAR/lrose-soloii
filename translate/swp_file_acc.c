@@ -392,7 +392,10 @@ int dd_absorb_ray_info(dgi)
     DD_TIME *dts=dds->dts, *d_unstamp_time();
     struct dd_input_sweepfiles_v3 *dis, *dd_return_sweepfile_structs_v3();
     unsigned long gdsos;
-
+# ifndef notyet
+# include <piraq/piraqx.h>
+    PIRAQX *prqx;
+# endif
 
     count++;
     if( count >= doodah ) {
@@ -598,7 +601,10 @@ int dd_absorb_ray_info(dgi)
 	     dgi->dds->xstf = (XTRA_STUFF *)malloc (gdsos);
 	   }
 	   memcpy (dgi->dds->xstf, dgi->in_next_block, gdsos);
-
+# ifndef notyet
+	   prqx = (PIRAQX *)(dgi->in_next_block
+			     +dgi->dds->xstf->offset_to_first_item);
+# endif
 	   if(gottaSwap) {
 	     xstfo = (XTRA_STUFF *)dgi->in_next_block;
 	     dgi->dds->xstf->sizeof_struct = gdsos;
