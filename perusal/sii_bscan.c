@@ -401,6 +401,7 @@ int sp_ts_data_loop(tsLink0, usi)
    for(tsl=tsLink0;  tsl;  tsl=tsl->next) {
       ww = tsl->wwptr->window_num;
       sii_xfer_images(ww, 0);	
+      sii_reset_reconfig_flags(ww);
    }
 
    return(0);
