@@ -674,7 +674,8 @@ int sp_data_loop(flink0)
     int flag_count=0, set_flag, fd, loop = 0;
     char str[256];
     float ang;
-    double d, angle0, angle1, prev_angle1;
+    double d, angle0, angle1, prev_angle1, sector;
+    double ang_fill;
     static float max_sector=4., ang0=220, ang1=250;
     struct dd_ray_sector *ddrc, *dd_ray_coverage();
     WW_PTR wwptr, solo_return_wwptr();
@@ -684,59 +685,53 @@ int sp_data_loop(flink0)
 
 
     wwptr = solo_return_wwptr(lead_frame);
+    ang_fill = wwptr->view->angular_fill_pct * .01;
     dgi = dd_window_dgi(lead_frame, "UNKNOWN");
-
     prev_angle1 = EMPTY_FLAG;
-
+    
     
     /*
      * now really loop through the data
      */
-
+    
     for(;; loop++) {			/* for each ray */
-	/*
-	 * get the sector to plot based on the rotation angle
-	 */
-	flink = flink0;
-	ddrc = dd_ray_coverage(dgi, dgi->source_rat
-			       , dgi->source_ray_num
-			       , (float)0);
-
-	if(FABS(ddrc->sector) > max_sector) {
-	  ddrc->sector = ddrc->sector < 0 ? -max_sector*.5 : max_sector*.5;
-	  ddrc->angle0 = FMOD360
-	    (ddrc->rotation_angle -.5*ddrc->sector);
-	  ddrc->angle1 = FMOD360
-	    (ddrc->rotation_angle +.5*ddrc->sector);
+       /*
+	* get the sector to plot based on the rotation angle
+	*/
+       flink = flink0;
+       ddrc = dd_ray_coverage(dgi, dgi->source_rat
+			      , dgi->source_ray_num
+			      , (float)0);
+       
+       if(FABS(ddrc->sector) > max_sector) {
+	  sector = ddrc->sector < 0 ? -max_sector*.5 : max_sector*.5;
+	  angle0 = (prev_angle1 != EMPTY_FLAG) ? prev_angle1 :
+	    FMOD360 (ddrc->rotation_angle -.5*sector);
+	  angle1 = FMOD360 (ddrc->rotation_angle +.5*sector);
 	  prev_angle1 = EMPTY_FLAG;
+       }
+	else if (ang_fill && ang_fill < 1.) {
+	   sector = ddrc->sector < 0 ? -ang_fill : ang_fill;
+	   angle0 = FMOD360(ddrc->rotation_angle -.5*sector);
+	   angle1 = FMOD360(ddrc->rotation_angle +.5*sector);
 	}
 	else {
-	  angle1 = FMOD360(ddrc->rotation_angle +.5*ddrc->sector);
-
-	  if(d = wwptr->view->angular_fill_pct) {
-	    if(d < 1.) {
-	      ddrc->sector = ddrc->sector < 0 ? -d : d;
-	    }
-	    else {
-	      ddrc->sector *= d;
-	    }
-	  }
-	  if( prev_angle1 != EMPTY_FLAG )
-	    { ddrc->angle0 =  prev_angle1; }
-	  else
-	    { ddrc->angle0 = FMOD360
-		(ddrc->rotation_angle -.5*ddrc->sector); }
-
-	  ddrc->angle1 = FMOD360
-	    (ddrc->rotation_angle +.7*ddrc->sector);
-
-	  prev_angle1 = angle1; 
-
-	  /* all this thrashsing is to keep the plot from
-	   * rotating when the angular fill is increased
-	   */
+	   sector = ddrc->sector;
+	   angle0 = ddrc->angle0;
+	   if (ang_fill) {
+	      sector *= ang_fill;
+	   }
+	   else {
+	      sector *= 1.2;
+	   }
+	   angle1 = FMOD360(angle0 + sector);
+	   prev_angle1 = FMOD360(ddrc->rotation_angle +.5*ddrc->sector);
+	   
+	   /* all this thrashsing is to keep the plot from
+	    * rotating when the angular fill is increased
+	    */
 	}
-
+       
 	for(ii=0; flink; flink=flink->next, ii++) {
 	    count++;
 	    if(count >= trip) {
@@ -744,7 +739,7 @@ int sp_data_loop(flink0)
 	    }
 	    ww = flink->wwptr->window_num;
 	    rxy = return_xyras(ww);
-	    ray_raster_setup(ww, ddrc->angle0, ddrc->angle1, rxy);
+	    ray_raster_setup(ww, angle0, angle1, rxy);
 	    if(rxy->ignore_this_ray) {
 # ifdef obsolete
 	       g_string_sprintfa (gs_complaints, "%d)Ignore (%.2f,%.2f)"
