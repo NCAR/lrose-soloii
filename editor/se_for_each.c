@@ -155,6 +155,9 @@ int se_header_value(arg, cmds)	/* #header-value# */
     else if(strstr("altitude", name)) {
        dds->asib->altitude_msl = f_val;
     }
+    else if(strstr("agl_altitude", name)) {
+       dds->asib->altitude_agl = f_val;
+    }
     else {
        mark = 0;
     }
