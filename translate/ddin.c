@@ -409,11 +409,6 @@ int ddin_ini(interactive)
 	dui->current_file_name = aa;
 	dd_input_read_open(irq, aa);
     }
-# ifdef obsolete
-    if((a=get_tagged_string("SOURCE_DEV"))) {
-	dd_input_read_open(irq, a);
-    }
-# endif
     n = ddin_next_ray();
     
     if(!vold->volume_des_length) {
