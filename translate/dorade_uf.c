@@ -841,7 +841,7 @@ void ufp_uf_stuff(dgi, ufp)
     ufp->uf_num_gates = (celv->dist_cells[g2-1] -r)/gs  +1.1;
     /*
      * create a gate lookup table if the gate spacings
-     * are not to be the same
+     * are not to be the same in the celv
      */
     for(i=0; i < ufp->uf_num_gates; i++, r+=ufp->uf_gate_spacing ) {
 	x = fabs((double)(r-celv->dist_cells[g]));
