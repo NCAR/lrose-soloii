@@ -1890,6 +1890,9 @@ void dd_input_strings()
     if(a=getenv("MAX_AZ_DIFF")) {
 	put_tagged_string("MAX_AZ_DIFF", a);
     }
+    if(a=getenv("MC_DATA")) {
+	put_tagged_string("MC_DATA", a);
+    }
     if(a=getenv("MIN_AZ_DIFF")) {
 	put_tagged_string("MIN_AZ_DIFF", a);
     }
@@ -3122,6 +3125,58 @@ dor_print_radd(radd, slm)
     solo_add_list_entry(slm, aa, strlen(aa));
     sprintf(aa, " interpulse_per5    %f", radd->interpulse_per5  );
     solo_add_list_entry(slm, aa, strlen(aa));
+
+    return;
+}
+/* c------------------------------------------------------------------------ */
+
+void
+dor_print_rktb(rktb, slm)
+  struct rot_ang_table *rktb;	
+  struct solo_list_mgmt *slm;
+{
+    char *aa, *bb, bstr[128];
+    int ii;
+    struct rot_table_entry *rte;
+
+    aa = bstr;
+
+    /* routine to print the contents of the rotation angle table */
+
+    solo_add_list_entry(slm, " ", 1);
+    sprintf(aa, "Contents of the rotation angle table  len: %d"
+	    , sizeof(struct rot_ang_table));
+    solo_add_list_entry(slm, aa, strlen(aa));
+
+    sprintf(aa, " name_struct[4]     %.4s", rktb->name_struct );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, " sizeof_struct      %d", rktb->sizeof_struct );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, " angle2ndx          %.3f", rktb->angle2ndx );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, " ndx_que_size       %d", rktb->ndx_que_size );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, " first_key_offset   %d", rktb->first_key_offset );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, " angle_table_offset %d", rktb->angle_table_offset );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, " num_rays           %d", rktb->num_rays );
+    solo_add_list_entry(slm, aa, strlen(aa));
+
+    bb = (char *)rktb + rktb->first_key_offset;
+
+
+    for(ii=0; ii < rktb->num_rays; ii++) {
+	rte = (struct rot_table_entry *)bb;
+	sprintf(aa, "%4d %7.2f %8d %7d\n"
+		, ii
+		, rte->rotation_angle
+		, rte->offset
+		, rte->size
+		);
+	bb += sizeof(struct rot_table_entry);
+	solo_add_list_entry(slm, aa, strlen(aa));
+     }
 
     return;
 }
