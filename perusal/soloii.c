@@ -523,6 +523,7 @@ int main( int argc,
 				 */
   gtk_widget_set_default_visual (gdk_rgb_get_visual ());
   gtk_widget_set_default_colormap (gdk_rgb_get_cmap ());
+  gdk_rgb_set_min_colors (216);       /* 6x6x6 = 216; 7x7x7 = 343 */
 
   sii_set_default_colors ();
   sii_init_frame_configs();
