@@ -106,7 +106,7 @@ int ();
 # endif
 
 static char * syn_sugar =
-" to of in with from by put-in is scale bias when and gates on km. degrees low high increment around ";
+" to of in with from by put-in is scale bias when and gates on km. degrees low high increment around milliseconds meters-per-second";
 
 
 /* c------------------------------------------------------------------------ */
