@@ -708,6 +708,7 @@ void dd_get_cfac(stream, cfac)
     /* routine to absorb an ascii version of the cfac info and
      * stuff it into the cfac struct
      */
+    static int complaint_count = 0;
     int nn, nt;
     char str[256], *aa, *bb;
     char string_space[256], *strptrs[16];
@@ -775,7 +776,8 @@ void dd_get_cfac(stream, cfac)
 	    cfac->tilt_corr = d;
 	}
 	else {
-	    printf("%s\n**** Not a usable correction factor ****\n", aa);
+	  if (complaint_count++ < 8)
+	    { printf("%s\n**** Not a usable correction factor ****\n", aa); }
 	}
     }
 }
