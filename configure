@@ -4083,7 +4083,7 @@ done
 echo "$as_me:$LINENO: checking \"for netcdf.h \"" >&5
 echo $ECHO_N "checking \"for netcdf.h \"... $ECHO_C" >&6
 
-for ac_incdir in /usr/include /usr/include/netcdf /usr/local/include /usr/local/include/netcdf /usr/lib /usr/lib/netcdf /usr/local/lib/netcdf /opt/local_rh90/include /opt/local_ws3/include
+for ac_incdir in /usr/include /usr/include/netcdf /usr/local/include /usr/local/include/netcdf /usr/lib /usr/lib/netcdf /usr/local/lib/netcdf /opt/local_rh90/include /opt/local_ws3/include /opt/local_fc3/include
 do
 if test -r $ac_incdir/netcdf.h; then
    LOCAL_INCLUDES="$LOCAL_INCLUDES -I$ac_incdir"
@@ -4096,7 +4096,7 @@ done
 echo "$as_me:$LINENO: checking \"for libnetcdf.a \"" >&5
 echo $ECHO_N "checking \"for libnetcdf.a \"... $ECHO_C" >&6
 NETCDFLIBDIR=
-for ac_xdir in /usr/lib /lib /local/lib /usr/local/lib /usr/lib/netcdf /lib/netcdf /local/lib/netcdf /usr/local/lib/netcdf /opt/local_rh90/lib /opt/local_ws3/lib
+for ac_xdir in /usr/lib /lib /local/lib /usr/local/lib /usr/lib/netcdf /lib/netcdf /local/lib/netcdf /usr/local/lib/netcdf /opt/local_rh90/lib /opt/local_ws3/lib /opt/local_fc3/lib
 do
 if test -r $ac_xdir/libnetcdf.a; then
    NETCDFLIBDIR=$ac_xdir
