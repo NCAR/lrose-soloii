@@ -155,8 +155,11 @@ int se_header_value(arg, cmds)	/* #header-value# */
     else if(strstr("altitude", name)) {
        dds->asib->altitude_msl = f_val;
     }
-    else if(strstr("agl_altitude", name)) {
+    else if(strstr("agl-altitude", name)) {
        dds->asib->altitude_agl = f_val;
+    }
+    else if(strstr("msl-into-agl-corr", name)) {
+       dds->asib->altitude_agl = dds->asib->altitude_msl +f_val;
     }
     else {
        mark = 0;
@@ -164,6 +167,25 @@ int se_header_value(arg, cmds)	/* #header-value# */
 
     return(1);
 }  
+/* c------------------------------------------------------------------------ */
+
+int se_rewrite(arg, cmds)	/* #rewrite# */
+  int arg;
+  struct ui_command *cmds;	
+{
+  /* trigger a rewrite of this ray even though no other editing 
+   * is taking place
+   */
+
+    struct solo_edit_stuff *seds, *return_sed_stuff();
+
+    seds = return_sed_stuff();
+    if(seds->finish_up) {
+	return(1);
+    }
+    seds->modified = YES;
+    return(1);
+}
 /* c------------------------------------------------------------------------ */
 
 int se_remove_field(arg, cmds)	/* #ignore-field# */
