@@ -76,6 +76,7 @@ static char *current_file_name;
 
 static char *pbuf=NULL, **pbuf_ptrs=NULL;
 static int pbuf_max=1200;
+static int dbg_count = 0;
 
 
 void nex_dump_this_ray();
@@ -1163,14 +1164,18 @@ char *nex_next_block()
     /* returns a pointer to the next block of a new NCDC 88D Level 2 file
      * 
      */
-    static int count=0, bp=298, tmp_rec = NO, cal_count = 0;
-    static char *tmp_at = NULL, *next_packet = NULL;
+    static int count=0, bp=98, tmp_rec = NO, cal_count = 0;
+    static char *tmp_at = NULL, *next_packet = NULL, *last_packet;
     int ii, mm, nn, mark, message_type, cal_packets = 36;
     int bytes_left = 0, bytes_used = 0, header_plus = 0;
-    int eof_count = 0, err_count = 0;
+    int eof_count = 0, err_count = 0, packet_size = NEX_PACKET_SIZE;
     char *at, *aa, *bb, *arch2 = "ARCHIVE2", *top = NULL;
     struct io_packet *dd_return_next_packet(), *dp;
- 
+    struct CTM_info *ctm;
+    static struct CTM_info *prior_ctm = 0;
+    short zeroes[6] = {0,0,0,0,0,0};
+
+
     if( !tmp_at ) {
       tmp_at = (char *)malloc( 3 * NEX_PACKET_SIZE );
     }
@@ -1178,8 +1183,10 @@ char *nex_next_block()
     if(++count >= bp) {
 	mark = 0;
     }
+    dbg_count = count;
 
-    for(;1;) {			/* 2432 = 19 * 128 */
+    for(;;) {			/* 2432 = 19 * 128 */
+
         bytes_left = 0;
 
 	if(iri->top->bytes_left < iri->min_block_size) {
@@ -1244,7 +1251,10 @@ char *nex_next_block()
 
 	    eof_count = err_count = 0;
 	    dd_stats->rec_count++;  
-	}
+
+	 } /* if(iri->top->bytes_left < iri->min_block_size) { */
+
+
 	if( header_plus > 0 ) {
 	  bytes_used = NEX_PACKET_SIZE - header_plus;
 	  header_plus = 0;
@@ -1257,7 +1267,7 @@ char *nex_next_block()
 	else {
 	  at = iri->top->at;
 	  bytes_used = NEX_PACKET_SIZE;
-	}
+       }
 
 	if( strncmp(at, arch2, strlen(arch2)) == 0) { /* start of a volume */
 	  nn = sizeof(struct nexrad_vol_scan_title);
@@ -1278,8 +1288,6 @@ char *nex_next_block()
 	  }
 	  continue;
 	}
-	iri->top->at += bytes_used;
-	iri->top->bytes_left -= bytes_used;
 
 # ifdef obsolete
 	if( cal_count ) {
@@ -1289,7 +1297,28 @@ char *nex_next_block()
 	  cal_count = 0;
 	}
 # endif
+	ctm = (struct CTM_info *)at;
+	if (prior_ctm) {
+	   mm = (int)(.1*NEX_PACKET_SIZE);
+	   if (memcmp (ctm, prior_ctm, sizeof (*ctm))) {
+	      bytes_used += sizeof (*ctm);
+	      ezhxdmp(last_packet, 0, mm);
+	      printf ("\n***** Data is garbage at ray %d\n\n", count);
+	      ezhxdmp(at, 0, mm);
+	      return (NULL);
+	   }
+	}
+	else {
+	   prior_ctm = (struct CTM_info *)malloc (sizeof (*ctm));
+	}
+# ifdef obsolete
+# endif
+	memcpy (prior_ctm, ctm, sizeof (*ctm));
+	last_packet = at;
 	at += sizeof(struct CTM_info);
+
+	iri->top->at += bytes_used;
+	iri->top->bytes_left -= bytes_used;
 
 	if(LittleEndian) {
 	  nex_crack_nmh(at, nmh, (int)0);
@@ -1303,7 +1332,7 @@ char *nex_next_block()
 	}
 
 	dp = dd_return_next_packet(iri);
-	dp->len = NEX_PACKET_SIZE;
+	dp->len = packet_size;
 
 	message_type = nmh->message_type;
 
@@ -1525,7 +1554,7 @@ int nex_next_ray()
 # endif
 	default:
 	    break;
-	}
+	 }
 	dp->len = sizeof_packet;
 	iri->top->bytes_left -= sizeof_packet;
 	iri->top->at += sizeof_packet;
