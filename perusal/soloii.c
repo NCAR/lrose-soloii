@@ -122,6 +122,7 @@ enum {
   SII_MAIN_FILESEL_OK,
   SII_MAIN_SWPFI_FILESEL,
   SII_MAIN_CONFIG_FILESEL,
+  SII_MAIN_COLORS_FILESEL,
 
   SII_MAIN_EVENT_ENTER,
   SII_MAIN_EVENT_LEAVE,
@@ -188,7 +189,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi);
 gchar *sii_nab_line_from_text (const gchar *txt, guint position );
 void sii_png_image_prep (char *dir);
 gboolean sii_batch (gpointer argu);
-void sii_initialization_filesel (gint which_but, gchar * dirroot);
+GtkWidget *sii_filesel (gint which_but, gchar * dirroot);
 /* c---------------------------------------------------------------------- */
 /* c...events */
 /* c---------------------------------------------------------------------- */
@@ -384,7 +385,7 @@ int sii_initialize_cb (GtkWidget *w, gpointer data)
     case SII_MAIN_CONFIG_FILESEL:
       if (!(aa =getenv ("INIT_FILESEL")))
 	{ aa = "/"; }
-      sii_initialization_filesel (task, aa);
+      sii_filesel (task, aa);
       break;
 
     case SII_MAIN_DIR:
@@ -636,6 +637,16 @@ int main( int argc,
 }
 
 /* c---------------------------------------------------------------------- */
+
+void 
+sii_param_colors_filesel (const gchar *str, GtkWidget *fs);
+
+/* c---------------------------------------------------------------------- */
+
+int sii_return_colors_filesel_wid() { return (SII_MAIN_COLORS_FILESEL); }
+
+/* c---------------------------------------------------------------------- */
+
 static GtkWidget *filesel;
 
 int sii_filesel_cb (GtkWidget *fs, gpointer data)
@@ -645,7 +656,7 @@ int sii_filesel_cb (GtkWidget *fs, gpointer data)
    gint task, ii;
    const GString *cgs;
 
-   task = (gint)gtk_object_get_data (GTK_OBJECT(fs), "task");
+   task = GPOINTER_TO_UINT (gtk_object_get_data (GTK_OBJECT(fs), "task"));
    name = gtk_file_selection_get_filename ((GtkFileSelection *)fs);
    strcpy (str, name);
    strcpy (str2, name);
@@ -679,17 +690,30 @@ int sii_filesel_cb (GtkWidget *fs, gpointer data)
 	(GTK_OBJECT(main_config_window), "config_dir");
       gtk_entry_set_text (GTK_ENTRY (entry), str);
       break;
+
+   case SII_MAIN_COLORS_FILESEL:
+      sii_param_colors_filesel (str, fs);
+      break;
    }
 }
 
 /* c---------------------------------------------------------------------- */
 
-void sii_initialization_filesel (gint which_but, gchar * dirroot)
+GtkWidget *sii_filesel (gint which_but, gchar * dirroot)
 {
    GtkWidget *fs;
    gchar str[256], *aa="/", *bb;
+
+   if (which_but == SII_MAIN_SWPFI_FILESEL) {
+      bb = "swpfi_dir";
+   }
+   else if (which_but == SII_MAIN_CONFIG_FILESEL) {
+      bb = "config_dir";
+   }
+   else if (which_but == SII_MAIN_COLORS_FILESEL) {
+      bb = "colors_dir";
+   }
    
-   bb = (which_but == SII_MAIN_SWPFI_FILESEL) ? "swpfi_dir" : "config_dir";
    strcpy (str, bb);
    strcat (str, " file selection dialog");
    fs = gtk_file_selection_new (str);
@@ -707,13 +731,11 @@ void sii_initialization_filesel (gint which_but, gchar * dirroot)
    }
    else
      { g_string_append (gen_gs, "/"); }
-   g_string_append (gen_gs, "/");
    gtk_file_selection_set_filename ((GtkFileSelection *)fs, gen_gs->str);
    gtk_object_set_data (GTK_OBJECT(fs)
 			, "task", (gpointer)which_but);
-   
    gtk_widget_show (fs);
-  
+   return (fs);
 }
 
 /* c---------------------------------------------------------------------- */
