@@ -174,7 +174,7 @@ struct ui_cmd_mgmt *ok_cmd( char * line, struct ui_cmd_mgmt *the_ucm )
   struct solo_edit_stuff *seds, *return_sed_stuff();
   struct ui_cmd_mgmt *ucm, *ucm_save = NULL;
   struct ui_command *cmd;
-  int ii, mm, nn, nt, hits = 0;
+  int ii, mm, nn, nt, hits = 0, nk;
   char *aa, *ee;
   struct solo_list_mgmt *slm;
   
@@ -217,13 +217,14 @@ struct ui_cmd_mgmt *ok_cmd( char * line, struct ui_cmd_mgmt *the_ucm )
 
     /* look for the cmd template */
 
+    nk = strlen (ucm_save->keyword);
     slm = seds->all_templates;
     nn = slm->num_entries;
     for (ii = 0; ii < nn; ii++) {
       aa = solo_list_entry (slm, ii);
       if (!strlen (aa))
 	{ continue; }
-      if (strstr (aa, ucm_save->keyword)) {
+      if (strncmp (aa, ucm_save->keyword, nk) == 0) {
 	the_ucm->tmplt = aa;
 	break;
       }
