@@ -6,7 +6,7 @@ static char vcid[] = "$Id$";
 
 #define NU_TSTAMP
 
-# include <uii.h>
+# include <ui.h>
 # include <dorade_headers.h>
 # include <solo_window_structs.h>
 # include <seds.h>
