@@ -10,7 +10,7 @@
 # include <sed_shared_structs.h>
 # include <solo_window_structs.h>
 # include <point_in_space.h>
-# include <uii.h>
+# include <ui.h>
 
 /* c------------------------------------------------------------------------ */
 
