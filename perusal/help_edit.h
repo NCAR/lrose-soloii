@@ -39,7 +39,7 @@ static const gchar * edit_overview[] = {
 };
 
 static const gchar * hlp_edit_file[] = {
-"\"Reset Times\" will reset the start and stop times if the become",
+"\"Reset Times\" will reset the start and stop times if they become",
 "hopelessly mangled",
 " ",
 "\"List Cmd & Bnd Files\" brings up a widget that allows you save",
@@ -49,6 +49,13 @@ static const gchar * hlp_edit_file[] = {
 "contain binary data. The \"asb.\" files created along with the",
 "boundary files are text files of boundary information to be used",
 "elsewhere and cannot be imported into soloii.",
+" ",
+"If a list of files appears below the directory for one of the three",
+"types of files, you should be able to click on the file name and soloii",
+"will import the contents of the file. To get files from other",
+"directories, type the directory name in the directory window followed", 
+"enter \"Enter\". A list should appear and then you can click on the ",
+"file name",
 " ",
 "\"Import Lat/Lon Bnds\" brings up this same widget. The files listed",
 "are text files created externally that contain ordered pairs of",
