@@ -98,6 +98,7 @@ struct dd_comm_info {
 };
 
 struct cfac_wrap {
+  int ok_frib;
   char frib_file_name[80];
   char cfac_file_name[256];
   char radar_name[16];
