@@ -1,6 +1,6 @@
 /* 	$Id$	 */
 
-# define xdiag
+# define config_debug
 
 # ifdef info_only
 # endif
@@ -2040,10 +2040,41 @@ void sii_plot_data (guint frame_num, guint plot_function)
 {
   /* Update and or modify image sizes */
   SiiFrameConfig *sfc = frame_configs[frame_num];
-  guint fn = 0, size, width, height, maxsize = 0;
+  guint fn = 0, size, width, height, cwidth, cheight, maxsize = 0, ndx;
+  gint idx, idy, mark, mm, nn;
   GtkWidget *frame;
   gchar str[256];
+  sii_table_parameters *stp;
     
+  fn = frame_num;
+  fn = 0;
+  ndx = frame_configs[fn]->cfg_que_ndx;
+  width = frame_configs[fn]->width;  height = frame_configs[fn]->height;
+  cwidth = frame_configs[fn]->cfg_width[ndx];  
+  cheight = frame_configs[fn]->cfg_height[ndx];
+
+  idx = abs ((gint)width - (gint)cwidth);
+  idy = abs ((gint)height - (gint)cheight);
+
+# ifdef config_debug
+     sprintf (str, "sii_plot_data idx:%d idy:%d  cfg:%dx%d frm:%dx%d"
+	      , idx, idy, cwidth, cheight, width, height);
+     sii_append_debug_stuff (str);
+# endif
+
+  if (idx > 0 || idy > 0) {
+     mark = 0;
+     stp = &frame_configs[0]->tbl_parms;
+     mm = stp->right_attach - stp->left_attach;
+     nn = stp->bottom_attach - stp->top_attach;
+     sii_table_widget_width = (guint)((gdouble)cwidth/mm);
+     sii_table_widget_height = (guint)((gdouble)cheight/nn);
+# ifndef notyet
+     sii_check_def_widget_sizes ();
+     sii_new_frames ();
+# endif
+  }
+
   /* make sure the image is big enought for the frame size */
 
   for (fn=0; fn < sii_frame_count; fn++) {
@@ -2058,10 +2089,9 @@ void sii_plot_data (guint frame_num, guint plot_function)
       { uniform_frame_shape = FALSE; }
 
     if (size > sfc->max_image_size) {
-# ifdef obsolete
+# ifdef config_debug
       sprintf (str, "Enlarge Image %d %d %d -> %d"
 	       , fn, sii_frame_count, sfc->max_image_size, size);    
-      g_message (str);
 # endif
       if (sfc->image) {
 	if (sfc->image->data)
@@ -2071,6 +2101,13 @@ void sii_plot_data (guint frame_num, guint plot_function)
 	sfc->image = (SiiImage *)g_malloc0 (sizeof (SiiImage));
       }
       sfc->image->data = g_malloc0 (size * 4);
+# ifdef config_debug
+      sprintf (str+strlen(str), " data:%d", sfc->image->data);
+				/*
+      g_message (str);
+				 */
+      sii_append_debug_stuff (str);
+# endif
       sfc->max_image_size = size;
       if (sfc->max_image_size > maxsize)
 	{ maxsize = sfc->max_image_size; }
