@@ -450,7 +450,7 @@ void dd_stuff_ray()
 	strncpy (dds->xstf->name_struct, "XSTF", 4);
 	dds->xstf->sizeof_struct = nn;
 	dds->xstf->one = 1;
-	dds->xstf->source_format = APIRAQ_FMT;
+	dds->xstf->source_format = PIRAQX_FMT;
 	dds->xstf->offset_to_first_item = sizeof (XTRA_STUFF);
       }
       aa = (char *)dds->xstf +dds->xstf->offset_to_first_item;
