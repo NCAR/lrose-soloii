@@ -387,6 +387,13 @@ int sii_initialize_cb (GtkWidget *w, gpointer data)
       break;
 
     case SII_MAIN_DIR:
+      if (sii_frame_count > 0) {
+	 sii_message (
+"Use Sweepfiles Widget to change directories"
+		      );
+	 return;
+      }
+
       entry = (GtkWidget *)gtk_object_get_data
 	(GTK_OBJECT(main_config_window), "swpfi_dir");
 
