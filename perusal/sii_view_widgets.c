@@ -59,6 +59,7 @@ enum {
    VIEW_VALUES_XYTICS,
    VIEW_AZ_LBL_RNG,
    VIEW_RNG_LBL_AZ,
+   VIEW_ANG_FILL,
 
    VIEW_CTR_RNG_AZ,
    VIEW_CTR_LAT_LON,
@@ -85,6 +86,7 @@ enum {
    VIEW_HLP_CTR,
    VIEW_HLP_LMRK,
    VIEW_HLP_TS,
+   VIEW_HLP_FILL,
    VIEW_LAST_ENUM,
 
 }ViewWidgetIds;
@@ -440,6 +442,13 @@ sii_set_view_info (guint frame_num)
     vd->orig_values[jj][0] = ff;
   }
   vwi.magnification = vwi.ts_magnification = vd->orig_values[jj][0];
+
+  jj = VIEW_ANG_FILL;
+  aa = gtk_entry_get_text( GTK_ENTRY (vd->data_widget[jj]));
+  if (sii_str_values ( aa, 1, &ff, &gg )) {
+    vd->orig_values[jj][0] = ff;
+  }
+  vwi.angular_fill_pct = vd->orig_values[jj][0];
 
   jj = VIEW_VALUES_AZRNG;
   aa = gtk_entry_get_text( GTK_ENTRY (vd->data_widget[jj]));
@@ -801,6 +810,11 @@ void sii_update_view_info (guint frame_num)
     aa = sii_set_string_from_vals (vd->orig_txt[jj], 1, ff, gg
 				   , vd->precision[jj]);
   }
+  jj = VIEW_ANG_FILL;
+  ff = wwptr->view->angular_fill_pct;
+  vd->orig_values[jj][0] = ff;
+  aa = sii_set_string_from_vals (vd->orig_txt[jj], 1, ff, gg
+				 , vd->precision[jj]);
 
   jj = VIEW_RADAR_LAT_LON_ALT;
   g_string_sprintf (vd->orig_txt[jj]
@@ -942,6 +956,10 @@ void sii_update_view_widget (guint frame_num)
   gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (check_item), TRUE );
   
    jj = VIEW_ZOOM;
+   aa = vd->orig_txt[jj]->str;
+   gtk_entry_set_text (GTK_ENTRY (vd->data_widget[jj]), aa);
+  
+   jj = VIEW_ANG_FILL;
    aa = vd->orig_txt[jj]->str;
    gtk_entry_set_text (GTK_ENTRY (vd->data_widget[jj]), aa);
 
@@ -1258,8 +1276,10 @@ void sii_view_menu_cb ( GtkWidget *w, gpointer   data )
     if( active = GTK_CHECK_MENU_ITEM (check_item)->active)
       { vd->rng_az_state = task; }
 
+# ifdef obsolete
     g_message ( "View Task: %d  State: %d  Active: %d"
 		, task, vd->toggle[task], active );
+# endif
     vd->toggle[task] = active;
     break;
 
@@ -1273,8 +1293,10 @@ void sii_view_menu_cb ( GtkWidget *w, gpointer   data )
     if( active = GTK_CHECK_MENU_ITEM (check_item)->active)
       { vd->xy_tics_state = task; }
 
+# ifdef obsolete
     g_message ( "View Task: %d  State: %d  Active: %d"
 		, task, vd->toggle[task], active );
+# endif
     vd->toggle[task] = active;
     break;
 
@@ -1287,8 +1309,10 @@ void sii_view_menu_cb ( GtkWidget *w, gpointer   data )
     if( active = GTK_CHECK_MENU_ITEM (check_item)->active)
       { vd->ctr_state = task; }
 
+# ifdef obsolete
     g_message ( "View Task: %d  State: %d  Active: %d"
 		, task, vd->toggle[task], active );
+# endif
     vd->toggle[task] = active;
     break;
 
@@ -1301,8 +1325,10 @@ void sii_view_menu_cb ( GtkWidget *w, gpointer   data )
     if( active = GTK_CHECK_MENU_ITEM (check_item)->active)
       { vd->lmrk_state = task; }
 
+# ifdef obsolete
     g_message ( "View Task: %d  State: %d  Active: %d"
 		, task, vd->toggle[task], active );
+# endif
     vd->toggle[task] = active;
     break;
 
@@ -1313,8 +1339,10 @@ void sii_view_menu_cb ( GtkWidget *w, gpointer   data )
   case VIEW_TS_MODE:
 
     vd->toggle[task] = GTK_CHECK_MENU_ITEM (rmi)->active;
+# ifdef obsolete
     g_message ( "View Task: %d  State: %d  Active: %d"
 		, task, vd->toggle[task], active );
+# endif
     break;
       
 
@@ -1360,8 +1388,10 @@ void sii_view_menu_cb ( GtkWidget *w, gpointer   data )
     if( active = GTK_CHECK_MENU_ITEM (check_item)->active)
       { vd->ts_lr_state = task; }
 
+# ifdef obsolete
     g_message ( "View Task: %d  State: %d  Active: %d"
 		, task, vd->toggle[task], active );
+# endif
     vd->toggle[task] = active;
     break;
 
@@ -1372,8 +1402,10 @@ void sii_view_menu_cb ( GtkWidget *w, gpointer   data )
     if( active = GTK_CHECK_MENU_ITEM (check_item)->active)
       { vd->ts_relative_state = task; }
 
+# ifdef obsolete
     g_message ( "View Task: %d  State: %d  Active: %d"
 		, task, vd->toggle[task], active );
+# endif
     vd->toggle[task] = active;
     break;
 
@@ -1385,8 +1417,10 @@ void sii_view_menu_cb ( GtkWidget *w, gpointer   data )
     if( active = GTK_CHECK_MENU_ITEM (check_item)->active)
       { vd->ts_point_state = task; }
 
+# ifdef obsolete
     g_message ( "View Task: %d  State: %d  Active: %d"
 		, task, vd->toggle[task], active );
+# endif
     vd->toggle[task] = active;
     break;
 
@@ -1694,6 +1728,15 @@ void sii_view_widget( guint frame_num )
   gtk_table_attach (GTK_TABLE (table), entry, 1, 2, row, row+1,
 		    xoptions, yoptions, xpadding, ypadding );
   sii_view_entry_info( entry, VIEW_RNG_LBL_AZ, frame_num, ENTRY_ONE_FLOAT );
+
+  row++;
+  label = gtk_label_new ( " Angular Fill (%) " );
+  gtk_table_attach (GTK_TABLE (table), label, 0, 1, row, row+1,
+		    xoptions, yoptions, xpadding, ypadding );
+  entry = gtk_entry_new ();
+  gtk_table_attach (GTK_TABLE (table), entry, 1, 2, row, row+1,
+		    xoptions, yoptions, xpadding, ypadding );
+  sii_view_entry_info( entry, VIEW_ANG_FILL, frame_num, ENTRY_ONE_FLOAT );
 
 
 # ifdef obsolete
