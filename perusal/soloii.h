@@ -74,6 +74,10 @@ enum {				/* top level window ids for each frame */
    FRAME_SOLO_INIT,
    FRAME_CONFIGS,
    FRAME_ZOOMS,
+   FRAME_DRAG_RESIZE,
+   FRAME_ZOOM_RESIZE,
+   FRAME_NEW_CONFIG,
+   FRAME_RESHAPE,
 
    FRAME_HELP,
    FRAME_HELP_SWPFI,
@@ -84,6 +88,12 @@ enum {				/* top level window ids for each frame */
    FRAME_LAST_ENUM,
 
 } sii_TopLevelWwindowIds;
+
+static const int FrameDragResize = 0x1;
+static const int FrameDragAdjust = 0x2;
+static const int FrameZoomResize = 0x4;
+static const int FrameNewConfig  = 0x8;
+static const int FrameReshape    = 0x10;
 
 enum {
    ENTRY_ZERO,
@@ -302,6 +312,18 @@ typedef struct {		/* frame info */
   guint cfg_que_ndx;
   guint cfg_width[CFG_QUE_SIZE];
   guint cfg_height[CFG_QUE_SIZE];
+
+  guint config_sync_num;
+  guint drag_resize_count;
+  guint expose_sync_num;
+  gint reconfig_flag;
+  gint x_drag_ref;
+  gint y_drag_ref;
+
+  GtkAllocation config_event_alloc;
+  GtkAllocation adjusted_alloc;
+  GtkAllocation current_alloc;
+
 
 } SiiFrameConfig;
 
