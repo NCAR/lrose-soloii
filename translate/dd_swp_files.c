@@ -534,8 +534,8 @@ void dd_new_vol(dgi)
 	 dgi->vol_num = dts->hour * 60 + dts->minute;
     }
     else {
-       vold->volume_num = dis->editing ? dgi->source_vol_num : dgi->vol_num;
        dgi->vol_num++;
+       vold->volume_num = dis->editing ? dgi->source_vol_num : dgi->vol_num;
     }
 }
 /* c------------------------------------------------------------------------ */
