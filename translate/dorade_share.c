@@ -1840,6 +1840,29 @@ void solo_unmalloc_list_mgmt(slm)
 }
 /* c------------------------------------------------------------------------ */
 
+void solo_sort_slm_entries (slm)
+  struct solo_list_mgmt *slm;
+{
+   char *aa, *bb;
+   int ii, jj, nn = slm->num_entries;
+   char str[256];
+   
+   for(ii=0; ii < nn-1; ii++) {
+      aa = solo_list_entry(slm, ii);
+      for(jj=ii+1; jj < nn; jj++) {
+	 bb = solo_list_entry(slm, jj);
+	 if(strcmp(bb, aa) < 0) {
+	    strcpy (str, aa);
+	    solo_modify_list_entry(slm, bb, strlen (bb), ii);
+	    aa = solo_list_entry(slm, ii);
+	    solo_modify_list_entry(slm, str, strlen (str), jj);
+	 }
+      }
+   }
+}
+  
+/* c------------------------------------------------------------------------ */
+
 char *str_terminate(dst, srs, n)
   CHAR_PTR srs, dst;
   int n;
