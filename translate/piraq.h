@@ -18,6 +18,7 @@ struct radar_consts {
 #define DATA_MAX_POL    10 /* same as full plus plus more gates */
 #define DATA_HVSIMUL    11 /* simultaneous transmission of H and V */
 #define DATA_SHRTPUL    12 /* same as MAX_POL with gate averaging */
+#define DATA_SMHVSIM    13 /*  */
 #define DATA_DUALPP     15 /* DOW dual prt pulse pair ABP,ABP */
 #define DATA_POL_PLUS_CMP 29	/* full pol plus */
 #define DATA_MAX_POL_CMP  30	/* same as full plus plus more gates */
