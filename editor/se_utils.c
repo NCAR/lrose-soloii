@@ -87,6 +87,7 @@ int se_once_only();
 int se_radial_shear();
 int se_readin_cmds();
 int se_remove_ac_motion();
+int se_remove_storm_motion();
 int se_remove_field();
 int se_rescale_field();
 int se_ring_zap();
@@ -106,7 +107,7 @@ int ();
 # endif
 
 static char * syn_sugar =
-" to of in with from by put-in is scale bias when and gates on km. degrees low high increment around milliseconds meters-per-second";
+" to of in with from by put-in is scale bias when and gates on km. degrees deg. deg mps m. low high increment around milliseconds meters-per-second";
 
 
 /* c------------------------------------------------------------------------ */
@@ -1252,6 +1253,13 @@ return_sed_stuff()
 
 	ucm = malloc_cmd_mgmt();
 
+	ucm->keyword = "remove-storm-motion";
+	ucm->cmd_proc = se_remove_storm_motion;
+	ucm_prev->next = ucm;
+	ucm_prev = ucm;
+
+	ucm = malloc_cmd_mgmt();
+
 	ucm->keyword = "rescale-field";
 	ucm->cmd_proc = se_rescale_field;
 	ucm_prev->next = ucm;
@@ -1937,6 +1945,9 @@ void se_all_fer_cmds(which)
     solo_add_list_entry(which, a, strlen(a));
 
     a = "remove-ring in <field> from <real> to <real> km.";
+    solo_add_list_entry(which, a, strlen(a));
+
+    a = "remove-storm-motion in <field> of <real> deg <real> mps";
     solo_add_list_entry(which, a, strlen(a));
 
     a = "remove-surface in <field>";

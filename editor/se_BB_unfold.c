@@ -508,3 +508,68 @@ int se_remove_ac_motion(arg, cmds)	/* #remove-aircraft-motion# */
     return(1);
 }
 /* c------------------------------------------------------------------------ */
+
+int se_remove_storm_motion(arg, cmds)	/* #remove-storm-motion# */
+  int arg;
+  struct ui_command *cmds;	
+{
+    /* remove the aircraft motion from velocities
+     */
+    struct ui_command *cmdq=cmds+1; /* point to the first argument */
+    int ii, nc, nn, mark, pn, sn;
+    int scaled_vel;
+    char *name;
+    short *ss, *tt, *zz, *bnd, vx, bad;
+    float speed, wind, scale, bias;
+    double d, az, theta, cosTheta, adjust, scaled_adjust;
+    struct dd_general_info *dgi, *dd_window_dgi();
+    struct dds_structs *dds;
+    struct solo_edit_stuff *seds, *return_sed_stuff();
+    double d_angdiff();
+
+
+    seds = return_sed_stuff();	/* solo editing struct */
+
+    if(seds->finish_up) {
+	return(1);
+    }
+    seds->modified = YES;
+    name = (cmdq++)->uc_text;
+    sn = strlen(name);
+    bnd = (short *) seds->boundary_mask;
+    dgi = dd_window_dgi(seds->se_frame);
+    dds = dgi->dds;
+
+    if((pn = dd_find_field(dgi, name)) < 0) {	
+	uii_printf("Source parameter %s not found for copy\n", name);
+	seds->punt = YES;
+	return(-1);
+    }
+# ifdef NEW_ALLOC_SCHEME
+    ss = (short *)dds->qdat_ptrs[pn];
+# else
+    ss = (short *)((char *)dds->rdat[pn] +sizeof(struct paramdata_d));
+# endif
+    wind = (cmdq++)->uc_v.us_v_float; /* angle */
+    speed = (cmdq++)->uc_v.us_v_float;
+    wind = FMOD360 (wind +180.); /* change to wind vector */
+    az = dd_rotation_angle (dgi);
+    theta = d_angdiff (az, wind); /* clockwise from az to wind */
+    adjust = cos (theta) * speed;
+
+    scale = dds->parm[pn]->parameter_scale;
+    bias = dds->parm[pn]->parameter_bias;
+    scaled_adjust = DD_SCALE(adjust, scale, bias);
+    bad = dds->parm[pn]->bad_data;
+    nc = dgi->clip_gate +1;
+    zz = ss +nc;
+
+    for(; ss < zz; ss++,bnd++) {
+	if(!(*bnd) || *ss == bad)
+	      continue;
+	d = *ss -scaled_adjust;
+	*ss = (short)d;
+    }
+    return(1);
+}
+/* c------------------------------------------------------------------------ */

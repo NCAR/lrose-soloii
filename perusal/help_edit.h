@@ -163,6 +163,7 @@ static const gchar * help_messages[] = {
 "radial-shear",
 "remove-aircraft-motion",
 "remove-ring",
+"remove-stomr-motion",
 "remove-surface",
 "rewrite",
 "set-bad-flags",
@@ -739,6 +740,20 @@ static const gchar * remove_ring[] = {
 " ",
 "!  e.g.",
 "    remove-ring in VQ from 75.15 to 75.8 km.",
+};
+
+static const gchar * remove_storm_motion[] = {
+"!  Help file for the \"remove-storm-motion\" command which has the form:",
+" ",
+"    remove-storm-motion in <field> of <real> deg <real> mps",
+" ",
+"!  Replace angle brackets and argument types with appropriate arguments.",
+"!  This operation subtracts the component of velocity contributed by",
+"!  the storm's motion where the angle in degrees is the direction",
+"!  from which the wind is blowing. ",
+" ",
+"!  e.g.",
+"    remove-storm-motion in VT of 234 deg 11 mps",
 };
 
 static const gchar * remove_surface[] = {

@@ -459,6 +459,10 @@ void sii_blow_up_mouse_button_event (GtkWidget *frame, GdkEvent *event
   height = sfc0->data_height;
 
 
+
+  double_click = event->type == GDK_2BUTTON_PRESS;
+  triple_click = event->type == GDK_3BUTTON_PRESS;
+
   /* set offsets from the center of the frame
    */
   dx = xx -.5 * width;
@@ -467,9 +471,11 @@ void sii_blow_up_mouse_button_event (GtkWidget *frame, GdkEvent *event
   *str = '\0';
   pt.button_mask = 0;
 
-  if( state & GDK_BUTTON1_MASK || state & GDK_BUTTON2_MASK) {
-    pt.button_mask |= (state & GDK_BUTTON1_MASK)
-      ? GDK_BUTTON1_MASK : GDK_BUTTON2_MASK;
+  if( double_click || state & GDK_BUTTON1_MASK || state & GDK_BUTTON2_MASK) {
+    if (double_click || state & GDK_BUTTON2_MASK)
+      { pt.button_mask |= GDK_BUTTON2_MASK; }
+    else 
+      { pt.button_mask |= GDK_BUTTON1_MASK; }
 
     /* send to editor which should ignore it if
      * not shown or the suspend boundary definition
@@ -575,9 +581,11 @@ void sii_mouse_button_event (GtkWidget *frame, GdkEvent *event
   *str = '\0';
   pt.button_mask = 0;
 
-  if( state & GDK_BUTTON1_MASK || state & GDK_BUTTON2_MASK) {
-    pt.button_mask |= (state & GDK_BUTTON1_MASK)
-      ? GDK_BUTTON1_MASK : GDK_BUTTON2_MASK;
+  if( double_click || state & GDK_BUTTON1_MASK || state & GDK_BUTTON2_MASK) {
+    if (double_click || state & GDK_BUTTON2_MASK)
+      { pt.button_mask |= GDK_BUTTON2_MASK; }
+    else 
+      { pt.button_mask |= GDK_BUTTON1_MASK; }
 
     /* send to editor which should ignore it if
      * not shown or the suspend boundary definition
