@@ -874,7 +874,9 @@ guint param_text_event_cb(GtkWidget *text, GdkEvent *event
   line = sii_nab_line_from_text (aa, nn);
 
   if( line ) {
+# ifdef obsolete
      g_message ("Frame:%d Parameter_text: %s", frame_num, line);
+# endif
 
      if( wid == PARAM_NAMES_TEXT ) {
 	g_strstrip (line);
