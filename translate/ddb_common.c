@@ -321,7 +321,8 @@ dd_azimuth_angle(dgi)
     double d_rot;
 
     if(dgi->dds->radd->scan_mode == AIR) {
-	/* most aircraft data */
+	/* most aircraft data
+	 */
 	d_rot = FMOD360(DEGREES(dgi->dds->ra->azimuth)+360.);
     }
     else if(dgi->dds->radd->radar_type == AIR_LF ||
@@ -602,7 +603,7 @@ dd_elevation_angle(dgi)
     double AzmR, ElR, PitchR, RollR, z;
 
     if(dgi->dds->radd->scan_mode == AIR) {
-	/* most aircraft data */
+	/* most aircraft data	 */
 	d_rot = DEGREES(dgi->dds->ra->elevation);
     }
     else if(dgi->dds->radd->radar_type == AIR_LF) {
@@ -2636,7 +2637,7 @@ dd_nav_tilt_angle(dgi)
 	break;
 
     default:
-	d_rot = dgi->dds->ryib->elevation +dgi->dds->cfac->elevation_corr;
+	d_rot = dd_elevation_angle (dgi);
 	break;
     }
     return(d_rot);
@@ -4246,7 +4247,7 @@ dd_tilt_angle(dgi)
     switch(dgi->dds->radd->scan_mode) {
 	
     case AIR:
-	d_rot = DEGREES(dgi->dds->ra->tilt);
+	d_rot = DEGREES(dgi->dds->ra->tilt+dgi->dds->cfac->tilt_corr);
 	break;
 
     case RHI:
