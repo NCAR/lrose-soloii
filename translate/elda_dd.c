@@ -61,6 +61,7 @@ static char vcid[] = "$Id$";
 # include "FieldLidar.h"
 # include "FieldRadar.h"
 # include "Waveform.h"
+# include "TimeSeries.h"
 
 # define UPPER(c) ((c) >= 'A' && (c) <= 'Z')
 
@@ -92,7 +93,6 @@ static double time_for_nimbus;
 static int lidar_data=NO;
 static char *current_file_name=NULL;
 static char *acmrg = NULL;
-
 
 double eld_fixed_angle();
 void eld_dd_conv();
@@ -868,7 +868,6 @@ void eldx_ini()
 	}
 	eui->fake_sweep_nums = YES;
     }
-
     eui->datum_size[DD_8_BITS] = 1;
     eui->datum_size[DD_16_BITS] = 2;
     eui->datum_size[DD_24_BITS] = 3;
@@ -1468,18 +1467,19 @@ int eld_next_ray()
     static int minRecSize = sizeof(struct volume_d)
 	  + sizeof(struct radar_d) +sizeof(struct parameter_d);
     static int count=0, eld_bytes_left=0, eof_count=0, rlen=0, ts_count=0;
-    static int ts_fid = -1, tape_count = 0, bad_desc_count = 0;
-    static char *eld_next_block=NULL;
+    static int ts_fid = -1, tape_count = 0, bad_desc_count = 0, n_selected=0;
+    static char *eld_next_block=NULL, select_radars[32], *srptrs[8];
     static int source_vol_num=-1, counttrip=84, ray_trip=1322;
     static struct volume_d *vold=NULL;
-    static struct time_series *tmsr;
     static struct indep_freq *indf;
-    static struct waveform_d *wave;
     static struct dd_general_info *dgi=NULL;
-    struct field_radar_i *frib = 0;
+    static struct field_radar_i *frib = 0;
+    static struct time_series *tmsr;
+    static struct waveform_d *wave=0;
+
     struct generic_descriptor xgd;
     int ii, jj, kk, nc, nn, ndx, pn, rn, ryib_flag=NO, mark, trip_inc=1800;
-    int gdsos, ncopy, really_break_out=NO, new_vol=NO, sz;
+    int gdsos, ncopy, really_break_out=NO, new_vol=NO, sz, ok;
     int fore, aft, ta_fore, zeros_count=0, num_parameter_des=0;
     int vol_radd_count=0, radd_count=0, param_count=0, total_param_count=0;
     int gotta_cspd = NO, new_cell_vec, err_count = 0;
@@ -1492,6 +1492,7 @@ int eld_next_ray()
     short tdate[6];
     double d, dorade_time_stamp(), angdiff();
     float gs=0, f;
+    static FILE *strm;
 
     struct dd_general_info *dgii, *dd_get_structs();
     struct field_parameter_data *frad;
@@ -1513,6 +1514,7 @@ int eld_next_ray()
 
 
     eui->ignore_this_ray = NO;
+    tmsr = 0;			/* time series pointer/flag */
 
     while(1) {
 	/* absorb the next ray as well as all intervening headers
@@ -2026,6 +2028,11 @@ int eld_next_ray()
 	else if(strncmp(eld_next_block,"FRIB",4)==0 ) {
 	   dds = dgi->dds;
 	   frib = (struct field_radar_i *)eld_next_block;
+	   if (wave) {
+	      if (!dds->wave)
+		{ dds->wave = (struct waveform_d *)malloc (sizeof (*wave)); }
+	      memcpy (dds->wave, wave, sizeof (*wave));
+	   }
 	   if (!dds->frib) {
 	      dds->frib = (struct field_radar_i *)malloc (sizeof (*frib));
 	   }
@@ -2077,15 +2084,24 @@ int eld_next_ray()
 	   }
 	}
 	else if(strncmp(eld_next_block,"WAVE",4)==0 ) {
-	  wave = (struct waveform_d*) eld_next_block;
-	  ii = wave->repeat_seq_dwel;
-	  ii = wave->num_chips[0];
+
           /* radd->num_freq_trans * 2 * wave->repeat_seq_dwel *
 	   * wave->num_chips[0] = number of floating pt values
 	   * in the time series descriptor ("TIME")
 	   * frib->time_series_gate (68) is the gate number
 	   */
-
+	   if (!wave) {
+	      wave = (struct waveform_d *)malloc (sizeof (*wave));
+	   }
+	   if(LittleEndian) {
+# ifdef notyet
+	     ddin_crack_wave(eld_next_block, wave, (int)0);
+# endif
+	     memcpy (wave, eld_next_block, sizeof (*wave));
+	   }
+	   else {
+	     memcpy (wave, eld_next_block, sizeof (*wave));
+	   }
 	}
 	else if(ryib_flag && strncmp(eld_next_block,"TIME",4)==0 ) {
 	    tmsr = ( struct time_series *)eld_next_block;
@@ -2109,16 +2125,6 @@ int eld_next_ray()
 	    }
 	    else if (dgi->time > D20030501) {
 	      irq->top->bytes_left = gdsos = eld_bytes_left = 0;
-	    }
-	    if(eui->options & ELD_TIME_SERIES) {
-	       if (!ts_count++) {
-		  slash_path(str, get_tagged_string("DORADE_DIR"));
-		  strcat (str, "time_series.tape");
-		  ts_fid = creat (str, PMODE);
-	       }
-	       if (ts_fid > 0 && gdsos > 0) {
-		  fb_write (ts_fid, eld_next_block+8, gdsos -8);
-	       }
 	    }
 	}
 	else if(strncmp(eld_next_block,"RYIB",4)==0 && ryib_flag ) {
@@ -2478,6 +2484,52 @@ int eld_next_ray()
     }
     dp->len = dp->bytes_left - irq->top->bytes_left;
     dd_stats->ray_count++;
+ 
+   if(eui->options & ELD_TIME_SERIES && tmsr) {
+       if (!ts_count++) {
+	  slash_path(str, get_tagged_string("DORADE_DIR"));
+	  strcat (str, "time_series.xml");
+	  strm = fopen (str, "w+");
+	  if (aa = get_tagged_string("SELECT_RADARS")) {
+	     strcpy (select_radars, aa);
+	     n_selected = dd_tokens (select_radars, srptrs);
+	  }
+       }
+       if (strm) {
+	  /* c...mark */
+	  ok = YES;
+	  if(difs->num_time_lims) {
+	     for(ii=0; ii < difs->num_time_lims; ii++ ) {
+		if(dgi->time >= difs->times[ii]->lower &&
+		   dgi->time <= difs->times[ii]->upper)
+		  break;
+	     }
+	     if(ii == difs->num_time_lims)
+	       { ok = NO; }
+	  }
+	  if(difs->num_az_sectors) {
+	     for(ii=0; ii < difs->num_az_sectors; ii++) {
+		if(in_sector((float)dd_rotation_angle(dgi)
+			     , (float)difs->azs[ii]->lower
+			     , (float)difs->azs[ii]->upper)) {
+		   break;
+		}
+	     }
+	     if (ii == difs->num_az_sectors)
+	       { ok = NO; }
+	  }
+	  if (n_selected) {
+	     for (ii=0; ii < n_selected; ii++) {
+		if (strstr (dgi->radar_name, srptrs[ii]))
+		  { break; }
+	     }
+	     if (ii == n_selected)
+	       { ok = NO; }
+	  }
+	  if (ok)
+	    { ts_xml_out (dgi, strm, tmsr, wave); }
+       }
+    }
     if( gotta_cspd ) {
       cspd2celv(dds, iri->cell_spacing);
       dd_set_uniform_cells(dgi->dds);
@@ -2488,6 +2540,250 @@ int eld_next_ray()
     }
     return(1);
 }
+/* c------------------------------------------------------------------------ */
+int xml_set_version (char *buf, int *bsize)
+{
+   char *aa = buf + *bsize;
+   sprintf (aa, "<?xml version =\"1.0\"?>\n");
+   *bsize += strlen (aa);
+}
+/* c------------------------------------------------------------------------ */
+int xml_open_element (char *buf, int *bsize, char *name)
+{
+   char *aa = buf + *bsize;
+   sprintf (aa, "<%s", name);
+   *bsize += strlen (aa);
+}
+/* c------------------------------------------------------------------------ */
+int xml_close_element (char *buf, int *bsize, char *name)
+{
+   char *aa = buf + *bsize;
+   sprintf (aa, "</%s>\n", name);
+   *bsize += strlen (aa);
+   return strlen (aa);
+}
+/* c------------------------------------------------------------------------ */
+int xml_append_attribute (char *buf, int *bsize, char *name, char *value)
+{
+   char *aa = buf + *bsize;
+   sprintf (aa, "\n\t%s=\"%s\"", name, value);
+   *bsize += strlen (aa);
+}
+/* c------------------------------------------------------------------------ */
+int xml_append_comment (char *buf, int *bsize, char *str)
+{
+   char *aa = buf + *bsize;
+   sprintf (aa, "<!-- %s -->\n", str);
+   *bsize += strlen (aa);
+}
+/* c------------------------------------------------------------------------ */
+int xml_end_attributes (char *buf, int *bsize, int empty_element)
+{
+   char *aa = buf + *bsize;
+   sprintf (aa, "%s\n", (empty_element) ? "/>" : ">");
+   *bsize += strlen (aa);
+   return strlen (aa);
+}
+/* c------------------------------------------------------------------------ */
+# ifdef obsolete
+# endif
+
+int ts_xml_out (struct dd_general_info *dgi, FILE *strm
+		, struct time_series *tmsr, struct waveform_d *wave)
+{
+  struct dds_structs *dds=dgi->dds;
+  DD_TIME *dts=dgi->dds->dts;
+  static int count = 0, bsize=0, mxbsize=0, esize;
+  static char *buf = 0, *str;
+  static RTIME rtime;
+  char *aa, *ele;
+  char *acts="acft:TimeSeries";
+  char *iqs="acft:IQs";
+  char *apos="acft:Antenna_position";
+  char *ardr="acft:Radar";
+  int empty_element = NO;
+  int nipps=dds->radd->num_ipps_trans, nfreqs=dds->radd->num_freq_trans;
+  int ii, jj, kk, mark, ipp, freq, gg, nsamp;
+  double ipp_vals[16], freq_vals[16];
+  int offs = 16, len, loop;
+  float ff, *fvals;
+  short i2, gate_dist[16];
+  fpos_t fpos;
+  long loffs;
+  RTIME dtime;
+  char *f2 = "%.2f", *f4="%.4f", *f6="%.6f";
+
+
+  if (!buf) {
+    mxbsize = 64 * 1024;
+    buf = (char *)malloc (mxbsize);
+    str = (char *)malloc (512);
+  }
+  nsamp = dds->parm[0]->num_samples;
+
+
+  if (!count++) {
+    /* put out the one time only info */
+    xml_set_version (buf, &bsize);
+    xml_open_element (buf, &bsize, acts);
+    rtime = dts->day_seconds;
+    d_unstamp_time (dts);
+
+    sprintf (str, "%4d%02d%02d", dts->year, dts->month, dts->day);
+    xml_append_attribute (buf, &bsize, "date", str);
+
+    sprintf (str, "%02d%02d%02d", dts->hour, dts->minute, dts->second);
+    xml_append_attribute (buf, &bsize, "time", str);
+
+    sprintf (str, "%d", nipps);
+    xml_append_attribute (buf, &bsize, "interpulse_period_count", str);
+
+    sprintf (str, "%d", nfreqs);
+    xml_append_attribute (buf, &bsize, "frequency_count", str);
+    xml_append_attribute (buf, &bsize, "gate_count", "1");
+
+    sprintf (str, "%d", nsamp);
+    xml_append_attribute (buf, &bsize, "num_samples", str);
+    xml_end_attributes (buf, &bsize, empty_element=NO);
+
+    xml_open_element (buf, &bsize, "acft:Naming_Conventions");
+    xml_append_attribute (buf, &bsize, "I", "real part of the autocorrelation function");
+    xml_append_attribute (buf, &bsize, "Q", "imaginary part");
+    xml_append_attribute (buf, &bsize, "Pnorm", "sum(I^2+Q^2)/num_samples");
+    xml_end_attributes (buf, &bsize, empty_element = YES);
+
+    xml_open_element (buf, &bsize, "acft:Velocity_calculation");
+    xml_append_attribute (buf, &bsize, "V", "3.0/(4.0*PI*freq*20.0)*2000/ipp*atan(Q/I)");
+    xml_end_attributes (buf, &bsize, empty_element = YES);
+
+    xml_open_element (buf, &bsize, "acft:Reflectivity_calculation");
+    xml_append_attribute (buf, &bsize, "dBZ", "10.0*log10(Pnorm)-conversion_gain-receiver_gain-radar_const+20.0*log10(range_km)");
+    xml_end_attributes (buf, &bsize, empty_element = YES);
+    xml_end_attributes (buf, &bsize, empty_element = NO);
+  }
+
+  xml_open_element (buf, &bsize, ardr);
+  xml_append_attribute (buf, &bsize, "name", dgi->radar_name);
+  
+  sprintf (str, f4, dds->radd->radar_const);
+  xml_append_attribute (buf, &bsize, "radar_const", str);
+  
+  ff = dds->frib->conversion_gain;
+  sprintf (str, f4, ff);
+  xml_append_attribute (buf, &bsize, "conversion_gain", str);
+  
+  ff = dds->frib->x_band_gain;
+  sprintf (str, f4, ff);
+  xml_append_attribute (buf, &bsize, "x_band_gain", str);
+  xml_end_attributes (buf, &bsize, empty_element = NO);
+  
+  xml_open_element (buf, &bsize, "acft:AntennaPosition");
+  
+  sprintf (str, f2, dd_rotation_angle(dgi));
+  xml_append_attribute (buf, &bsize, "rotation_angle_deg", str);
+  
+  sprintf (str, f2, dds->asib->tilt);
+  xml_append_attribute (buf, &bsize, "tilt_deg", str);
+  
+  dd_radar_angles (dds->asib, dds->cfac, dds->ra, dgi);
+  sprintf (str, f4, DEGREES(dds->ra->elevation));
+  xml_append_attribute (buf, &bsize, "true_elevation_deg", str);
+  
+  sprintf (str, f4, dds->asib->altitude_msl);
+  xml_append_attribute (buf, &bsize, "altitude_km_msl", str);
+  
+  sprintf (str, f4, dds->asib->altitude_agl);
+  xml_append_attribute (buf, &bsize, "altitude_km_agl", str);
+  
+  sprintf (str, f2, dds->asib->heading);
+  xml_append_attribute (buf, &bsize, "heading", str);
+  
+  sprintf (str, f2, dds->asib->roll);
+  xml_append_attribute (buf, &bsize, "roll", str);
+  
+  sprintf (str, f2, dds->asib->pitch);
+  xml_append_attribute (buf, &bsize, "pitch", str);
+  
+  sprintf (str, f2, dds->asib->drift_angle);
+  xml_append_attribute (buf, &bsize, "drift", str);
+  
+  xml_end_attributes (buf, &bsize, empty_element = YES);
+  
+  dd_return_interpulse_periods( dgi, 0, ipp_vals );
+  dd_return_frequencies( dgi, 0, freq_vals ) ;
+  len = nsamp * 2 * sizeof (float);
+  offs = 8;			/* data starts after descripter length */
+  if (LittleEndian) {
+     swack_short ((char *)wave->gate_dist1, (char *)gate_dist, 5*2);
+  }
+  else {
+     memcpy (gate_dist, wave->gate_dist1, 5*2*sizeof(short));
+  }
+
+  for (ipp=0; ipp < nipps; ipp++) {
+     for (freq=0; freq < nfreqs; freq++) {
+	
+	xml_open_element (buf, &bsize, iqs);
+	
+	sprintf (str, f6, ipp_vals[ipp]*.001);
+	xml_append_attribute (buf, &bsize, "ipp", str);
+	
+	sprintf (str, "%.6e", freq_vals[freq]*1.e9);
+	xml_append_attribute (buf, &bsize, "freq", str);
+	
+	gg = dds->frib->time_series_gate;
+	sprintf (str, "%d", gg);
+	xml_append_attribute (buf, &bsize, "gate", str);
+	ff = gate_dist[freq*2 +1]; /* "90 60 90 60 ..." */
+
+	sprintf (str, f4, 2.5 * gg * ff *.001);
+	xml_append_attribute (buf, &bsize, "range_km", str);
+	
+	ff = dds->frib->receiver_gain[freq]; 
+	sprintf (str, f4, ff);
+	xml_append_attribute (buf, &bsize, "receiver_gain", str);
+			      
+	sprintf (str, f4, dts->day_seconds -rtime);
+	xml_append_attribute (buf, &bsize, "time_offset", str);
+	
+	xml_end_attributes (buf, &bsize, empty_element = NO);
+
+	fvals = (float *)((char *)tmsr +offs);
+	ele = "acft:I";
+
+	for (kk=0; kk < 2; kk++) { /* do the I and Q values */
+	   aa = str;
+	   for (ii=0,jj=kk; ii < nsamp; ii++, jj+=2) {
+	      if (LittleEndian) 	/* these are big endian values */
+		{ swack4 ((char *)&fvals[jj], (char *)&ff); }
+	      else
+		{ ff = fvals[jj]; }
+	      sprintf (aa, "%.2f,", ff);
+	      aa += strlen (aa);
+	   }
+	   *(aa-1) = '\0';	/* knock off the last comma */
+	   xml_open_element (buf, &bsize, ele);
+	   xml_append_attribute (buf, &bsize, "values", str);
+	   xml_end_attributes (buf, &bsize, empty_element = YES);
+	   ele = "acft:Q";
+	}
+	esize = xml_close_element (buf, &bsize, iqs);
+	offs += len;
+     }
+  }
+  xml_close_element (buf, &bsize, ardr);
+  loffs = (long)xml_close_element (buf, &bsize, acts);
+  fwrite ((void *)buf, sizeof(char), bsize, strm);
+  /*
+   * close the main encircling element and then
+   * back over it in case it's not the last ray
+   */
+  if (fseek (strm, -loffs, SEEK_CUR)) {
+     mark = 0;
+  }
+  bsize = 0;
+}
+/* c------------------------------------------------------------------------ */
 /* c------------------------------------------------------------------------ */
 
 void eld_positioning()
