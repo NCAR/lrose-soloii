@@ -209,8 +209,8 @@ void se_refresh_examine_list(int frame_num, struct solo_list_mgmt  *slm)
 {
    ExamData *xmd = (ExamData *)frame_configs[frame_num]->exam_data;
    WW_PTR wwptr = solo_return_wwptr (frame_num);
-   gint jj, nn = 64, gate;
-   gchar *aa;
+   gint jj, nn = 64, gate, lim;
+   gchar *aa, str[256];
    GtkWidget *label, *widget;
    GtkAdjustment *adj;
    gint value;
@@ -227,7 +227,16 @@ void se_refresh_examine_list(int frame_num, struct solo_list_mgmt  *slm)
    if (!slm || !slm->num_entries)
      { return; }
 
-   for (jj=0; jj < slm->num_entries; jj++) {
+   if (slm->num_entries <= xmd->max_possible_cells)
+     { lim = slm->num_entries; }
+   else {
+      lim = xmd->max_possible_cells-8;
+      sprintf (str, "Max lines:%d Lines needed:%d"
+	       , xmd->max_possible_cells, slm->num_entries);
+      sii_message (str);
+   }
+
+   for (jj=0; jj < lim; jj++) {
       aa = solo_list_entry (slm, jj);
       if (!aa)
 	{ break; }
@@ -335,7 +344,7 @@ void se_refresh_examine_widgets (int frame_num, struct solo_list_mgmt  *slm)
    if( !frame_configs[frame_num]->exam_data ) {
       xmd =
 	frame_configs[frame_num]->exam_data = g_malloc0 (sizeof( ExamData ));
-     xmd->max_possible_cells = xmd->max_cells = 1500;
+     xmd->max_possible_cells = xmd->max_cells = 2064;
      xmd->max_chars_per_line = 256;
      xmd->label_items = (GtkWidget **)g_malloc0
        (xmd->max_possible_cells * sizeof (GtkWidget *));
@@ -958,7 +967,7 @@ void sii_exam_widget( guint frame_num )
   if( !frame_configs[frame_num]->exam_data ) {
      xmdata =
        frame_configs[frame_num]->exam_data = g_malloc0 (sizeof( ExamData ));
-     xmdata->max_possible_cells = xmdata->max_cells = 1500;
+     xmdata->max_possible_cells = xmdata->max_cells = 2064;
      xmdata->max_chars_per_line = 256;
      xmdata->label_items = (GtkWidget **)g_malloc0
        (xmdata->max_possible_cells * sizeof (GtkWidget *));
