@@ -349,12 +349,6 @@ double short_avg_running_sum();
 void update_prqx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel);
 char *eld_nimbus_fix_asib();
 
-# ifdef obsolete
-/* c------------------------------------------------------------------------ */
-void return_piraq_radar_consts( rc )
-     float *rc;
-{ *rc = h_rconst; *(rc+1) = v_rconst; }
-# endif
 
 /* c------------------------------------------------------------------------ */
 struct input_read_info *return_pir_irq() { return(irq); }
@@ -5999,104 +5993,132 @@ piraq_ts_stats()
     }
 }
 
-/* c------------------------------------------------------------------------ */
+// c---------------------------------------------------------------------------
+# define UEMPTY_FLAG 2147483647
 
 void update_prqx (PIRAQX *prqx, RADARV *rhdr, HEADERV *dwel)
 {
+
   strncpy(prqx->desc, "DWLX", 4);
-  prqx->one             = 1;
   prqx->recordlen       = sizeof (PIRAQX);
+  prqx->channel         = UEMPTY_FLAG;
+  prqx->rev             = rhdr->rev;
+  prqx->one             = 1; /* always set to the value 1 (endian flag) */
+  prqx->byte_offset_to_data = UEMPTY_FLAG;
+  prqx->dataformat      = dwel->dataformat;
+  prqx->typeof_compression = UEMPTY_FLAG;
+  prqx->pulse_num       = (uint8)EMPTY_FLAG;
+  prqx->pulse_num       = 0x0102030405060708;
+  prqx->beam_num        = (uint8)EMPTY_FLAG;
 
   prqx->gates           = dwel->gates;
+  prqx->start_gate      = UEMPTY_FLAG;
   prqx->hits            = dwel->hits;
+  prqx->ctrlflags       = UEMPTY_FLAG;  /* equivalent to packetflag below?  */
+  prqx->bytespergate    = 2; 
   prqx->rcvr_pulsewidth = dwel->rcvr_pulsewidth;
-# ifdef obsolete
-  prqx->prt             = dwel->prt;
-# endif
+  prqx->prt[0]          = dwel->prt;
+  prqx->prt[1]          = dwel->prt2;
+  prqx->meters_to_first_gate = 0;
 
-# ifdef obsolete
-  prqx->delay           = dwel->delay;
-  prqx->clutterfilter   = dwel->clutterfilter;
-  prqx->timeseries      = dwel->timeseries;
-  prqx->tsgate          = dwel->tsgate;
+  prqx->num_segments    = 1;
+  prqx->gate_spacing_meters[0] =
+    dwel->rcvr_pulsewidth * .5 * SPEED_OF_LIGHT;
+  prqx->gates_in_segment[0] = dwel->gates;
 
-  prqx->time            = dwel->time;
-  prqx->subsec          = dwel->subsec;
-# endif
+  prqx->clutter_start[0] = UEMPTY_FLAG;
+  prqx->clutter_end[0]  = UEMPTY_FLAG;
+  prqx->clutter_type[0] = UEMPTY_FLAG;
+  prqx->secs            = dwel->time;
+  prqx->nanosecs        = (uint4)(dwel->subsec * 1.0e-4 * 1.0e9);
   prqx->az              = dwel->az;
+  prqx->az_off_ref      = EMPTY_FLAG;   /* azimuth offset off reference */
   prqx->el              = dwel->el;
+  prqx->el_off_ref      = EMPTY_FLAG;   /* elevation offset off reference */
 
   prqx->radar_longitude = dwel->radar_longitude; 
   prqx->radar_latitude = dwel->radar_lattitude;
   prqx->radar_altitude  = dwel->radar_altitude;
-  prqx->ew_velocity     = dwel->ew_velocity;
+  strcpy (prqx->gps_datum, "UNK");
+  prqx->ts_start_gate   = dwel->tsgate;
+  prqx->ts_end_gate    = dwel->tsgate;
 
+  prqx->ew_velocity     = dwel->ew_velocity;
   prqx->ns_velocity     = dwel->ns_velocity;
   prqx->vert_velocity   = dwel->vert_velocity;
-  prqx->dataformat      = dwel->dataformat;
-# ifdef obsolete
-  prqx->prt2            = dwel->prt2;
-# endif
-
-  prqx->fxd_angle       = dwel->fxd_angle;
+  prqx->fxd_angle       = dwel->fxd_angle * ANGSCALE;
+  prqx->true_scan_rate  = EMPTY_FLAG;
   prqx->scan_type       = dwel->scan_type;
   prqx->scan_num        = dwel->scan_num;
   prqx->vol_num         = dwel->vol_num;
 
-# ifdef obsolete
-  prqx->ray_count       = dwel->ray_count;
-# endif
   prqx->transition      = dwel->transition;
-# ifdef obsolete
-  prqx->hxmit_power     = dwel->hxmit_power;
-  prqx->vxmit_power     = dwel->vxmit_power;
-# endif
-
+  prqx->xmit_power      = dwel->hxmit_power;
   prqx->yaw             = dwel->yaw;
   prqx->pitch           = dwel->pitch;
   prqx->roll            = dwel->roll;
+  prqx->track           = EMPTY_FLAG;
+  prqx->gate0mag        = EMPTY_FLAG;
+  prqx->dacv            = EMPTY_FLAG;
+  prqx->packetflag      = UEMPTY_FLAG;
 
-  /* // items from the depricated radar "RHDR" header */
-
-  prqx->rev              = rhdr->rev;
   prqx->year             = rhdr->year;
+  prqx->julian_day       = UEMPTY_FLAG;
   memcpy(prqx->radar_name, rhdr->radar_name, 8);
-
+  strcpy(prqx->channel_name, "UNK");
+  strcpy(prqx->project_name, "UNK");
+  strcpy(prqx->operator_name, "UNK");
+  strcpy(prqx->site_name, "UNK");
+  
   prqx->polarization     = rhdr->polarization;
   prqx->test_pulse_pwr   = rhdr->test_pulse_pwr;
   prqx->test_pulse_frq   = rhdr->test_pulse_frq;
   prqx->frequency        = rhdr->frequency;
- 
-# ifdef obsolete
-  prqx->peak_power       = rhdr->peak_power;
-# endif
+
   prqx->noise_figure     = rhdr->noise_figure;
   prqx->noise_power      = rhdr->noise_power;
   prqx->receiver_gain    = rhdr->receiver_gain;
+  prqx->E_plane_angle    = EMPTY_FLAG;  /* offsets from normal pointing angle */
+  prqx->H_plane_angle    = EMPTY_FLAG;
+
 
   prqx->data_sys_sat     = rhdr->data_sys_sat;
   prqx->antenna_gain     = rhdr->antenna_gain;
-# ifdef obsolete
-  prqx->horz_beam_width  = rhdr->horz_beam_width;
-  prqx->vert_beam_width  = rhdr->vert_beam_width;
-# endif
+  prqx->H_beam_width     = rhdr->horz_beam_width;
+  prqx->V_beam_width     = rhdr->vert_beam_width;
 
   prqx->xmit_pulsewidth  = rhdr->xmit_pulsewidth;
   prqx->rconst           = rhdr->rconst ;
   prqx->phaseoffset      = rhdr->phaseoffset;
-# ifdef obsolete
-  prqx->vreceiver_gain   = rhdr->vreceiver_gain;
-
-  prqx->vtest_pulse_pwr  = rhdr->vtest_pulse_pwr;
-  prqx->vantenna_gain    = rhdr->vantenna_gain;
-  prqx->vnoise_power     = rhdr->vnoise_power;
-# endif
   prqx->zdr_fudge_factor = rhdr->zdr_fudge_factor;
-
   prqx->mismatch_loss    = rhdr->mismatch_loss;
-  
+
+  prqx->rcvr_const       = EMPTY_FLAG; 
+  prqx->test_pulse_rngs_km[0] = EMPTY_FLAG;
+  prqx->test_pulse_rngs_km[1] = EMPTY_FLAG;
+
+  strcpy (prqx->comment, "NO COMMENT");
+
+  prqx->i_norm            = EMPTY_FLAG;
+  prqx->q_norm            = EMPTY_FLAG;
+  prqx->i_compand         = EMPTY_FLAG;
+  prqx->q_compand         = EMPTY_FLAG;
+  /*
+  float4 transform_matrix[2][2][2];
+  float4 stokes[4]; 
+   */
+  prqx->vxmit_power        = dwel->vxmit_power;
+  prqx->vtest_pulse_pwr    = rhdr->vtest_pulse_pwr;
+  prqx->vnoise_power       = rhdr->vnoise_power;
+  prqx->vreceiver_gain     = rhdr->vreceiver_gain;
+  prqx->vantenna_gain      = rhdr->vantenna_gain;
+  prqx->h_rconst           = h_rconst;
+  prqx->v_rconst           = v_rconst;
+  prqx->peak_power         = rhdr->peak_power;
+
 }
 
+// c---------------------------------------------------------------------------
 /* c------------------------------------------------------------------------ */
 #define STARTGATE       5      /* start gate for power average of all gates */
 /* c------------------------------------------------------------------------ */
