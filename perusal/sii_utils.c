@@ -26,8 +26,10 @@ void sii_append_debug_stuff (gchar *gch)
 {
    gchar *aa, *bb;
    gint len, mm, nn, max=777, slack=111;
-
-# ifndef notyet
+   /*
+   printf ("%s\n", gch);
+    */
+   
    if (!dbgs)
      { dbgs = g_string_new (""); }
 
@@ -58,7 +60,6 @@ void sii_append_debug_stuff (gchar *gch)
 	 }	 
       }
    }
-# endif
 }
 
 /* c------------------------------------------------------------------------ */
