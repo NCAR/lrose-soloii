@@ -5,18 +5,7 @@
 # include "sii_utils.h"
 # include <solo_window_structs.h>
 
-gchar *sample_click_text = 
-"DBZ
-Hdg.
-Lon.
-Lat.
-Alt.
-Ang.
-0000.00km.-000.00 -000.00 -000.00
-0000.00km.-000.00 -000.00 -000.00
-0000.00km.-000.00 -000.00 -000.00
-0000.00km.-000.00 -000.00 -000.00
-0000.00km.-000.00 -000.00 -000.00";
+gchar *sample_click_text = "caca";
 
 enum {
    FRAME_MENU_ZERO,
