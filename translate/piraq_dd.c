@@ -2053,6 +2053,7 @@ piraq_map_hdr(aa, gotta_header)
 
     if (pui->options & WINDOWS_DOW) {
       memcpy (xhdr, aa, sizeof (*xhdr));
+      sparc_alignment = NO;
     }
 
     if(pui->options & SPARC_ALIGNMENT) {
