@@ -3717,10 +3717,12 @@ int solo_hardware_color_table(gint frame_num)
   ParamData *pd = (ParamData *)frame_configs[frame_num]->param_data;
   GtkWidget *widget;
 
+# ifdef obsolete
   if (!frame_configs[frame_num]->color_map) {
     rgb_visual = gdk_rgb_get_visual ();
     frame_configs[frame_num]->color_map = gdk_colormap_new (rgb_visual, FALSE);
   }
+# endif
   cmap = frame_configs[frame_num]->color_map;
 
   widget = sii_get_widget_ptr (frame_num, FRAME_PARAMETERS);
