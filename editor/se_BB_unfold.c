@@ -84,8 +84,9 @@ int alt_gecho (dgi, min_grad, zmax_cell)
        }
     }
 				/*
-    printf ("%8.2f %8.4f %4d %4d %4d\n"
-	    , rot_angle, elev, ng_grad, mark_grad, mark_max);
+    printf ("%8.2f %8.4f %4d %4d %4d %.1f\n"
+	    , rot_angle, elev, ng_grad, mark_grad, mark_max
+	    , smin_grad *.01);
 				 */
     *zmax_cell = mark_max;
     return (mark_grad);
