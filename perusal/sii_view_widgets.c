@@ -642,9 +642,28 @@ void sii_update_linked_view_widgets (guint frame_num)
     if(!li->link_set[jj])
       { continue; }
     widget = sii_get_widget_ptr (jj, FRAME_VIEW);
-    if (widget)
-      { sii_update_view_widget (jj); }
+    if (widget) {
+      sii_set_view_info (jj);
+      sii_update_view_widget (jj);
+    }
   }
+}
+
+/* c---------------------------------------------------------------------- */
+
+void sii_view_update_links (guint frame_num, int li_type)
+{
+  LinksInfo *li;
+  WW_PTR wwptr = solo_return_wwptr(frame_num);
+  ViewData *vd = (ViewData *)frame_configs[frame_num]->view_data;
+  guint jj;
+
+  if (!vd)
+    { return; }
+
+  sii_set_links_from_solo_struct (frame_num, li_type
+				  , wwptr->frame_ctr_info->linked_windows);
+
 }
 
 /* c---------------------------------------------------------------------- */
