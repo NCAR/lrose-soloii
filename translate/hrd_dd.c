@@ -1349,9 +1349,9 @@ int hrd_next_ray()
 		  mc_data_really = YES;
 		  nwords16 = (int)mrh->nwords16;
 		  ndata = (int)mrh->ndata;
+		  nn = nwords16 * sizeof (short);
 
 		  if (LittleEndian) {
-		     nn = nwords16 * sizeof (short);
 		     swack_short (irq->top->buf, mc_flags, nwords16);
 		     swack_long (irq->top->buf+nn, mc_lvals, ndata);
 		  }
