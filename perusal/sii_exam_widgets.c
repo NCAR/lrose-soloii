@@ -33,6 +33,8 @@ enum {
    EXAM_POS_FOLD_RAY,
    EXAM_NEG_FOLD_SEG,
    EXAM_POS_FOLD_SEG,
+   EXAM_NEG_FOLD_GT,
+   EXAM_POS_FOLD_GT,
    EXAM_REPLACE,
 
    EXAM_DATA,
@@ -652,6 +654,8 @@ void sii_exam_menu_cb ( GtkWidget *w, gpointer   data )
     case EXAM_DELETE_RAY:
     case EXAM_NEG_FOLD_RAY:
     case EXAM_POS_FOLD_RAY:
+    case EXAM_NEG_FOLD_GT:
+    case EXAM_POS_FOLD_GT:
     case EXAM_REPLACE:
       g_return_if_fail (GTK_IS_RADIO_MENU_ITEM (rmi));
 
@@ -1412,6 +1416,20 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
    xmdata->equiv_solo_state[widget_id] = EX_RAY_PLUS_FOLD;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "+ Fold Ray", submenu, widget_id
+			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , &radio_group);
+   
+   widget_id = EXAM_NEG_FOLD_GT;
+   xmdata->equiv_solo_state[widget_id] = EX_GT_MINUS_FOLD;
+   xmdata->data_widget[widget_id] = menuitem =
+     sii_toggle_submenu_item ( "- Fold Ray >", submenu, widget_id
+			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , &radio_group);
+   
+   widget_id = EXAM_POS_FOLD_GT;
+   xmdata->equiv_solo_state[widget_id] = EX_GT_PLUS_FOLD;
+   xmdata->data_widget[widget_id] = menuitem =
+     sii_toggle_submenu_item ( "+ Fold Ray >", submenu, widget_id
 			       , sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    

@@ -276,6 +276,8 @@ sxm_apply_changez(frme)
 
 		    case EX_RAY_PLUS_FOLD:
 		    case EX_RAY_MINUS_FOLD:
+		    case EX_GT_PLUS_FOLD:
+		    case EX_GT_MINUS_FOLD:
 			ival = DD_SCALE
 			      (chz->f_new_val
 			       , dgi->dds->parm[pn]->parameter_scale
@@ -284,6 +286,11 @@ sxm_apply_changez(frme)
 
 			if(chz->second_cell_num) {
 			    zz = ss + chz->second_cell_num;
+			    ss += chz->cell_num;
+			}
+			else if (chz->typeof_change == EX_GT_PLUS_FOLD ||
+				 chz->typeof_change == EX_GT_MINUS_FOLD) {
+			    zz = ss + dgi->dds->celv->number_cells;
 			    ss += chz->cell_num;
 			}
 			else {
@@ -588,16 +595,21 @@ sxm_click_in_list(sci)
 
     case EX_RAY_PLUS_FOLD:
     case EX_RAY_MINUS_FOLD:
+    case EX_GT_PLUS_FOLD:
+    case EX_GT_MINUS_FOLD:
     case EX_RAY_IGNORE:
 	if(chz->typeof_change == EX_RAY_IGNORE) {
 	    chz->f_new_val = val = ecs->bad_data[chz->col_num];
 	    chz->flagged_for_deletion = YES;
 	}
-	else if(chz->typeof_change ==EX_RAY_PLUS_FOLD)
+	else if(chz->typeof_change == EX_RAY_PLUS_FOLD ||
+		chz->typeof_change == EX_GT_PLUS_FOLD)
 	      val = nyq_interval;
 	else
 	      val = -nyq_interval;
 	fptr = ecs->data_ptrs[chz->col_num];
+	if (chz->typeof_change == EX_GT_PLUS_FOLD) {
+	}
 	nn = wwptr->examine_control->actual_num_cells;
 
 	if(itsa_run) {		/* we need to but the parts of the ray
@@ -623,7 +635,14 @@ sxm_click_in_list(sci)
 	    }
 	}
 	else {
-	    for(ii=0; ii < nn ; ii++, fptr++) {
+	   ii = 0;
+	   if (chz->typeof_change == EX_GT_PLUS_FOLD ||
+	       chz->typeof_change == EX_GT_MINUS_FOLD) {
+	      ii = row_num;
+	      fptr += row_num;
+	   }
+
+	    for(; ii < nn ; ii++, fptr++) {
 		if(chz->typeof_change == EX_RAY_IGNORE) {
 		    sxm_change_cell_in_list
 			  (chz, ii, ecs->bad_data[chz->col_num]);
@@ -1173,6 +1192,8 @@ sxm_process_click(sci)
     case EX_RAY_IGNORE:
     case EX_RAY_PLUS_FOLD:
     case EX_RAY_MINUS_FOLD:
+    case EX_GT_PLUS_FOLD:
+    case EX_GT_MINUS_FOLD:
 	sxm_get_widget_info(sci->frame);
 	wwptr->examine_info->typeof_change = sci->which_widget_button;
 	break;
@@ -2024,11 +2045,17 @@ sxm_undo_last(frme)
 
     case EX_RAY_PLUS_FOLD:
     case EX_RAY_MINUS_FOLD:
+    case EX_GT_PLUS_FOLD:
+    case EX_GT_MINUS_FOLD:
     case EX_RAY_IGNORE:
 
 	if(chz->second_cell_num) { /* it's a run */
 	    ii = chz->row_num;
 	    nn = ii + chz->second_cell_num - chz->cell_num;
+	}
+	else if (chz->typeof_change == EX_GT_PLUS_FOLD ||
+		chz->typeof_change == EX_GT_MINUS_FOLD ) {
+	    ii = chz->row_num; nn = wwptr->examine_control->actual_num_cells;
 	}
 	else {
 	    ii = 0; nn = wwptr->examine_control->actual_num_cells;
