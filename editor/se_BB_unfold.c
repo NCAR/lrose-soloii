@@ -521,7 +521,7 @@ int se_remove_storm_motion(arg, cmds)	/* #remove-storm-motion# */
     char *name;
     short *ss, *tt, *zz, *bnd, vx, bad;
     float speed, wind, scale, bias;
-    double d, az, theta, cosTheta, adjust, scaled_adjust;
+    double d, az, cosEl, rcp_cosEl, theta, cosTheta, adjust, scaled_adjust;
     struct dd_general_info *dgi, *dd_window_dgi();
     struct dds_structs *dds;
     struct solo_edit_stuff *seds, *return_sed_stuff();
@@ -554,8 +554,12 @@ int se_remove_storm_motion(arg, cmds)	/* #remove-storm-motion# */
     speed = (cmdq++)->uc_v.us_v_float;
     wind = FMOD360 (wind +180.); /* change to wind vector */
     az = dd_rotation_angle (dgi);
+    cosEl = cos (RADIANS (dd_elevation_angle (dgi)));
+    if (fabs (cosEl) < .0001)
+      { return (1); }
+    rcp_cosEl = 1./cosEl;
     theta = d_angdiff (az, wind); /* clockwise from az to wind */
-    adjust = cos (theta) * speed;
+    adjust = cos (RADIANS (theta)) * speed;
 
     scale = dds->parm[pn]->parameter_scale;
     bias = dds->parm[pn]->parameter_bias;
@@ -567,7 +571,7 @@ int se_remove_storm_motion(arg, cmds)	/* #remove-storm-motion# */
     for(; ss < zz; ss++,bnd++) {
 	if(!(*bnd) || *ss == bad)
 	      continue;
-	d = *ss -scaled_adjust;
+	d = (*ss * cosEl -scaled_adjust) * rcp_cosEl;
 	*ss = (short)d;
     }
     return(1);
