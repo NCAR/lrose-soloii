@@ -29,13 +29,16 @@ if eval "type uname"; then
    elif eval "echo -n \"$ac_uname_stuff\" | grep \"Linux\" >/dev/null"; then
       ac_os_type="Linux"
       AC_MSG_RESULT(IT'S $ac_os_type)
+   elif eval "echo -n \"$ac_uname_stuff\" | grep \"Darwin\" >/dev/null"; then
+      ac_os_type="Darwin"
+      AC_MSG_RESULT(IT'S $ac_os_type)
    else		  
       AC_MSG_RESULT(found NO match for OS names!)
-      exit 1
+dnl      exit 1
    fi
 else
     echo "CAN'T DETERMINE OS TYPE!"
-    exit 1
+dnl    exit 1
 fi
 
 dnl Checks for programs.
