@@ -954,6 +954,7 @@ DGI_PTR dgi_last()
 {
     return(last_dgi);
 }
+# ifdef obsolete
 /* c------------------------------------------------------------------------ */
 
 void difs_terminators(dgi, difs, dd_stats)
@@ -969,6 +970,7 @@ void difs_terminators(dgi, difs, dd_stats)
 	difs->stop_flag = YES;
     }
 }
+# endif
 /* c------------------------------------------------------------------------ */
 
 void do_print_dd_open_info()
