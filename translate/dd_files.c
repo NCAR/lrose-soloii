@@ -56,6 +56,7 @@ static char vcid[] = "$Id$";
 
 # include <errno.h>
 
+# ifdef obsolete
 #ifdef SVR4
 # include <sys/statvfs.h>
 #else
@@ -65,6 +66,7 @@ static char vcid[] = "$Id$";
 #  include <sys/vfs.h>
 # endif
 #endif
+# endif
 
 # define MAX_DIRECTORIES 16
 # define MAX_FILE_TYPES 16
@@ -993,10 +995,12 @@ return_ddir(dir_num)
     return(ddir_list_v3[dir_num]);
 }
 /* c------------------------------------------------------------------------ */
+# ifdef obsolete
 
 double ddir_free( dir )
   char *dir;
 {
+
 #ifdef SVR4
     struct statvfs fs;
 #else
@@ -1020,6 +1024,7 @@ double ddir_free( dir )
 
     return(d);
 }
+# endif
 /* c------------------------------------------------------------------------ */
 
 /* c------------------------------------------------------------------------ */
