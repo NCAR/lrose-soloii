@@ -236,6 +236,7 @@ struct piraq_swp_que {
 # define             GUIFU_FLAG 0x80000
 # define     IGNORE_TRANSITIONS 0x100000
 # define       HZO_IMPROVE_FLAG 0x200000
+# define        HOPE_ITSA_DWELL 0x400000
 
 
 extern int LittleEndian;
@@ -447,6 +448,7 @@ pui_next_block()
     int ii, mm, nn, mark, eof_count=0, ugly;
     int unsigned short recordlen=0;
     int size=-1, ugly_record_count=0;
+    int dwel_record, rhdr_record;
     DD_TIME *d_unstamp_time();
     char *aa, *bb, *cc = NULL, *dd_next_source_dev_name(), *dts_print();
     char mess[256], *last_top;
@@ -455,14 +457,15 @@ pui_next_block()
     /* c...mark */
 
 
-    if(!count++) {
-	mark = 0;
-    }
-    if(count >= bp) {
-	mark = 0;
-    }
-
     for(;;) {
+
+      if(!count++) {
+	mark = 0;
+      }
+      if(count >= bp) {
+	mark = 0;
+      }
+
 	if(irq->top->bytes_left < irq->min_block_size) {
 	    if(irq->io_type == BINARY_IO && irq->top->bytes_left > 0) {
 		keep_offset = irq->top->offset;
@@ -542,28 +545,41 @@ pui_next_block()
 	gh = (TOP *)aa;
 	recordlen = LittleEndian ? gh->recordlen : PX2(gh->recordlen);
 
-	if(!strncmp("DWEL", aa, 4) || !strncmp("RHDR", aa, 4)) {
-	  last_gh = gh;
-# ifdef obsolete
-	   if(!strncmp("RHDR", aa, 4)) {
-	      if(recordlen == 1071) recordlen = 1070;
-	   }
-# endif
-	   /* Otherwise it's a good record so continue on. */
-	}
-	else {
-	  if( ++illegal_header_count < 5 ) {
+	dwel_record = !strncmp("DWEL", aa, 4);
+	rhdr_record = !strncmp("RHDR", aa, 4);
+
+	if (!(dwel_record || rhdr_record)) {
+	  if((illegal_header_count++ % 3) == 0 ) {
 	    sprintf(mess, 
-       "Illegal header id: %02x%02x%02x%02x rlen: %d  sizeof_read: %d %s %s"
-		    , gh->desc[0], gh->desc[1], gh->desc[2], gh->desc[3]
-		    ,  recordlen
+ "Illegal header id: %2x %2x %2x %2x %2x %2x rlen: %d  sizeof_read:  %d %d"
+		    , (int)gh->desc[0] & 0xff
+		    , (int)gh->desc[1] & 0xff
+		    , (int)gh->desc[2] & 0xff
+		    , (int)gh->desc[3] & 0xff
+		    , (int)gh->desc[4] & 0xff
+		    , (int)gh->desc[5] & 0xff
+		    , recordlen
 		    , irq->top->sizeof_read
-		    , current_file_name
-		    , dts_print(d_unstamp_time(gri->dts)));
+		    , illegal_header_count
+		    );
 	    dd_append_cat_comment(mess);
 	    printf("%s\n", mess);
 	  }
+	  if(((illegal_header_count-1) % 30) == 0 ) {
+	    sprintf(mess,  "%s %s"
+		    , current_file_name
+		    , dts_print(d_unstamp_time(gri->dts))
+		    );
+	    dd_append_cat_comment(mess);
+	    printf("%s\n", mess);
+	  }
+	}
 
+	if (dwel_record || rhdr_record ||
+	    (pui->options & HOPE_ITSA_DWELL)) {
+	  last_gh = gh;
+	}
+	else {
 	    if(irq->io_type != BINARY_IO) {
 		irq->top->bytes_left = 0; /* just read another record */
 		continue;
@@ -610,7 +626,7 @@ pui_next_block()
 	else {
 	   ugly = (recordlen - irq->top->bytes_left > 1) || recordlen < 1;
 
-	   if(pui->check_ugly && !strncmp("DWEL", aa, 4) && ugly) {
+	   if(pui->check_ugly && dwel_record && ugly) {
 	      ++ugly_record_count;
 	      printf("Ugly record count: %d  rlen: %d  left: %d\n"
 		     , ugly_record_count, hdr->recordlen
@@ -1561,6 +1577,8 @@ piraq_ini()
 	  { pui->options |= GUIFU_FLAG; }
 	if(strstr(aa, "IGNORE_TRANS")) /*  */
 	  { pui->options |= IGNORE_TRANSITIONS; }
+	if(strstr(aa, "HOPE_ITSA_DWE")) /*  */
+	  { pui->options |= HOPE_ITSA_DWELL; }
 	if(bb = strstr(aa, "HZO_IMP")) {
 	  strcpy( str, bb );
 	  nt = dd_tokens( str, sptrs );
@@ -2113,7 +2131,7 @@ piraq_map_hdr(aa, gotta_header)
     struct piraq_ray_que *rq=pui->ray_que;
     int sparc_alignment = 0;
     int tdiff;
-    char message[256], str[256];
+    char message[256], str[256], tstr[32], tstr2[32];
     
     count++;
     dwl = (DWELLV *)aa;
@@ -2242,13 +2260,20 @@ piraq_map_hdr(aa, gotta_header)
     pui->time += pui->time_correction;
 
     if( pui->time < rq->last->time ) {
+      gri->dts->time_stamp = rq->last->time;
+      strcpy (tstr, dts_print( d_unstamp_time( gri->dts ))); 
       gri->dts->time_stamp = pui->time;
-      sprintf( message, "   **** Time glitch at: %s \n   %.4f %.4f %.4f %.4f"
-	       , dts_print( d_unstamp_time( gri->dts ))
+      strcpy (tstr2, dts_print( d_unstamp_time( gri->dts ))); 
+# ifdef obsolete
+      sprintf( message, "   **** Time glitch at: %s %s\n   %.4f %.4f %.4f %.4f"
+	       , tstr, tstr2
 	       , rq->last->last->last->time, rq->last->last->time
 	       , rq->last->time, pui->time
 	       );
-       if( 1 || (pui->time_glitch_count++ % 10 ) == 0 ) {
+# else
+      sprintf( message, "   **** Time glitch at: %s %s", tstr, tstr2 );
+# endif
+       if((pui->time_glitch_count++ % 5 ) == 0 ) {
 	 dd_append_cat_comment( message );
 	 printf( "%s\n", message );
        }
