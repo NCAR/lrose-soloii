@@ -283,9 +283,9 @@ double * ipps;
   if( field_num < 0 || field_num >= dgi->dds->radd->num_parameter_des )
     { return 0; }
 				/*
-  // interpulse periods returned in seconds
+  // interpulse periods returned in milliseconds
 				 */
-
+# ifdef notyet
   for( ii = 0; ii < 5; ii++, probe <<= 1 ) {
     if( probe & mask ) {
       /*
@@ -294,6 +294,12 @@ double * ipps;
       *( ipps + nn ) = *( fptr + ii ) * .001; 
       nn++;
     }
+  }
+# endif
+
+  nn = dgi->dds->radd->num_ipps_trans;
+  for (ii=0; ii < nn; ii++) {
+     ipps[ii] = fptr[ii];
   }
   return nn;
 }
