@@ -81,6 +81,7 @@ enum {
    PARAM_CLR_TBL_TEXT,
    PARAM_CLR_TBL_PATH,
    PARAM_COLORS_TEXT,
+   PARAM_COLORS_FILESEL,
 
    PARAM_GNRK_ENTRY,
    PARAM_GNRK_ENTRY_CANCEL,
@@ -240,6 +241,12 @@ static gboolean its_changed = FALSE;
 
 /* c---------------------------------------------------------------------- */
 /* c---------------------------------------------------------------------- */
+
+GtkWidget *
+sii_filesel (gint which_but, gchar * dirroot);
+
+void 
+param_entry_widget( guint frame_num, gchar *prompt, gchar * dirroot);
 
 static void
 param_list_widget( guint frame_num, guint widget_id
@@ -414,7 +421,8 @@ sii_update_param_widget (guint frame_num);
 
 struct solo_perusal_info *
 solo_return_winfo_ptr();
-void solo_sort_slm_entries (slm);
+void solo_sort_slm_entries ();
+
 /* c...mark */
 
 /* c---------------------------------------------------------------------- */
@@ -444,7 +452,20 @@ void param_set_cb_loc (int frame_num, int loc)
 
 /* c---------------------------------------------------------------------- */
 
-void param_entry_widget( guint frame_num, gchar *prompt)
+void 
+sii_param_colors_filesel (const gchar *str, GtkWidget *fs);
+int sii_initialize_cb (GtkWidget *w, gpointer data);
+
+void 
+sii_param_colors_filesel (const gchar *str, GtkWidget *fs )
+{
+   gint frame_num =  GPOINTER_TO_UINT (gtk_object_get_data (GTK_OBJECT(fs)
+							    , "frame_num"));
+   sii_param_absorb_ctbl (frame_num, str);
+}
+/* c---------------------------------------------------------------------- */
+
+void param_entry_widget( guint frame_num, gchar *prompt, gchar * dirroot)
 {
   ParamData *pd = (ParamData *)frame_configs[frame_num]->param_data;
   GtkWidget *label;
@@ -457,6 +478,7 @@ void param_entry_widget( guint frame_num, gchar *prompt)
   GdkPoint *ptp;
   gint x, y;
   gchar *bb;
+  static gchar str[256];
 
   wid = FRAME_PARAM_ENTRY;
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -502,6 +524,20 @@ void param_entry_widget( guint frame_num, gchar *prompt)
 		      , (GtkSignalFunc) sii_param_menu_cb
 		      , (gpointer)nn
 		      );
+
+  if (dirroot) {
+     button = gtk_button_new_with_label ("Colors FileSelect");
+     gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0 );
+     nn = frame_num*TASK_MODULO + PARAM_COLORS_FILESEL;
+     gtk_signal_connect (GTK_OBJECT(button)
+		      ,"clicked"
+		      , (GtkSignalFunc) sii_param_menu_cb
+		      , (gpointer)nn
+		      );
+     slash_path (str, dirroot);
+     gtk_object_set_data (GTK_OBJECT(button)
+			  , "dirroot", (gpointer)str);
+   }				      
 
   button = gtk_button_new_with_label ("Cancel");
   gtk_box_pack_start (GTK_BOX (hbox), button, TRUE, TRUE, 0 );
@@ -2213,6 +2249,8 @@ void sii_param_menu_cb ( GtkWidget *w, gpointer   data )
    SiiLinkedList *item;   
    SiiPalette *pal;
    WW_PTR wwptr;
+   GtkWidget *fs;
+   gchar * dirroot;
 
 				/* c...menu_cb */
    frame_num = num/TASK_MODULO;
@@ -2250,13 +2288,25 @@ void sii_param_menu_cb ( GtkWidget *w, gpointer   data )
      show_param_generic_list_widget (frame_num, task);
      break;
 
+   case PARAM_COLORS_FILESEL:
+     wid = sii_return_colors_filesel_wid();
+     dirroot = (gchar *)gtk_object_get_data (GTK_OBJECT(w), "dirroot");
+     fs = sii_filesel (wid, dirroot);
+     gtk_object_set_data (GTK_OBJECT(fs)
+			  , "frame_num", (gpointer)frame_num);
+     widget = sii_get_widget_ptr (frame_num, FRAME_PARAM_ENTRY);
+     gtk_widget_hide (widget);
+     break;
+
    case PARAM_MPORT_CLR_TBL:
      widget = sii_get_widget_ptr (frame_num, FRAME_PARAM_ENTRY);
      if (!widget)
        {
+	  if (!(aa = getenv ("COLORS_FILESEL")))
+	    { aa = "/"; }
 	 param_entry_widget(frame_num
- , "\n Type the full path name of the color table file and press return \n");
-       }
+ , "\n Type the full path name of the color table file and press return \n"
+       , aa); }
      else
        { gtk_widget_show (widget); }
      break;
