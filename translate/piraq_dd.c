@@ -236,8 +236,7 @@ struct piraq_swp_que {
 # define             GUIFU_FLAG 0x80000
 # define     IGNORE_TRANSITIONS 0x100000
 # define       HZO_IMPROVE_FLAG 0x200000
-# define        HOPE_ITSA_DWELL 0x400000
-
+# define         DZ_TO_DBZ_FLAG 0x400000
 
 extern int LittleEndian;
 
@@ -438,212 +437,211 @@ static void do_Noise_lut( noise, scale2ln )
 int
 pui_next_block()
 {
-    /* returns a pointer to the next block of piraq data
-     * which in the case of CD-ROMs may block several rays in a record
-     * otherwise it corresponds to a physical record on the tape
-     */
-    static int count=0, bp=298, illegal_header_count=0;
-    long keep_offset;
-    int err_count = 0;
-    int ii, mm, nn, mark, eof_count=0, ugly;
-    int unsigned short recordlen=0;
-    int size=-1, ugly_record_count=0;
-    int dwel_record, rhdr_record;
-    DD_TIME *d_unstamp_time();
-    char *aa, *bb, *cc = NULL, *dd_next_source_dev_name(), *dts_print();
-    char mess[256], *last_top;
-    TOP *gh;
-    static TOP *last_gh;
-    /* c...mark */
+  /* returns a pointer to the next block of piraq data
+   * which in the case of CD-ROMs may block several rays in a record
+   * otherwise it corresponds to a physical record on the tape
+   */
+  static int count=0, bp=298, illegal_header_count=0;
+  long keep_offset;
+  int err_count = 0;
+  int ii, mm, nn, mark, eof_count=0, ugly;
+  int unsigned short recordlen=0;
+  int size=-1, ugly_record_count=0;
+  int dwel_record, rhdr_record;
+  DD_TIME *d_unstamp_time();
+  char *aa, *bb, *cc = NULL, *dd_next_source_dev_name(), *dts_print();
+  char mess[256], *last_top;
+  TOP *gh;
+  static TOP *last_gh;
+  /* c...mark */
 
 
-    for(;;) {
+  for(;;) {
 
-      if(!count++) {
-	mark = 0;
-      }
-      if(count >= bp) {
-	mark = 0;
-      }
-
-	if(irq->top->bytes_left < irq->min_block_size) {
-	    if(irq->io_type == BINARY_IO && irq->top->bytes_left > 0) {
-		keep_offset = irq->top->offset;
-		dd_io_reset_offset(irq, irq->top->offset
-				   + irq->top->sizeof_read
-				   - irq->top->bytes_left);
-		if(keep_offset == irq->current_offset) {
-		   return(-1);
-		}
-		irq->top->bytes_left = 0;
-	    }
-	    dd_logical_read(irq, FORWARD);
-
-	    if(irq->top->read_state < 0) {
-	       if( ++err_count < 4 ) {
-		  printf("Last read: %d errno: %d\n"
-			 , irq->top->read_state, err_count);
-		  irq->top->bytes_left = 0;
-		  continue;
-	       }
-	       nn = irq->top->read_state;
-	       dd_input_read_close(irq);
-	       /*
-		* see if there is another file to read
-		*/
-	       if(aa = dd_next_source_dev_name("PRQ")) {
-		  current_file_name = aa;
-		  if((ii = dd_input_read_open(irq, aa)) <= 0) {
-		     return(size);
-		  }
-		  eof_count = 0;
-		  err_count = 0;
-		  continue;
-	       }
-	       else {
-		  return(size);
-	       }
-	    }
-	    else if(irq->top->eof_flag) {
-	       err_count = 0;
-	       eof_count++;
-	       dd_stats->file_count++;
-	       printf( "EOF number: %d at %.2f MB\n"
-		      , dd_stats->file_count
-		      , dd_stats->MB);
-	       
-	       irq->top->bytes_left = 0;
-	       if(eof_count > 3) {
-		  nn = irq->top->read_state;
-		  dd_input_read_close(irq);
-		  /*
-		   * see if there is another file to read
-		   */
-		  if(aa = dd_next_source_dev_name("PRQ")) {
-		     current_file_name = aa;
-		     if((ii = dd_input_read_open(irq, aa)) <= 0) {
-			return(size);
-		     }
-		  }
-		  else {
-		     return(size);
-		  }
-		  err_count = 0;
-		  eof_count = 0;
-		  continue;
-	       }
-	       continue;
-	    }
-	    else {
-		dd_stats->rec_count++;
-		dd_stats->MB += BYTES_TO_MB(irq->top->sizeof_read);
-		eof_count = 0;
-		err_count = 0;
-	    }
-	}
-	aa = irq->top->at;
-	gh = (TOP *)aa;
-	recordlen = LittleEndian ? gh->recordlen : PX2(gh->recordlen);
-
-	dwel_record = !strncmp("DWEL", aa, 4);
-	rhdr_record = !strncmp("RHDR", aa, 4);
-
-	if (!(dwel_record || rhdr_record)) {
-	  if((illegal_header_count++ % 3) == 0 ) {
-	    sprintf(mess, 
- "Illegal header id: %2x %2x %2x %2x %2x %2x rlen: %d  sizeof_read:  %d %d"
-		    , (int)gh->desc[0] & 0xff
-		    , (int)gh->desc[1] & 0xff
-		    , (int)gh->desc[2] & 0xff
-		    , (int)gh->desc[3] & 0xff
-		    , (int)gh->desc[4] & 0xff
-		    , (int)gh->desc[5] & 0xff
-		    , recordlen
-		    , irq->top->sizeof_read
-		    , illegal_header_count
-		    );
-	    dd_append_cat_comment(mess);
-	    printf("%s\n", mess);
-	  }
-	  if(((illegal_header_count-1) % 30) == 0 ) {
-	    sprintf(mess,  "%s %s"
-		    , current_file_name
-		    , dts_print(d_unstamp_time(gri->dts))
-		    );
-	    dd_append_cat_comment(mess);
-	    printf("%s\n", mess);
-	  }
-	}
-
-	if (dwel_record || rhdr_record ||
-	    (pui->options & HOPE_ITSA_DWELL)) {
-	  last_gh = gh;
-	}
-	else {
-	    if(irq->io_type != BINARY_IO) {
-		irq->top->bytes_left = 0; /* just read another record */
-		continue;
-	    }
-	    if(1) {
-		dd_input_read_close(irq);
-		if(aa = dd_next_source_dev_name("PRQ")) {
-		    if((ii = dd_input_read_open(irq, aa)) <= 0) {
-			return(size);
-		    }
-		}
-		else {
-		    return(size);
-		}
-		irq->top->bytes_left = 0;
-		continue;
-	    }
-	    /* otherwise try to reposition after the current bad block
-	     * perhaps by searching for DWEL or RHDR
-	     * but not for now
-	     */
-	    dd_io_reset_offset(irq, irq->top->offset
-			       + irq->top->sizeof_read
-			       - irq->top->bytes_left
-			       + recordlen);
-	    irq->top->bytes_left = 0;
-	    continue;
-	}
-	if(irq->io_type == BINARY_IO) {
-	   if(recordlen > irq->top->bytes_left) {
-		keep_offset = irq->top->offset;
-		dd_io_reset_offset(irq, irq->top->offset
-				   + irq->top->sizeof_read
-				   - irq->top->bytes_left);
-		if(keep_offset == irq->current_offset) {
-		   return(-1);
-		}
-	      irq->top->bytes_left = 0;
-	   }
-	   else {
-	      break;
-	   }
-	}
-	else {
-	   ugly = (recordlen - irq->top->bytes_left > 1) || recordlen < 1;
-
-	   if(pui->check_ugly && dwel_record && ugly) {
-	      ++ugly_record_count;
-	      printf("Ugly record count: %d  rlen: %d  left: %d\n"
-		     , ugly_record_count, hdr->recordlen
-		     , irq->top->bytes_left);
-	      irq->top->bytes_left = 0;
-	      if(ugly_record_count > 5) {
-		 return(-1);
-	      }
-	      continue;
-	   }
-	   ugly_record_count = 0;
-	   break;		/* for non binary io */
-	}
+    if(!count++) {
+      mark = 0;
     }
-    size = recordlen;
+    if(count >= bp) {
+      mark = 0;
+    }
 
-    return(size);
+    if(irq->top->bytes_left < irq->min_block_size) {
+      if(irq->io_type == BINARY_IO && irq->top->bytes_left > 0) {
+	keep_offset = irq->top->offset;
+	dd_io_reset_offset(irq, irq->top->offset
+			   + irq->top->sizeof_read
+			   - irq->top->bytes_left);
+	if(keep_offset == irq->current_offset) {
+	  return(-1);
+	}
+	irq->top->bytes_left = 0;
+      }
+      dd_logical_read(irq, FORWARD);
+
+      if(irq->top->read_state < 0) {
+	if( ++err_count < 4 ) {
+	  printf("Last read: %d errno: %d\n"
+		 , irq->top->read_state, err_count);
+	  irq->top->bytes_left = 0;
+	  continue;
+	}
+	nn = irq->top->read_state;
+	dd_input_read_close(irq);
+	/*
+	 * see if there is another file to read
+	 */
+	if(aa = dd_next_source_dev_name("PRQ")) {
+	  current_file_name = aa;
+	  if((ii = dd_input_read_open(irq, aa)) <= 0) {
+	    return(size);
+	  }
+	  eof_count = 0;
+	  err_count = 0;
+	  continue;
+	}
+	else {
+	  return(size);
+	}
+      }
+      else if(irq->top->eof_flag) {
+	err_count = 0;
+	eof_count++;
+	dd_stats->file_count++;
+	printf( "EOF number: %d at %.2f MB\n"
+		, dd_stats->file_count
+		, dd_stats->MB);
+	       
+	irq->top->bytes_left = 0;
+	if(eof_count > 3) {
+	  nn = irq->top->read_state;
+	  dd_input_read_close(irq);
+	  /*
+	   * see if there is another file to read
+	   */
+	  if(aa = dd_next_source_dev_name("PRQ")) {
+	    current_file_name = aa;
+	    if((ii = dd_input_read_open(irq, aa)) <= 0) {
+	      return(size);
+	    }
+	  }
+	  else {
+	    return(size);
+	  }
+	  err_count = 0;
+	  eof_count = 0;
+	  continue;
+	}
+	continue;
+      }
+      else {
+	dd_stats->rec_count++;
+	dd_stats->MB += BYTES_TO_MB(irq->top->sizeof_read);
+	eof_count = 0;
+	err_count = 0;
+      }
+    }
+    aa = irq->top->at;
+    gh = (TOP *)aa;
+    recordlen = LittleEndian ? gh->recordlen : PX2(gh->recordlen);
+
+    dwel_record = !strncmp("DWEL", aa, 4);
+    rhdr_record = !strncmp("RHDR", aa, 4);
+
+    if (!(dwel_record || rhdr_record)) {
+      if((illegal_header_count++ % 3) == 0 ) {
+	sprintf(mess, 
+		"Illegal header id: %2x %2x %2x %2x %2x %2x rlen: %d  sizeof_read:  %d %d"
+		, (int)gh->desc[0] & 0xff
+		, (int)gh->desc[1] & 0xff
+		, (int)gh->desc[2] & 0xff
+		, (int)gh->desc[3] & 0xff
+		, (int)gh->desc[4] & 0xff
+		, (int)gh->desc[5] & 0xff
+		, recordlen
+		, irq->top->sizeof_read
+		, illegal_header_count
+		);
+	dd_append_cat_comment(mess);
+	printf("%s\n", mess);
+      }
+      if(((illegal_header_count-1) % 30) == 0 ) {
+	sprintf(mess,  "%s %s"
+		, current_file_name
+		, dts_print(d_unstamp_time(gri->dts))
+		);
+	dd_append_cat_comment(mess);
+	printf("%s\n", mess);
+      }
+    }
+
+    if (dwel_record || rhdr_record) {
+      last_gh = gh;
+    }
+    else {
+      if(irq->io_type != BINARY_IO) {
+	irq->top->bytes_left = 0; /* just read another record */
+	continue;
+      }
+      if(1) {
+	dd_input_read_close(irq);
+	if(aa = dd_next_source_dev_name("PRQ")) {
+	  if((ii = dd_input_read_open(irq, aa)) <= 0) {
+	    return(size);
+	  }
+	}
+	else {
+	  return(size);
+	}
+	irq->top->bytes_left = 0;
+	continue;
+      }
+      /* otherwise try to reposition after the current bad block
+       * perhaps by searching for DWEL or RHDR
+       * but not for now
+       */
+      dd_io_reset_offset(irq, irq->top->offset
+			 + irq->top->sizeof_read
+			 - irq->top->bytes_left
+			 + recordlen);
+      irq->top->bytes_left = 0;
+      continue;
+    }
+    if(irq->io_type == BINARY_IO) {
+      if(recordlen > irq->top->bytes_left) {
+	keep_offset = irq->top->offset;
+	dd_io_reset_offset(irq, irq->top->offset
+			   + irq->top->sizeof_read
+			   - irq->top->bytes_left);
+	if(keep_offset == irq->current_offset) {
+	  return(-1);
+	}
+	irq->top->bytes_left = 0;
+      }
+      else {
+	break;
+      }
+    }
+    else {
+      ugly = (recordlen - irq->top->bytes_left > 1) || recordlen < 1;
+
+      if(pui->check_ugly && dwel_record && ugly) {
+	++ugly_record_count;
+	printf("Ugly record count: %d  rlen: %d  left: %d\n"
+	       , ugly_record_count, hdr->recordlen
+	       , irq->top->bytes_left);
+	irq->top->bytes_left = 0;
+	if(ugly_record_count > 5) {
+	  return(-1);
+	}
+	continue;
+      }
+      ugly_record_count = 0;
+      break;		/* for non binary io */
+    }
+  }
+  size = recordlen;
+
+  return(size);
 }
 /* c------------------------------------------------------------------------ */
 
@@ -947,7 +945,7 @@ piraq_isa_new_sweep()
 		short_avg_running_sum( pui->az_diff_rs ); /* NUM_SHORT_AVG */
 
 	    if(fabs(short_avg_az_diff) > min_az_diff) { /* MIN_AZ_DIFF */
-		/* moving in azimuth hopefully to the next rhi */
+		/* moving in azimuth hopeGfully to the next rhi */
 		return(NO);
 	    }
 	    short_avg_el =
@@ -1575,10 +1573,10 @@ piraq_ini()
 	  { pui->options |= DOW_FLAG; }
 	if(strstr(aa, "GUIFU_F")) /* GUIFU_FLAG */
 	  { pui->options |= GUIFU_FLAG; }
+	if(strstr(aa, "DZ_TO_DBZ")) /* DZ_TO_DBZ_FLAG */
+	  { pui->options |= DZ_TO_DBZ_FLAG; }
 	if(strstr(aa, "IGNORE_TRANS")) /*  */
 	  { pui->options |= IGNORE_TRANSITIONS; }
-	if(strstr(aa, "HOPE_ITSA_DWE")) /*  */
-	  { pui->options |= HOPE_ITSA_DWELL; }
 	if(bb = strstr(aa, "HZO_IMP")) {
 	  strcpy( str, bb );
 	  nt = dd_tokens( str, sptrs );
@@ -2641,7 +2639,11 @@ KDP   Specific diff. prop. phase btwn HH, VV
     gri->dd_scale[pn] = scale;
     gri->dd_offset[pn] = bias;
     gri->field_id_num[pn] = DZ_ID_NUM;
-    strcpy( gri->field_name[pn], "DZ      " );
+    if (pui->options & DZ_TO_DBZ_FLAG)
+      { strcpy( gri->field_name[pn], "DBZ     " ); }
+    else
+      { strcpy( gri->field_name[pn], "DZ      " ); }
+
     strncpy( gri->field_long_name[pn]
 	     , "Horizontal copolar reflectivity (HH)                        "
 	     , 40);
