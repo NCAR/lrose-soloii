@@ -222,9 +222,20 @@ void sii_frame_expose_event(GtkWidget *frame, GdkEvent *event
 	  */
 	 if (!second_expose) {
 	    ndx = sfc->cfg_que_ndx;
+	    stp = &sfc->tbl_parms;
+	    mm = stp->right_attach - stp->left_attach;
+	    nn = stp->bottom_attach - stp->top_attach;
 	    sfc->width = sfc->cfg_width[ndx];
 	    sfc->height = sfc->cfg_height[ndx];
 	    sii_check_image_size (frame_num);
+	    if (mm == 1) {
+	       sii_table_widget_width = sfc->width;
+	    }
+	    if (nn == 1) {
+	       sii_table_widget_height = sfc->height;
+	    }
+	    sii_check_def_widget_sizes ();
+
 	    sfc->sync_num = sfc->config_sync_num;
 	    g_string_append (gs, " X0");
 	    sii_plot_data2 (frame_num, REPLOT_THIS_FRAME);
