@@ -876,8 +876,8 @@ void ncdf_init_sweep(dgi, ncp)
    strcpy( str, "xltrs" );
    ii = nc_put_att_text( ncid, NC_GLOBAL, "Software"
 			, strlen(str)+1, str );
-   strcpy (str, "Certain radars have variable cell spacings
-defined in segments of constant cell spacing");
+   strcpy (str, "Certain radars have variable cell spacings");
+strcat( str, "defined in segments of constant cell spacing");
    
    ii = nc_put_att_text( ncid, NC_GLOBAL, "Range_Segments"
 			, strlen(str)+1, str );
