@@ -597,6 +597,8 @@ static const gchar * header_value[] = {
 "    header-value corr-elevation by 5. degrees",
 "    header-value corr-azimuth by 5. degrees",
 "    header-value corr-rot-angle by 5. degrees",
+"    header-value ipp1 is 1.1 milliseconds",
+"    header-value ipp2 is 1.0 milliseconds",
 " ",
 "!  Tokens following the <real> are ignored but can be included to",
 "!  clarify the units of the header value",
