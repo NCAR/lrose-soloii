@@ -388,6 +388,7 @@ void sii_edit_menu_cb ( GtkWidget *w, gpointer data )
       if (active = GTK_CHECK_MENU_ITEM (check_item)->active)
 	{ edd->bnd_in_out_state = task; }
       edd->toggle[task] = active;
+      sebs->operate_outside_bnd = (task == EDIT_BND_OUT && active) ? YES : NO;
       break;
 
     case EDIT_BND_DRAW:
