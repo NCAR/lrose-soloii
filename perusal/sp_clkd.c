@@ -104,7 +104,15 @@ void solo_new_list_field_vals(frme)
 	dd_latlon_shift(&radar, &clicked);
     }
 
-    sprintf(str, "    %s\n", wwptr->parameter->parameter_name);
+    if (!ts) {
+	dts.time_stamp = sfv->next->time;
+	aa = dts_print(d_unstamp_time(&dts));
+        sprintf(str, "%s:  %s\n", wwptr->parameter->parameter_name, aa);
+    } else {
+        sprintf(str, "   %s\n", wwptr->parameter->parameter_name);
+    }
+        
+    
     solo_add_list_entry(slm, str, strlen(str));
 
     switch(wwptr->lead_sweep->scan_mode) {
