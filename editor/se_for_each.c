@@ -159,7 +159,8 @@ int se_header_value(arg, cmds)	/* #header-value# */
        dds->asib->altitude_agl = f_val;
     }
     else if(strstr("msl-into-agl-corr", name)) {
-       dds->asib->altitude_agl = dds->asib->altitude_msl +f_val;
+       dds->asib->altitude_agl = dds->asib->altitude_msl
+	 +dds->cfac->pressure_alt_corr +f_val;
     }
     else {
        mark = 0;
