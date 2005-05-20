@@ -4,9 +4,17 @@ The current version of soloii and the xltrsii is soloii108.tar.gz for
 version 1.08. You might find newer versions in this directory which
 should be ok.
 
+version 1.08:  Hooked up logging function for examine widget.
+
+version 1.07:  Modified translators to work with new WSR88D 
+archive II format.
+
 soloii requires the GTK+ headers and libraries! Also if you will be
 reading or writing netCDF files make sure the netcdf libraries have
-been loaded.
+been loaded.  New versions of linux may not have GTK 1.2 installed
+by default.  This may require the install of packages (RPMs) that
+contain the 1.2 version of GTK.
+
 
 The build of Soloii is based on autoconf which produces a Borne shell
 script "configure" from a "configure.ac" file and uses "Makefile.in"
