@@ -366,15 +366,20 @@ sxm_append_to_log_stream(stuff, nchar)
 {
     int nn;
 
-    if(log_state != LOG_ACTIVE)
-	  return(0);
+    if(log_state != LOG_ACTIVE){
+	return(0);
+    }
 
     sxm_open_log_stream();
 
-    if(!log_stream)
-	  return(0);
+    if(!log_stream){
+	return(0);
+    }
+    
+    char line[4096];
+    sprintf(line,"%s\n",stuff);
 
-    return(nn = fwrite(stuff, sizeof(char), nchar, log_stream));
+    return(nn = fwrite(line, sizeof(char), strlen(line), log_stream));
 }
 /* c------------------------------------------------------------------------ */
 
@@ -682,8 +687,10 @@ sxm_close_log_stream()
 void 
 sxm_flush_log_stream()
 {
-    if(!log_stream)
-	  return;
+    if(!log_stream){
+	printf("sxm_flush_log_stream: log_stream is NULL\n");
+	return;
+    }
     fflush(log_stream);
 }
 /* c------------------------------------------------------------------------ */
@@ -722,11 +729,9 @@ sxm_toggle_log_dir (active)
   char str[256];
   log_state = (active) ? LOG_ACTIVE : LOG_SUSPENDED;
 
-# ifdef notyet
   sprintf (str, "Toggled log state to: %s!\n"
 	   , (active) ? "log active" : "log suspended");
   sii_message (str);
-# endif
 }
 
 /* c------------------------------------------------------------------------ */
@@ -2432,9 +2437,6 @@ void sxm_update_examine_data(frme, wgt_btn)
     float bad_val, val, *fptr;
     struct solo_perusal_info *spi, *solo_return_winfo_ptr();
 
-
-
-
     spi = solo_return_winfo_ptr();
 
 # ifdef obsolete
@@ -2778,10 +2780,14 @@ void sxm_update_examine_data(frme, wgt_btn)
     entry_num = 0;
     solo_modify_list_entry(slm, ecs->rotang_header
 			   , strlen(ecs->rotang_header), entry_num++);
+    sxm_append_to_log_stream(ecs->rotang_header,strlen(ecs->rotang_header));
+
     /* second row: field names
      */
     solo_modify_list_entry(slm, ecs->names_header
 			   , strlen(ecs->names_header), entry_num++);
+    sxm_append_to_log_stream(ecs->names_header,strlen(ecs->names_header));
+
     ecs->heading_row_count = entry_num;
 
     for(cell_num=0; cell_num < ecs->actual_num_cells; cell_num++) {
@@ -2819,6 +2825,7 @@ void sxm_update_examine_data(frme, wgt_btn)
 	/* send this line back to the list management tool
 	 */
 	solo_modify_list_entry(slm, line, strlen(line), entry_num++);
+	sxm_append_to_log_stream(line,strlen(line));
     }
     se_refresh_examine_widgets(frme, slm);
     sp_change_cursor(YES);
