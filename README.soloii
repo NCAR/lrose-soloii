@@ -1,8 +1,11 @@
 This file is named .../soloii/README.soloii.
 
-The current version of soloii and the xltrsii is soloii108.tar.gz for
-version 1.08. You might find newer versions in this directory which
-should be ok.
+The current version of soloii and the xltrsii is soloii109.tar.gz for
+version 1.09. You might find newer versions in this directory which
+should be ok
+
+version 1.09: Found bug in logging code.  String sizes
+were not large enough.
 
 version 1.08:  Hooked up logging function for examine widget.
 
