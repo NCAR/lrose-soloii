@@ -699,7 +699,7 @@ void
 sxm_set_log_dir (dir)
      char *dir;
 {
-  char str[256];
+  char str[2048];
   sprintf (str, "Setting log directory to: %s\n", dir);
   sii_message (str);
   sxm_close_log_stream();
@@ -726,7 +726,7 @@ void
 sxm_toggle_log_dir (active)
      int active;
 {
-  char str[256];
+  char str[2048];
   log_state = (active) ? LOG_ACTIVE : LOG_SUSPENDED;
 
   sprintf (str, "Toggled log state to: %s!\n"
@@ -815,7 +815,7 @@ sxm_get_widget_info(frme)
   int frme;
 {
     int ii, width, frac;
-    char *aa, *bb, *cc, str[256];
+    char *aa, *bb, *cc, str[2048];
     float f;
     WW_PTR wwptr, solo_return_wwptr();
     struct examine_control *ecs;
@@ -904,7 +904,7 @@ sxm_list_beams(frme)
     struct dd_general_info *dgi, *dd_window_dgi();
     int file_action=TIME_NEAREST, version=LATEST_VERSION;
     int sweep_skip=1, replot=YES, nr;
-    char *aa, str[256];
+    char *aa, str[2048];
 
     wwptr = solo_return_wwptr(frme);
     dgi = dd_window_dgi(wwptr->lead_sweep->window_num);
@@ -979,7 +979,7 @@ sxm_list_edit_hist(frme)
     struct solo_list_mgmt *slm;
     WW_PTR wwptr, solo_return_wwptr();
     struct dd_general_info *dgi, *dd_window_dgi();
-    char *aa, *bb, *cc, *zz, str[256];
+    char *aa, *bb, *cc, *zz, str[2048];
 
     wwptr = solo_return_wwptr(frme);
     dgi = dd_window_dgi(wwptr->lead_sweep->window_num);
@@ -1038,15 +1038,17 @@ sxm_list_to_log(slm, entry, num)
 
 void
 sxm_log_stat_line(dgi)
-  DGI_PTR dgi;
+     struct dd_general_info *dgi;
 {
-    char str[256];
+    char str[2048];
 
     if(log_state != LOG_ACTIVE)
 	  return;
 
     sxm_open_log_stream();
+
     sxm_stat_line(dgi, YES, "", "", str);
+
     fprintf(log_stream, "%s", str);
 }
 /* c------------------------------------------------------------------------ */
@@ -1054,7 +1056,7 @@ sxm_log_stat_line(dgi)
 void
 sxm_open_log_stream()
 {
-    char str[256], *aa, *getenv();
+    char str[2048], *aa, *getenv();
     long time_now();
 
     if(log_stream)
@@ -1593,7 +1595,7 @@ sxm_set_click_frame(frme, theta, range)
     WW_PTR wwptr, solo_return_wwptr();
     struct solo_edit_stuff *seds, *return_sed_stuff();
     struct solo_list_mgmt *slm;
-    char *aa, str[256];
+    char *aa, str[2048];
 
     if(frme >= 0 && frme < SOLO_MAX_WINDOWS) {
 	seds = return_sed_stuff();
@@ -1638,7 +1640,7 @@ sxm_stat_line(dgi, verbosity, preamble, postamble, line)
      * other front ends such as UF output from sweep files.
      */
     int ii, jj, nn;
-    char str[256], *a, *dts_print(), *str_terminate(), radar_name[12];
+    char str[2048], *a, *dts_print(), *str_terminate(), radar_name[12];
     DD_TIME *d_unstamp_time();
     struct dds_structs *dds=dgi->dds;
     struct sweepinfo_d *swib=dgi->dds->swib;
@@ -1738,7 +1740,7 @@ sxm_ui_cmd(arg, cmds, key)
     struct examine_control *ecs;
     struct solo_examine_info *sei;
     struct solo_list_mgmt *slm;
-    char *aa, *bb, tmp_str[256], *strstr(), *strchr(), *se_unquote_string();
+    char *aa, *bb, tmp_str[2048], *strstr(), *strchr(), *se_unquote_string();
 
 
     last_click.which_widget_button = key;
@@ -2431,7 +2433,7 @@ void sxm_update_examine_data(frme, wgt_btn)
     int file_action=TIME_NEAREST, version=LATEST_VERSION;
     int sweep_skip=1, replot=YES;
     char *aa, *bb, *cc, *ee, *line, tmp_val[32];
-    char *str_terminate(), tmp_flds[32], str[256];
+    char *str_terminate(), tmp_flds[32], str[2048];
     double d, d_start, et, dd_rotation_angle(), dd_ac_vel();
     double dd_elevation_angle();
     float bad_val, val, *fptr;
@@ -2539,7 +2541,10 @@ void sxm_update_examine_data(frme, wgt_btn)
     nn = lseek(dgi->in_swp_fid
 	       , (long)(entry1 +tsri->ray_num)->offset, 0L);
     dd_absorb_ray_info(dgi);
+
     sxm_log_stat_line(dgi);
+
+
     /*
      * check for fields present
      */
