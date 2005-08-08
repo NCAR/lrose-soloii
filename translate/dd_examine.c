@@ -10,6 +10,11 @@ static char vcid[] = "$Id$";
 # define DDX_MAX_BLOCKS 4
 
 # include <stdio.h>
+
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+
 # include "dorade_headers.h"
 # include "Waveform.h"
 # include "FieldRadar.h"

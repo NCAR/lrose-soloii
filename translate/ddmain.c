@@ -12,6 +12,9 @@ static char vcid[] = "$Id$";
 # include "dd_stats.h"
 # include <date_stamp.h>
 
+#include <unistd.h>
+#include <stdlib.h>
+
 # ifdef linux
 # include <endian.h>
 

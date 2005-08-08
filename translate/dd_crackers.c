@@ -9,6 +9,10 @@ static char vcid[] = "$Id$";
  * /home/steam/oye/scripts/crackers.perl
  */
 
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+
 # ifndef CRAK_LST_INC
 # define CRAK_LST_INC
 # define    type_long  3
