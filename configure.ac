@@ -110,10 +110,10 @@ done
 ] )
 
 dnl AC_MSG_CHECKING("for gtk.h ")
-dnl AC_FIND_LOCALHDR(gtk/gtk.h,/usr/include /usr/local/include /usr/local/include/gtk-1.2)
+dnl AC_FIND_LOCALHDR(gtk/gtk.h,/usr/include /usr/include/gtk-1.2 /usr/local/include /usr/local/include/gtk-1.2)
 
 AC_MSG_CHECKING("for glib.h ")
-AC_FIND_LOCALHDR(glib.h,/usr/include /usr/local/include /usr/local/include/glib-1.2)
+AC_FIND_LOCALHDR(glib.h,/usr/include /usr/include/glib-1.2 /usr/local/include /usr/local/include/glib-1.2)
 
 AC_MSG_CHECKING("for netcdf.h ")
 AC_FIND_LOCALHDR(netcdf.h,/usr/include /usr/include/netcdf /usr/local/include /usr/local/include/netcdf /usr/lib /usr/lib/netcdf /usr/local/lib/netcdf /opt/local_fc4/include /opt/local_el4/include)

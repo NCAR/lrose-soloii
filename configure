@@ -4393,7 +4393,7 @@ XLIBDIR=
 echo "$as_me:$LINENO: checking \"for glib.h \"" >&5
 echo $ECHO_N "checking \"for glib.h \"... $ECHO_C" >&6
 
-for ac_incdir in /usr/include /usr/local/include /usr/local/include/glib-1.2
+for ac_incdir in /usr/include /usr/include/glib-1.2 /usr/local/include /usr/local/include/glib-1.2
 do
 if test -r $ac_incdir/glib.h; then
    LOCAL_INCLUDES="$LOCAL_INCLUDES -I$ac_incdir"
