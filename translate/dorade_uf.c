@@ -21,7 +21,7 @@ static char vcid[] = "$Id$";
 # include <function_decl.h>
 # include <dgi_func_decl.h>
 
-# define PMODE 0644
+# define PMODE 0666
 # define NO_UF_CLIPPING 0x1
 # define    UF_VOL_TRAP 0x2
 

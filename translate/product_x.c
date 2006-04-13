@@ -10,7 +10,7 @@ static char vcid[] = "$Id$";
 
 # include "dorade_headers.h"
 
-# define PMODE 0644
+# define PMODE 0666
 
 struct px_control_struct {
     int omit[MAX_SENSORS];

@@ -1459,7 +1459,7 @@ void eld_lut(dgi, pn, dst)
     parm->bad_data = DELETE_FLAG;
 }
 /* c------------------------------------------------------------------------ */
-# define PMODE 0644
+# define PMODE 0666
 
 int eld_next_ray()
 {

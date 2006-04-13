@@ -1,6 +1,6 @@
 
 # ifndef PMODE
-# define PMODE 0644
+# define PMODE 0666
 # endif
 
 # define      SHANES_HEADER_SIZE 30

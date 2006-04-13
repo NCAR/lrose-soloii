@@ -1,5 +1,5 @@
 # include "Correction.h"
-# define PMODE 0644
+# define PMODE 0666
 
 main()
 {

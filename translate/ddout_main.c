@@ -8,7 +8,7 @@ static char vcid[] = "$Id$";
 # include "dd_defines.h"
 # include <time.h>
 # include <sys/time.h>
-# define PMODE 0644
+# define PMODE 0666
 
 /* c------------------------------------------------------------------------ */
 

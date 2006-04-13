@@ -38,7 +38,7 @@ static char vcid[] = "$Id$";
 # include <function_decl.h>
 # include <dgi_func_decl.h>
 
-# define PMODE 0644
+# define PMODE 0666
 # define TMP_BUF_SIZE 8192
 
 extern int LittleEndian;

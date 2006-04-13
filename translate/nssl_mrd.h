@@ -23,7 +23,7 @@
 # define  NAV_GPS 3
 
 # ifndef PMODE
-# define PMODE 0644
+# define PMODE 0666
 # endif
 
 # ifndef S10

@@ -16,7 +16,7 @@ static char vcid[] = "$Id$";
  * stand alone program to copy a tape file
  * to a FORTRAN-BINARY file
  */
-# define PMODE 0644
+# define PMODE 0666
 # define BLOCK_SIZE 131072
 # ifndef FB_IO
 # define FB_IO 1

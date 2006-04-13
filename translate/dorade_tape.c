@@ -11,7 +11,7 @@ static char vcid[] = "$Id$";
  * dd_tape_dump
  */
 
-# define PMODE 0644
+# define PMODE 0666
 # define SIZEOF_FILE_MARK 250000
 
 # include <dorade_headers.h>

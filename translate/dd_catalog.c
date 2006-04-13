@@ -1080,7 +1080,7 @@ void ddcat_close( fid )
     return;
 }
 /* c------------------------------------------------------------------------ */
-# define PMODE 0644
+# define PMODE 0666
 
 int ddcat_open(file_name )
   char *file_name;

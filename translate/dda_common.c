@@ -64,7 +64,7 @@ static char vcid[] = "$Id$";
 # include <dd_math.h>
 # include <function_decl.h>
 
-# define PMODE 0644
+# define PMODE 0666
 # define MIN_RAYS_PER_SWEEP 1
 
 # ifndef SOLO_HALT

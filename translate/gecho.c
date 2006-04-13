@@ -8,7 +8,7 @@ static char vcid[] = "$Id$";
 # include <dd_math.h>
 # include <function_decl.h>
 # include <dgi_func_decl.h>
-# define PMODE 0644
+# define PMODE 0666
 
 struct gecho_control_struct {
     int omit[MAX_SENSORS];
