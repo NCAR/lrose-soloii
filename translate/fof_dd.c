@@ -4797,7 +4797,7 @@ int zatt_arg_ptrs(att, string_space, str_ptrs)
      * and update a list of pointers to the arguments
      */
     int nargs=0;
-    char *a=att, *b, *c=string_space, **sp=str_ptrs, *strchr();
+    char *a=att, *b, *c=string_space, **sp=str_ptrs;
 
     *c = '\0';
     if(!a || !strlen(a))
@@ -4825,7 +4825,7 @@ int xnext_att(fp, att)		/* get the next attribute */
   char *att;
 {
     int ch, nn=0;
-    char *b, *c, *strchr();
+    char *b, *c;
     
     for(b=c=att;;) {		/* keep going till we get an attribute */
 	while((ch = getc(fp)) != EOF) {

@@ -1740,7 +1740,7 @@ sxm_ui_cmd(arg, cmds, key)
     struct examine_control *ecs;
     struct solo_examine_info *sei;
     struct solo_list_mgmt *slm;
-    char *aa, *bb, tmp_str[2048], *strstr(), *strchr(), *se_unquote_string();
+    char *aa, *bb, tmp_str[2048], *strstr(), *se_unquote_string();
 
 
     last_click.which_widget_button = key;

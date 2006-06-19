@@ -241,6 +241,12 @@ elif test "$ac_os_type" = "HPUX"; then
 
 elif test "$ac_os_type" = "Linux"; then
       LIBS="$LIBS -lncurses"
+     if test -n "$CFLAGS"; then
+          CFLAGS="$CFLAGS -m32"
+     else
+          CFLAGS="-m32 "
+     fi
+
 fi
 
 ac_sh_test=`type sh`
@@ -298,21 +304,6 @@ dnl remember for IRIX cc compiler you need a -n32 flag if various libraries
 dnl have been built with the same flag
 
 echo "ac_os_type: $ac_os_type"
-
-dnl TAKE THIS OUT AFTER TESTING IS COMPLETE (speeds up compilation)!!!
-if test -n "x"; then
-CFLAGS="-g"
-if test "$ac_os_type" = "HPUX"; then
-     if test "$WHICHCC" = "cc"; then
-      CFLAGS="-g -Ae"
-   fi
-elif test "$ac_os_type" = "IRIX"; then
-     if test "$WHICHCC" = "cc"; then
-	CFLAGS="-g -n32"
-     fi
-fi
-AC_MSG_RESULT( CFLAGS: $CFLAGS )
-fi
 
 echo " "
 echo "#### Ran configure in `pwd` ####"

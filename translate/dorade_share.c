@@ -493,7 +493,7 @@ int dcdatime( str, n, yy, mon, dd, hh, mm, ss, ms )
     /*
      * this routine decodes a time string hh:mm:ss.ms
      */
-    char ls[88], *s, *t, *strchr();
+    char ls[88], *s, *t;
     
     *yy = *mon = *dd = *hh = *mm = *ss = *ms = 0;
     strncpy( ls, str, n );

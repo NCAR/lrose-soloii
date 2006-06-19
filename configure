@@ -4543,6 +4543,12 @@ elif test "$ac_os_type" = "HPUX"; then
 
 elif test "$ac_os_type" = "Linux"; then
       LIBS="$LIBS -lncurses"
+     if test -n "$CFLAGS"; then
+          CFLAGS="$CFLAGS -m32"
+     else
+          CFLAGS="-m32 "
+     fi
+
 fi
 
 ac_sh_test=`type sh`
@@ -4618,21 +4624,6 @@ echo "${ECHO_T}bindir: $bindir " >&6
 
 
 echo "ac_os_type: $ac_os_type"
-
-if test -n "x"; then
-CFLAGS="-g"
-if test "$ac_os_type" = "HPUX"; then
-     if test "$WHICHCC" = "cc"; then
-      CFLAGS="-g -Ae"
-   fi
-elif test "$ac_os_type" = "IRIX"; then
-     if test "$WHICHCC" = "cc"; then
-	CFLAGS="-g -n32"
-     fi
-fi
-echo "$as_me:$LINENO: result: CFLAGS: $CFLAGS " >&5
-echo "${ECHO_T}CFLAGS: $CFLAGS " >&6
-fi
 
 echo " "
 echo "#### Ran configure in `pwd` ####"

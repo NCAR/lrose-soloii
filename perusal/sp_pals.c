@@ -470,7 +470,7 @@ void solo_merge_usual_parm(this, name)
   struct solo_palette_ptr *this;
   char *name;
 {
-    char *a, *aa, *b, *c, *e, *f, str[256], *strstr(), *strchr();
+    char *a, *aa, *b, *c, *e, *f, str[256], *strstr();
     int i, j, n, nn, mark, prepend=NO;
     /*
      * put "name" at the beginning of the list
@@ -788,7 +788,7 @@ void solo_zap_usual_parm(this, name)
   struct solo_palette_ptr *this;
   char *name;
 {
-    char *a, *b, *c, *e, str[256], *strstr(), *strchr();
+    char *a, *b, *c, *e, str[256], *strstr();
     int i, j, n, mark;
     struct solo_palette_ptr *solo_palette_remove();
     /*

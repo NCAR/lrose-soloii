@@ -367,7 +367,7 @@ int nab_wsrqc_stuff(stream, buf, wsp, quit_at, num_occurs)
      */
     int ii, nn, hh, mm, ss, noc=0, mark, lc;
     char *a, *b, *c=buf, *nl, *dd_whiteout(), *dd_delimit();
-    char *strchr(), *strstr(), *fgetsx();
+    char *strstr(), *fgetsx();
     struct wsrqc_stuff *ws=wsp->at;
     DD_TIME dts;
     double d, d_time_stamp();

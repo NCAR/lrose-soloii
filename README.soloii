@@ -1,8 +1,11 @@
 This file is named .../soloii/README.soloii.
 
-The current version of soloii and the xltrsii is soloii110.tar.gz for
-version 1.11. You might find newer versions in this directory which
+The current version of soloii and the xltrsii is soloii112.tar.gz for
+version 1.12. You might find newer versions in this directory which
 should be ok
+
+version 1.12: Now compiles with the -02 option.  For linux machines
+compiles with the -m32 flag to force 32 bit compiles on 64 bit machines.
 
 version 1.11: Changed the mode permissions for open/creat calls to 666.
 

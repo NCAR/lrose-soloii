@@ -1052,7 +1052,7 @@ dd_relative_time(rtm)
 {
     /* routine to detect and extract relative time in seconds
      */
-    char *aa, *bb, *cc, str[64], hms, *strchr();
+    char *aa, *bb, *cc, str[64], hms;
     int ii, nn, relative;
     double d=0, dsign=1;
     float f_val;
