@@ -7,7 +7,7 @@ static char vcid[] = "$Id$";
 
 # include <dd_defines.h>
 # include <dorade_share.h>
-# include <dorade/CellVector.h>   /* for MAXGATES */
+# include <CellVector.h>   /* for MAXGATES */
 # include <dd_math.h>
 # include <function_decl.h>
 # include <errno.h>
