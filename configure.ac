@@ -240,6 +240,7 @@ elif test "$ac_os_type" = "HPUX"; then
      fi
 
 elif test "$ac_os_type" = "Linux"; then
+     CFLAGS="-g"
       LIBS="$LIBS -lncurses"
      if test -n "$CFLAGS"; then
           CFLAGS="$CFLAGS -m32"
