@@ -443,6 +443,7 @@ void dd_insert_headers(dgi)
 	c += ssize;
     }
     /* cell vector */
+
     nn = (celv->number_cells > MAXCVGATES)
 	? 12 + celv->number_cells * sizeof(float) : sizeof(struct cell_d);
     memcpy(c, (char *)celv, nn);

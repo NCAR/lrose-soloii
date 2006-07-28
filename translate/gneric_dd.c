@@ -48,6 +48,7 @@ void dd_celv_update(dds)
     float corr=dds->cfac->range_delay_corr;
 
     /* update bin spacing info */
+
     celv->number_cells = gri->num_bins;
     memcpy((char *)celv->dist_cells, (char *)gri->range_value
 	   , gri->num_bins*sizeof(float));
@@ -316,6 +317,7 @@ void dd_stuff_ray()
 	mark = 0;
     }
 
+
     if( gri->vol_num != dgi->source_vol_num ) {
 	dd_vold_update(dgi);
 	dgi->source_vol_num = gri->vol_num;
@@ -323,6 +325,7 @@ void dd_stuff_ray()
 	dgi->source_fmt = gri->source_format;
     }
     if( new_vol || gri->sweep_num != dgi->source_sweep_num ) {
+	dd_vold_update(dgi);
 	dd_init_sweep(dgi,new_vol);
 	dgi->source_sweep_num = gri->sweep_num;
 	new_sweep = YES;

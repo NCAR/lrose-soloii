@@ -31,6 +31,9 @@ int dd_ncdf_conv()
     int ii, rn;
     struct unique_sweepfile_info_v3 *usi;
     struct dd_general_info *dgi, *dd_window_dgi();
+
+
+    printf("In dd_ncdf_conv \n");
     
     if((ii=dd_ncdf_init()) == END_OF_TIME_SPAN ) {
 	return(1);
@@ -75,6 +78,9 @@ int dd_ncdf_init()
     struct dd_stats *dd_return_stats_ptr();
     struct dd_input_sweepfiles_v3 *dd_setup_sweepfile_structs_v3();
     struct unique_sweepfile_info_v3 *usi;
+
+    printf("In dd_ncdf_init.\n");
+
 
     /* do all the necessary initialization including
      * reading in the first ray

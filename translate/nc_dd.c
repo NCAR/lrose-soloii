@@ -7,6 +7,7 @@ static char vcid[] = "$Id$";
 
 # include <dd_defines.h>
 # include <dorade_share.h>
+# include <dorade/CellVector.h>   /* for MAXGATES */
 # include <dd_math.h>
 # include <function_decl.h>
 # include <errno.h>
@@ -15,6 +16,8 @@ static char vcid[] = "$Id$";
 # include "input_limits.h"
 # include "dd_stats.h"
 # include "generic_radar_info.h"
+
+
 
 # define              maxSys 8
 # define             namelen 64
@@ -216,6 +219,7 @@ nc_dd_conv(interactive_mode)
 {
   /* translate netCDF sweepfiles to DORADE sweepfiles */
 
+
   static int count=0;
   int mark, nn, ns, le, rn;
   char *aa, *fn;
@@ -224,6 +228,8 @@ nc_dd_conv(interactive_mode)
   fn = nc_dir + strlen( nc_dir );
     
   for( le = 0; le < ns; le++ ) { /* for each sweepfile */
+
+      printf("\n\nFile %d\n",le);
       
     aa = solo_list_entry( slm, le );
     strcpy( fn, aa );
@@ -405,7 +411,13 @@ int nc_access_swpfi( full_path_name )
 
   ii = nc_inq_dimid( ncid, "maxCells", &cells_did );
   ii = nc_inq_dim( ncid, cells_did, str, &size );
-  maxCells = size;
+
+  if(size > MAXGATES){
+      printf("WARNING: cell dim is %d, setting maxCells to %d \n",size,MAXGATES);
+      maxCells = MAXGATES;
+  }else{
+      maxCells = size;
+  }
 
   archive2 = NO;
   ii = nc_inq_varnatts (ncid, NC_GLOBAL, &numGlobals);
@@ -767,6 +779,7 @@ int nc_access_swpfi( full_path_name )
 
   rr = gri->range_b1 = metersToFirstCell;
   gs = gri->bin_spacing = metersBetweenCells;
+
   gri->num_bins = maxCells;
 
   for( ii = 0; ii < gri->num_bins; ii++ ) {
