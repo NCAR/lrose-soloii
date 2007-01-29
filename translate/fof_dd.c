@@ -194,6 +194,7 @@ struct param_desc {
 };
 
 struct dual_pol_mode {
+#ifdef BIGENDIAN
     unsigned int unused     :  8;
     unsigned int half_nyq   :  1; /* Half Nyquist Enable (Velocity interface
 				   * 0 = HV pairs
@@ -212,6 +213,29 @@ struct dual_pol_mode {
 				   */
     unsigned int zdr_limit  :  1; /* ZDR limit enable (0 = folding) */
     unsigned int dual_polar :  1; /* Dual Polarization Mode Enable */
+#else
+    unsigned int dual_polar :  1; /* Dual Polarization Mode Enable */
+    unsigned int zdr_limit  :  1; /* ZDR limit enable (0 = folding) */
+
+    unsigned int zdr_scale  :  2; /* 00 +-  3 db
+				   * 01 +-  6 db
+				   * 10 +- 12 db
+				   * 11 +- 24 db
+				   */
+    unsigned int ldr_limit  :  1; /* LDR limit enable (0 = folding) */
+    unsigned int ldr_scale  :  2; /* 00 +-  6 db
+				   * 01 +- 12 db
+				   * 10 +- 24 db
+				   * 11 +- 48 db
+				   */
+
+    unsigned int half_nyq   :  1; /* Half Nyquist Enable (Velocity interface
+				   * 0 = HV pairs
+				   * 1 = HH and VV pairs
+				   */
+    unsigned int unused     :  8;
+#endif
+
 };
 
 /*  e.g. 0x00df  Dual Mode, HH and VV pairs for velocity, ZDR limit at +- 24db,
