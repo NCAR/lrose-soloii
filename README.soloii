@@ -1,8 +1,12 @@
 This file is named .../soloii/README.soloii.
 
+
+
 The current version of soloii and the xltrsii is soloii113.tar.gz for
-version 1.13. You might find newer versions in this directory which
+version 1.14. You might find newer versions in this directory which
 should be ok
+
+version 1.14  Added yum netcdf install paths to configure script. 
 
 version 1.13: Fixed some bugs for Dorade to netCDF conversion.
 

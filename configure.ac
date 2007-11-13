@@ -116,11 +116,11 @@ AC_MSG_CHECKING("for glib.h ")
 AC_FIND_LOCALHDR(glib.h,/usr/include /usr/include/glib-1.2 /usr/local/include /usr/local/include/glib-1.2)
 
 AC_MSG_CHECKING("for netcdf.h ")
-AC_FIND_LOCALHDR(netcdf.h,/usr/include /usr/include/netcdf /usr/local/include /usr/local/include/netcdf /usr/lib /usr/lib/netcdf /usr/local/lib/netcdf /opt/local_fc4/include /opt/local_el4/include)
+AC_FIND_LOCALHDR(netcdf.h,/usr/include /usr/include/netcdf /usr/local/include /usr/local/include/netcdf /usr/lib /usr/lib/netcdf /usr/local/lib/netcdf /usr/include/netcdf-3)
 
 AC_MSG_CHECKING("for libnetcdf.a ")
 NETCDFLIBDIR=
-for ac_xdir in /usr/lib /lib /local/lib /usr/local/lib /usr/lib/netcdf /lib/netcdf /local/lib/netcdf /usr/local/lib/netcdf /opt/local_fc4/lib /opt/local_el4/lib
+for ac_xdir in /usr/lib /lib /local/lib /usr/local/lib /usr/lib/netcdf /lib/netcdf /local/lib/netcdf /usr/local/lib/netcdf /usr/lib/netcdf-3
 do
 dnl echo "testing $ac_xdir/libnetcdf.a"
 if test -r $ac_xdir/libnetcdf.a; then
