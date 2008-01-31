@@ -358,7 +358,7 @@ void slm_ctypeu16( slm, a, m, n )	/* type as 16 bit integers */
     int jj = m;
     short ival;
     unsigned char *bb = a + m;
-    char str[128];
+    char str[1024];
     char *aa = str;
     
     solo_reset_list_entries(slm);
@@ -398,7 +398,7 @@ void slm_xctypeu16( slm, a, m, n )	/* type as 16 bit integers */
     int jj = m;
     short ival;
     unsigned char *bb = a + m;
-    char str[128];
+    char str[1024];
     char *aa = str;
     
     solo_reset_list_entries(slm);
@@ -1409,7 +1409,7 @@ void slm_ezascdmp( slm, b, m, n )		/* ascii dump of n bytes */
 {
     int s=0;
     char *c=b+m;
-    char str[128];
+    char str[1024];
     char *aa = str;
 
     solo_reset_list_entries(slm);
@@ -1481,7 +1481,7 @@ void slm_ezhxdmp( slm, b, m, n )		/* hexdump of n bytes */
     int c, s;
     char ascii[16], *as;
     char h[20];
-    char str[128];
+    char str[1024];
     char *aa = str, *bb = b+m;
     strcpy (ascii, " ");
 
