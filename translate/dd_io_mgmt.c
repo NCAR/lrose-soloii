@@ -1047,12 +1047,12 @@ int dd_really_skip_recs(iri, direction, skip_count)
 /* c------------------------------------------------------------------------ */
 
 double
-dd_relative_time(rtm)
-  char *rtm;
+dd_relative_time(const char *rtm)
 {
     /* routine to detect and extract relative time in seconds
      */
-    char *aa, *bb, *cc, str[64], hms;
+    const char *aa;
+    char *bb, *cc, str[64], hms;
     int ii, nn, relative;
     double d=0, dsign=1;
     float f_val;
