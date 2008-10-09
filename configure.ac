@@ -142,6 +142,9 @@ elif eval "type g77"; then
    WHICHFORTRAN="g77"
 elif eval "type f77"; then
    WHICHFORTRAN="f77"
+
+elif eval "type gfortran"; then
+   WHICHFORTRAN="gfortran";
 fi
 AC_MSG_RESULT( WHICHFORTRAN: $WHICHFORTRAN )
 
@@ -159,10 +162,10 @@ if test -n "$NETCDFLIBDIR"; then
 fi
 
 if test -z "$WHICHFORTRAN"; then
-   AC_MSG_RESULT( FORTRAN NOT found! )
+   AC_MSG_WARN( FORTRAN NOT found! )
    DAPLIB=
 else
-   if test "$WHICHFORTRAN" = "g77"; then
+   if test "$WHICHFORTRAN" = "g77" || test "$WHICHFORTRAN" = "gfortran"; then
 	FCSTATICFLAG="-static"
    elif test "$WHICHFORTRAN" = "f77"; then
 	FCSTATICFLAG="-Bstatic"
