@@ -208,7 +208,7 @@ void sii_message (const gchar *message )
 
 /* c---------------------------------------------------------------------- */
 
-int sii_str_seek ( char **sptrs, int count, char *sought )
+int sii_str_seek ( char **sptrs, int count, const char *sought )
 {
    int ii = 0;
 
@@ -274,7 +274,7 @@ void sii_set_widget_frame_num ( GtkWidget *w, gpointer data )
 
 /* c---------------------------------------------------------------------- */
 
-gboolean sii_str_values ( gchar *line, guint nvals, gfloat *f1
+gboolean sii_str_values ( const gchar *line, guint nvals, gfloat *f1
 			 , gfloat *f2 )
 {
    gchar str[128], *sptrs[16];
@@ -568,7 +568,7 @@ gchar *sii_set_string_from_vals (GString *gs, guint nvals,
 
 /* c---------------------------------------------------------------------- */
 
-void sii_bad_entry_message ( gchar *ee, guint items )
+void sii_bad_entry_message ( const gchar *ee, guint items )
 {
    gchar str[256];
 

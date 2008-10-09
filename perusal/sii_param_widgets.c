@@ -233,7 +233,7 @@ GtkWidget *
 sii_filesel (gint which_but, gchar * dirroot);
 
 void 
-param_entry_widget( guint frame_num, gchar *prompt, gchar * dirroot);
+param_entry_widget( guint frame_num, const gchar *prompt, const gchar * dirroot);
 
 static void
 param_list_widget( guint frame_num, guint widget_id
@@ -305,7 +305,7 @@ void
 sii_min_max_from_ctr_inc (guint ncolors, gfloat *ctr, gfloat *inc,
 			  gfloat *min, gfloat *max );
 SiiLinkedList *
-sii_new_palette_for_param (gchar *p_name, gchar *name);
+sii_new_palette_for_param (const gchar *p_name, const gchar *name);
 
 gchar *
 sii_new_palettes_list ();
@@ -317,16 +317,16 @@ gchar *
 sii_new_colors_list ();
 
 SiiLinkedList *
-sii_palette_for_param (gchar *name);
+sii_palette_for_param (const gchar *name);
 
 void
-sii_palette_prepend_usual_param ( SiiPalette *pal, gchar *name);
+sii_palette_prepend_usual_param ( SiiPalette *pal, const gchar *name);
 
 void 
-sii_palette_remove_usual_param ( SiiPalette *palx, gchar *name);
+sii_palette_remove_usual_param ( SiiPalette *palx, const gchar *name);
 
 SiiLinkedList *
-sii_palette_seek (gchar *p_name);
+sii_palette_seek (const gchar *p_name);
 
 void
 sii_param_dup_entries (guint frame_num);
@@ -384,10 +384,11 @@ void
 sii_reset_image (guint frame_num);
 
 void
-sii_set_entries_from_palette (guint frame_num, gchar *name, gchar *p_name);
+sii_set_entries_from_palette (guint frame_num, const gchar *name, 
+        const gchar *p_name);
 
 SiiPalette *
-sii_set_palette (gchar *name);
+sii_set_palette (const gchar *name);
 
 gboolean
 sii_set_param_info (guint frame_num);
@@ -459,7 +460,7 @@ sii_param_colors_filesel (const gchar *str, GtkWidget *fs )
 }
 /* c---------------------------------------------------------------------- */
 
-void param_entry_widget( guint frame_num, gchar *prompt, gchar * dirroot)
+void param_entry_widget( guint frame_num, const gchar *prompt, const gchar * dirroot)
 {
   ParamData *pd = (ParamData *)frame_configs[frame_num]->param_data;
   GtkWidget *label;
@@ -565,11 +566,12 @@ void sii_param_add_ctbl (const char **at, int nn)
 
 /* c---------------------------------------------------------------------- */
 
-gboolean sii_param_absorb_ctbl (guint frame_num, gchar *filename)
+gboolean sii_param_absorb_ctbl (guint frame_num, const gchar *filename)
 {
   ParamData *pd = (ParamData *)frame_configs[frame_num]->param_data;
   gchar str[256], *sptrs[32], mess[256], *buf, *aa, *bb;
-  gchar *name, *bptrs[128];
+  const gchar *name;
+  gchar *bptrs[128];
   FILE *stream;
   size_t lenx, len0, len2;
   gint ii, jj, nn, nt;
@@ -822,7 +824,8 @@ guint param_text_event_cb(GtkWidget *text, GdkEvent *event
   guint position = gtk_text_get_point (GTK_TEXT (text));
   guint frame_num, wid;
   gint jj, kk, nn, nt, mark, start, end;
-  gchar *aa, *bb = "", *line, *p_name, *name;
+  const gchar *aa, *bb = "", *p_name, *name;
+  gchar *line;
   ParamData *pd;
   gboolean ok;
   gchar str[256], *sptrs[32];
@@ -1875,7 +1878,7 @@ void sii_min_max_from_ctr_inc (guint ncolors, gfloat *ctr, gfloat *inc,
 
 /* c---------------------------------------------------------------------- */
 
-SiiLinkedList *sii_new_palette_for_param (gchar *p_name, gchar *name)
+SiiLinkedList *sii_new_palette_for_param (const gchar *p_name, const gchar *name)
 {
    SiiPalette *pal = NULL;
    SiiLinkedList *item;
@@ -1976,7 +1979,7 @@ gchar *sii_new_palettes_list ()
 
 /* c---------------------------------------------------------------------- */
 
-SiiLinkedList *sii_palette_for_param (gchar *name)
+SiiLinkedList *sii_palette_for_param (const gchar *name)
 {
    SiiPalette *pal = NULL;
    SiiLinkedList *item = palette_stack;
@@ -1996,7 +1999,7 @@ SiiLinkedList *sii_palette_for_param (gchar *name)
 
 /* c---------------------------------------------------------------------- */
 
-void sii_palette_prepend_usual_param (SiiPalette *pal, gchar *name)
+void sii_palette_prepend_usual_param (SiiPalette *pal, const gchar *name)
 {
    /*
     * Or shift the name to the front
@@ -2025,7 +2028,7 @@ void sii_palette_prepend_usual_param (SiiPalette *pal, gchar *name)
 
 /* c---------------------------------------------------------------------- */
 
-void sii_palette_remove_usual_param ( SiiPalette *palx, gchar *name)
+void sii_palette_remove_usual_param ( SiiPalette *palx, const gchar *name)
 {
    /*
     * remove the name from all other palettes except this one
@@ -2066,7 +2069,7 @@ void sii_palette_remove_usual_param ( SiiPalette *palx, gchar *name)
 
 /* c---------------------------------------------------------------------- */
 
-SiiLinkedList *sii_palette_seek (gchar *p_name)
+SiiLinkedList *sii_palette_seek (const gchar *p_name)
 {
    SiiPalette *pal = NULL;
    SiiLinkedList *item = palette_stack;
@@ -2087,7 +2090,7 @@ void sii_param_dup_entries (guint frame_num)
 {
    ParamData *pd = (ParamData *)frame_configs[frame_num]->param_data;
    guint size, jj, entry_flag;
-   gchar *aa;
+   const gchar *aa;
    size = sizeof (*pd->values[jj]);
 
    for (jj=0; jj < PARAM_MAX_WIDGETS; jj++) {
@@ -2227,7 +2230,7 @@ void sii_param_dup_pal (gpointer sii_pal, gpointer old_pal)
 void sii_param_check_changes (guint frame_num)
 {
    ParamData *pd = (ParamData *)frame_configs[frame_num]->param_data;
-   gchar *aa;
+   const gchar *aa;
    guint jj;
 
    for (jj=0; jj < PARAM_MAX_WIDGETS; pd->change_flag[jj++] = FALSE);
@@ -2291,7 +2294,7 @@ void sii_param_menu_cb ( GtkWidget *w, gpointer   data )
 {
    guint num = GPOINTER_TO_UINT (data);
    guint nn, frame_num, task, wid, frame_wid, cancel_wid, active, taskx;
-   gchar *aa, *bb, *line, str[128], *sptrs[16], *p_name, *name;
+   const gchar *aa, *bb, *line, *p_name, *name;
    gfloat f1, f2, ftmp, ctr, inc, rnd = .000001;
    gint nt, ncolors = 17, jj, flag;
    ParamData *pd, *pdx;
@@ -2654,7 +2657,7 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = PARAM_CLOSE;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Close", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    /* add a seperator */
    menuitem = sii_submenu_item ( NULL, submenu, 0, NULL, frame_num );
@@ -2662,17 +2665,17 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = PARAM_PALETTE_LIST;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "List Palettes", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_CLR_TBL_LIST;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "List Color Tables", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_COLORS_LIST;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "List Colors", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    /* add a seperator */
    menuitem = sii_submenu_item ( NULL, submenu, 0, NULL, frame_num );
@@ -2680,7 +2683,7 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = PARAM_MPORT_CLR_TBL;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Import a Color Table", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    /* add a seperator */
    menuitem = sii_submenu_item ( NULL, submenu, 0, NULL, frame_num );
@@ -2688,47 +2691,47 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = PARAM_ZERO;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Broadcast...", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_BC_GRID;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Grid Color", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_BC_BND;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Boundary Color", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_BC_XCEED;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Exceeded Color", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_BC_MSSNG;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Missing Data Color", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_BC_ANNOT;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Annotation Color", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_BC_BACKG;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Background Color", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_BC_EMPH;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Emphasis Color", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_BC_CB;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Color Bar Settings", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
 
 
@@ -2737,7 +2740,7 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = PARAM_ZERO;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Color Bar", submenu, widget_id
-			, sii_param_menu_cb, frame_num );
+			, (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    radio_group = NULL;
    radio_num = 0;
@@ -2745,19 +2748,19 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = PARAM_CB_BOTTOM;
    pdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "At Bottom", submenu, widget_id
-			       , sii_param_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_param_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
    widget_id = PARAM_CB_LEFT;
    pdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "At Left", submenu, widget_id
-			       , sii_param_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_param_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
    widget_id = PARAM_CB_RIGHT;
    pdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "At Right", submenu, widget_id
-			       , sii_param_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_param_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
    /* add a seperator */
@@ -2767,7 +2770,7 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    radio_num = 0;		/* implies a check menu item */
    pdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Use Symbols", submenu, widget_id
-			       , sii_param_menu_cb, frame_num, radio_num
+			       , (GtkSignalFunc)sii_param_menu_cb, frame_num, radio_num
 			       , &radio_group);
 
    /* add a seperator */
@@ -2777,7 +2780,7 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    radio_num = 0;		/* implies a check menu item */
    pdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "HiLight Labels", submenu, widget_id
-			       , sii_param_menu_cb, frame_num, radio_num
+			       , (GtkSignalFunc)sii_param_menu_cb, frame_num, radio_num
 			       , &radio_group);
 
    /* add a seperator */
@@ -2787,7 +2790,7 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    radio_num = 0;		/* implies a check menu item */
    pdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Electric Params", submenu, widget_id
-			       , sii_param_menu_cb, frame_num, radio_num
+			       , (GtkSignalFunc)sii_param_menu_cb, frame_num, radio_num
 			       , &radio_group);
 
 
@@ -2798,12 +2801,12 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = PARAM_REPLOT_LINKS;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Replot Links", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_REPLOT_ALL;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Replot All", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
 
 
@@ -2812,7 +2815,7 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = PARAM_LINKS;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Set Links", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
      
 
 
@@ -2821,37 +2824,37 @@ void sii_param_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = PARAM_OVERVIEW;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Overview", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_HLP_FILE;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "File", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_HLP_OPTIONS;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Options", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_HLP_LINKS;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "ParamLinks", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_HLP_PALETTES;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Palettes", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 
    widget_id = PARAM_HLP_MINMAX;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Min & Max", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 # ifdef obsolete
    widget_id = PARAM_HLP_EMPHASIS;
    pdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Emphasis", submenu, widget_id
-		       , sii_param_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_param_menu_cb, frame_num );
 # endif
 
   check_item = pdata->data_widget[PARAM_ELECTRIC];
@@ -2890,7 +2893,7 @@ void sii_param_process_changes (guint frame_num)
    SiiPalette *pal, *pal0;
    gfloat f1, f2;
    guint jj, kk, wid;
-   gchar *aa, *bb, *p_name, *name;
+   const gchar *aa, *bb, *p_name, *name;
    gboolean ok;
 
 
@@ -3487,7 +3490,8 @@ void sii_reset_image (guint frame_num)
 
 /* c---------------------------------------------------------------------- */
 
-void sii_set_entries_from_palette (guint frame_num, gchar *name, gchar *p_name)
+void sii_set_entries_from_palette (guint frame_num, const gchar *name, 
+        const gchar *p_name)
 {
    SiiPalette *pal = NULL;
    SiiLinkedList *item = NULL;
@@ -3591,7 +3595,7 @@ void sii_set_entries_from_palette (guint frame_num, gchar *name, gchar *p_name)
 
 /* c---------------------------------------------------------------------- */
 
-SiiPalette *sii_set_palette (gchar *name)
+SiiPalette *sii_set_palette (const gchar *name)
 {
    int nn, nt;
    SiiPalette *pal = NULL;
@@ -3629,7 +3633,8 @@ sii_set_param_info (guint frame_num)
   gfloat ff, gg;
   ParamData *pd = (ParamData *)frame_configs[frame_num]->param_data;
   struct parameter_widget_info pwi;
-  char str[256], *sptrs[32], *aa, *bb, *cc;
+  char str[256], *sptrs[32];
+  const gchar *aa, *bb, *cc;
   gint nt, nn, jj;
   WW_PTR wwptr = solo_return_wwptr(frame_num);
 

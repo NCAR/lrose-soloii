@@ -162,7 +162,7 @@ void show_solo_image_gen();
 void sii_initialization_widget();
 void sii_image_gen_widget();
 void show_all_click_data_widgets (gboolean really);
-int sii_default_startup (gchar *swpfi_dir);
+int sii_default_startup (const gchar *swpfi_dir);
 void sii_init_frame_configs();
 void sii_reset_config_cells();
 void soloii_get_main_menu(GtkWidget *window, GtkWidget **menubar);
@@ -182,12 +182,12 @@ gint sii_frame_keyboard_event(GtkWidget *frame, GdkEvent *event
 const GString *sii_return_config_files (const char *dir);
 gchar *sii_get_swpfi_dir (gchar *dir);
 void sp_change_cursor (int normal);
-void solo_save_window_info (char *dir, char *a_comment);
-int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi);
+void solo_save_window_info (const char *dir, const char *a_comment);
+int solo_absorb_window_info (const char *dir, const char *fname, int ignore_swpfi);
 gchar *sii_nab_line_from_text (const gchar *txt, guint position );
 void sii_png_image_prep (char *dir);
 gboolean sii_batch (gpointer argu);
-GtkWidget *sii_filesel (gint which_but, gchar * dirroot);
+GtkWidget *sii_filesel (gint which_but, const gchar * dirroot);
 /* c---------------------------------------------------------------------- */
 /* c...events */
 /* c---------------------------------------------------------------------- */
@@ -340,7 +340,7 @@ int sii_initialize_cb (GtkWidget *w, gpointer data)
    GtkWidget *button;
    gint nn;
    gboolean active;
-   gchar *aa, *bb;
+   const gchar *aa, *bb;
    const gchar *cc;
    const GString *cgs;
 
@@ -443,7 +443,8 @@ void sii_main_text_event_cb (GtkWidget *text, GdkEvent *event
 {
   GtkWidget *entry, button;
   gint nn = GTK_TEXT (text)->cursor_mark.index, ii;
-  gchar *aa, *bb = gs_config_file_names->str, *line;
+  gchar *line;
+  const gchar *aa, *bb = gs_config_file_names->str;
    
   line = sii_nab_line_from_text (bb, nn);
   g_strstrip (line);
@@ -655,7 +656,8 @@ int sii_return_colors_filesel_wid() { return (SII_MAIN_COLORS_FILESEL); }
 
 int sii_filesel_cb (GtkWidget *fs, gpointer data)
 {
-   gchar *name, *aa, *bb, str[256], str2[256];
+   const gchar *name, *aa;
+   gchar str[256], str2[256], *bb;
    GtkWidget *entry;
    gint task, ii;
    const GString *cgs;
@@ -703,7 +705,7 @@ int sii_filesel_cb (GtkWidget *fs, gpointer data)
 
 /* c---------------------------------------------------------------------- */
 
-GtkWidget *sii_filesel (gint which_but, gchar * dirroot)
+GtkWidget *sii_filesel (gint which_but, const gchar * dirroot)
 {
    GtkWidget *fs;
    gchar str[256], *aa="/", *bb;

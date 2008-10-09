@@ -123,7 +123,7 @@ const struct solo_list_mgmt *sii_return_swpfi_list (guint frame_num);
 const gchar *solo_list_entry (const struct solo_list_mgmt *slm, int item_num);
 const gchar *sii_return_swpfi_label (int frame_num);
 gboolean sii_set_swpfi_info (guint frame_num, gint sweep_num);
-double dd_relative_time (char *str);
+double dd_relative_time (const char *str);
 
 /* c---------------------------------------------------------------------- */
 /* c---------------------------------------------------------------------- */
@@ -135,7 +135,8 @@ sii_set_swpfi_info (guint frame_num, gint sweep_num)
   LinksInfo *li;
   SwpfiData *sd = (SwpfiData *)frame_configs[frame_num]->swpfi_data;
   struct sweep_widget_info swi;
-  char str[256], *sptrs[32], *aa, *bb;
+  char str[256], *sptrs[32];
+  const gchar *aa, *bb;
   gint nt, nn, jj;
   WW_PTR wwptr = solo_return_wwptr(frame_num);
 
@@ -198,7 +199,8 @@ gint sii_return_filter_info (gint frame_num, char *scan_modes
   int nt, jj = 0, kk, ok = 1;
   SwpfiData *sd = (SwpfiData *)frame_configs[frame_num]->swpfi_data;
   GtkWidget *widget;
-  gchar str[256], *sptrs[16], *aa;
+  gchar str[256], *sptrs[16];
+  const gchar *aa;
   float ff;
 
   widget = sii_get_widget_ptr (frame_num, FRAME_SWPFI_MENU);
@@ -251,9 +253,8 @@ void sii_update_swpfi_widget (guint frame_num)
   GtkWidget *check_item, *widget;
   gdouble dtime;
   gchar str[64];
-  const gchar *cc;
+  const gchar *cc, *aa;
   guint wid, jj;
-  char *aa;
   gboolean active;
   
   
@@ -779,7 +780,12 @@ void sii_swpfi_list_widget( guint frame_num )
   if (!style) {
     defstyle = gtk_widget_get_default_style ();
     style = gtk_style_copy (defstyle);
+#ifndef PANGO_FONT
     style->font = font;
+#else
+    pango_font_description_set_family(style->font_desc, "Fixed");
+    pango_font_description_set_weight(style->font_desc, PANGO_WEIGHT_NORMAL);
+#endif
   }
   
   slm = sii_return_swpfi_list (frame_num);
@@ -1206,18 +1212,18 @@ void sii_swpfi_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = SWPFI_CLOSE;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Close", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
    
    widget_id = SWPFI_RADAR_LIST;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "List Radars", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
    
 # ifdef notyet
    widget_id = SWPFI_RESCAN;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Rescan Dir", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
 
    /* add a seperator */
    menuitem = sii_submenu_item ( NULL, submenu, 0, NULL, frame_num );
@@ -1227,7 +1233,7 @@ void sii_swpfi_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = SWPFI_ELECTRIC;
    sd->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Electric Swpfis", submenu, widget_id
-			       , sii_swpfi_menu_cb, frame_num, radio_num
+			       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num, radio_num
 			       , &radio_group);
 
 # ifdef notyet
@@ -1237,7 +1243,7 @@ void sii_swpfi_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = SWPFI_ZAP_SWPFIS;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Delete Swpfis", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
 # endif
 
    submenu = sii_submenu ( "SwpfiLinks", mbar );
@@ -1245,26 +1251,26 @@ void sii_swpfi_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = SWPFI_LINKS;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Set Links", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
 
    submenu = sii_submenu ( "Lockstep", mbar );
 
    widget_id = LOCKSTEP_LINKS;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Set Links", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
 
    submenu = sii_submenu ( "Replot", mbar );
    
    widget_id = SWPFI_REPLOT_LINKS;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Replot Links", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
    
    widget_id = SWPFI_REPLOT_ALL;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Replot All", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
 
 
    submenu = sii_submenu ( "Help", mbar );
@@ -1272,32 +1278,32 @@ void sii_swpfi_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = SWPFI_OVERVIEW;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Overview", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
    
    widget_id = SWPFI_HLP_LINKS;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "With Links", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
    
    widget_id = SWPFI_HLP_LOCKSTEP;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "With Lockstep", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
    
    widget_id = SWPFI_HLP_TIMES;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "With Times", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
    
    widget_id = SWPFI_HLP_FILTER;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "With the Filter", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
    
    widget_id = SWPFI_HLP_TSYNC;
    sd->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Time Link", submenu, widget_id
-		       , sii_swpfi_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_swpfi_menu_cb, frame_num );
 
   check_item = sd->data_widget[SWPFI_ELECTRIC];
   gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (check_item), TRUE );

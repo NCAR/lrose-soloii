@@ -27,7 +27,7 @@ int
 sii_cmd_tmplt_tokens (gchar *str, gchar**sptrs, gint *data_types);
 
 void
-sii_bad_entry_message ( gchar *ee, guint items );
+sii_bad_entry_message ( const gchar *ee, guint items );
 
 gchar *
 sii_generic_gslist_insert ( gpointer name, gpointer data );
@@ -87,10 +87,10 @@ void
 sii_set_widget_ptr ( guint frame_num, gint window_id, GtkWidget *widget);
 
 int
-sii_str_seek ( char **sptrs, int count, char *sought);
+sii_str_seek ( char **sptrs, int count, const char *sought);
 
 gboolean
-sii_str_values (gchar *line, guint nvals, gfloat *f1, gfloat *f2);
+sii_str_values (const gchar *line, guint nvals, gfloat *f1, gfloat *f2);
 
 GtkWidget *
 sii_submenu ( gchar *name, GtkWidget *mbar );

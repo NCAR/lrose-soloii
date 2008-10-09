@@ -237,7 +237,8 @@ void sii_edit_menu_cb ( GtkWidget *w, gpointer data )
 {
    guint num = GPOINTER_TO_UINT (data);
    guint nn, frame_num, task, wid, active, len;
-   gchar *aa, *bb, *line, str[128], *sptrs[16];
+   const gchar *aa, *bb, *line, *sptrs[16];
+   gchar str[128];
    GtkWidget *widget, *check_item, *rmi;
    GtkWidget *entry, *text;
    EditData *edd;
@@ -668,8 +669,8 @@ int se_edit_start_stop (int frame_num, struct swp_file_input_control *sfic)
 {
   gdouble dtime, tstart, tstop;
   EditData *edd = (EditData *)frame_configs[frame_num]->edit_data;
-  gchar *aa, *bb, str[64], mess[256];
-  const gchar *cc;
+  gchar str[64], mess[256];
+  const gchar *aa, *bb, *cc;
   gboolean ok = TRUE;
   gint jj, kk;
 
@@ -1753,7 +1754,7 @@ void sii_edit_menubar2( GtkWidget  *window,
    widget_id = EDIT_CLOSE;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Close", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
    /* add a seperator */
    menuitem = sii_submenu_item ( NULL, submenu, 0, NULL, frame_num );
@@ -1761,7 +1762,7 @@ void sii_edit_menubar2( GtkWidget  *window,
    widget_id = EDIT_RESET_TIMES;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Reset Times", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
 # ifdef notyet
    /* add a seperator */
@@ -1770,7 +1771,7 @@ void sii_edit_menubar2( GtkWidget  *window,
    widget_id = EDIT_PREV_SWP_SET;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Use Last Sweep Set", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
    /* add a seperator */
    menuitem = sii_submenu_item ( NULL, submenu, 0, NULL, frame_num );
@@ -1778,12 +1779,12 @@ void sii_edit_menubar2( GtkWidget  *window,
    widget_id = EDIT_SAVE_CMDS;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Save Commands", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
    
    widget_id = EDIT_SAVE_BND;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Save Boundary", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 # endif
 
    /* add a seperator */
@@ -1792,12 +1793,12 @@ void sii_edit_menubar2( GtkWidget  *window,
    widget_id = EDIT_CMD_BND_FILES;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Save/List Cmds & Bnds ", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
    
    widget_id = EDIT_IMPORT_LLB_FILES;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Import Lat/Lon Bnds", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
    
    /* add a seperator */
    menuitem = sii_submenu_item ( NULL, submenu, 0, NULL, frame_num );
@@ -1805,7 +1806,7 @@ void sii_edit_menubar2( GtkWidget  *window,
    widget_id = EDIT_AUTO_REPLOT; /* Check Item */
    edata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Auto Replot", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num, 0, &radio_group );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num, 0, &radio_group );
 
 
    submenu = sii_submenu ( "Boundary", mbar );
@@ -1815,13 +1816,13 @@ void sii_edit_menubar2( GtkWidget  *window,
    widget_id = EDIT_BND_IN;
    edata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Edit Inside", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num, ++radio_num
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
    widget_id = EDIT_BND_OUT;
    edata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Edit Outside", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num, ++radio_num
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num, ++radio_num
 			       , &radio_group );
 
    /* add a seperator */
@@ -1830,14 +1831,14 @@ void sii_edit_menubar2( GtkWidget  *window,
    widget_id = EDIT_BND_DRAW;
    edata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Draw Boundary", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num, 0, &radio_group );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num, 0, &radio_group );
 
 
 # ifdef notyet
    widget_id = EDIT_BND_PREV;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Get Previous Bnd Set", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
 
    /* add a seperator */
@@ -1846,7 +1847,7 @@ void sii_edit_menubar2( GtkWidget  *window,
    widget_id = EDIT_BND_LIST;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "List Bnd Points", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 # endif
 
    widget_id = EDIT_REPLOT_LINKS;
@@ -1869,37 +1870,37 @@ void sii_edit_menubar2( GtkWidget  *window,
    widget_id = EDIT_EG_BB_UNF;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Bargen-Brown-unfolding", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
    widget_id = EDIT_EG_FLG_FRK;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "flag-freckles", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
    widget_id = EDIT_EG_FLG_GLTCH;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "flag-glitches", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
    widget_id = EDIT_EG_REG_HST;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "regular-histogram", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
    widget_id = EDIT_EG_IRREG_HST;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "irregular-histogram", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
    widget_id = EDIT_EG_RSHEAR;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "radial-shear", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
    widget_id = EDIT_EG_THRSH;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "thresholding", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
 
 
@@ -1908,37 +1909,37 @@ void sii_edit_menubar2( GtkWidget  *window,
    widget_id = EDIT_HLP_OVERVIEW;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Overview Frame", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
    widget_id = EDIT_HLP_FILE;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "With File Menu", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
    widget_id = EDIT_HLP_SHORTCUTS;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "With Cmd Editing", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
   
    widget_id = EDIT_HLP_BNDS;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "With Boundaries", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
   
    widget_id = EDIT_HLP_EXTEND;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "With Star-Stop Times", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 # ifdef notyet
    widget_id = EDIT_HLP_EG;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Examples", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 # endif
    widget_id = EDIT_HLP_WITH;
    edata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Cmds with Help", submenu, widget_id
-		       , sii_edit_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_edit_menu_cb, frame_num );
 
 
    widget_id = EDIT_CANCEL;

@@ -2265,7 +2265,7 @@ gchar *sii_get_swpfi_dir (gchar *dir)
 
 /* c---------------------------------------------------------------------- */
 
-int sii_default_startup (gchar *swpfi_dir)
+int sii_default_startup (const gchar *swpfi_dir)
 {
    int mark = 0, frme, jj, nn, nfiles;
    int param_list[64];

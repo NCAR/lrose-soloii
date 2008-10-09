@@ -177,7 +177,8 @@ void sii_exam_return_click_indices (guint frame_num, gint *list_index
 
 void se_dump_examine_widget(int frame_num, struct examine_widget_info *ewi)
 {
-   gchar str[128], *aa;
+   gchar str[128];
+   const gchar *aa;
    ExamData *xmd = (ExamData *)frame_configs[frame_num]->exam_data;
    gint count, nn;
 
@@ -608,7 +609,8 @@ void sii_exam_menu_cb ( GtkWidget *w, gpointer   data )
    guint num = GPOINTER_TO_UINT (data);
    guint frame_num, task, wid, frame_wid, cancel_wid, active, height;
    gint nn, jj, value, cells;
-   gchar *aa, *bb, *line, str[128], *sptrs[16];
+   gchar str[128], *sptrs[16];
+   const gchar *aa, *bb, *line;
    ExamData *xmd;
    GtkWidget *widget, *check_item, *rmi, *layout;
    GtkAdjustment *adj;
@@ -1385,7 +1387,7 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = EXAM_CLOSE;
    xmdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Close", submenu, widget_id
-		       , sii_exam_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_exam_menu_cb, frame_num );
 
    /* add a seperator */
    menuitem = sii_submenu_item ( NULL, submenu, 0, NULL, frame_num );
@@ -1397,7 +1399,7 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
    xmdata->equiv_solo_state[widget_id] = EX_RADAR_DATA;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Cell Values", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
   gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (menuitem), TRUE );
    
@@ -1405,7 +1407,7 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
    xmdata->equiv_solo_state[widget_id] = EX_BEAM_INVENTORY;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Ray Info", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
   gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (menuitem), FALSE );
    
@@ -1413,7 +1415,7 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
    xmdata->equiv_solo_state[widget_id] = EX_DESCRIPTORS;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Metadata", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
   gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (menuitem), FALSE );
    
@@ -1421,7 +1423,7 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
    xmdata->equiv_solo_state[widget_id] = EX_EDIT_HIST;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Edit Hist", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
   gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (menuitem), FALSE );
    
@@ -1434,63 +1436,63 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
    xmdata->equiv_solo_state[widget_id] = EX_DELETE;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Delete", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = EXAM_NEG_FOLD;
    xmdata->equiv_solo_state[widget_id] = EX_MINUS_FOLD;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "- Fold", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = EXAM_POS_FOLD;
    xmdata->equiv_solo_state[widget_id] = EX_PLUS_FOLD;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "+ Fold", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = EXAM_DELETE_RAY;
    xmdata->equiv_solo_state[widget_id] = EX_RAY_IGNORE;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Delete Ray", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = EXAM_NEG_FOLD_RAY;
    xmdata->equiv_solo_state[widget_id] = EX_RAY_MINUS_FOLD;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "- Fold Ray", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = EXAM_POS_FOLD_RAY;
    xmdata->equiv_solo_state[widget_id] = EX_RAY_PLUS_FOLD;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "+ Fold Ray", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = EXAM_NEG_FOLD_GT;
    xmdata->equiv_solo_state[widget_id] = EX_GT_MINUS_FOLD;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "- Fold Ray >", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = EXAM_POS_FOLD_GT;
    xmdata->equiv_solo_state[widget_id] = EX_GT_PLUS_FOLD;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "+ Fold Ray >", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = EXAM_ZAP_GND_SPD;
    xmdata->equiv_solo_state[widget_id] = EX_REMOVE_AIR_MOTION;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Zap Gnd Spd", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
    submenu = sii_submenu ( "Options", mbar );
@@ -1499,13 +1501,13 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = EXAM_LST_RNGAZ;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Az,Rng Labels", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = EXAM_LST_CELLRAY;
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Cell,Ray Labels", submenu, widget_id
-			      , sii_exam_menu_cb, frame_num, ++radio_num
+			      , (GtkSignalFunc)sii_exam_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
 
@@ -1516,18 +1518,18 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
    radio_num = 0;		/* implies a check menu item */
    xmdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Logging Active", submenu, widget_id
-			       , sii_exam_menu_cb, frame_num, radio_num
+			       , (GtkSignalFunc)sii_exam_menu_cb, frame_num, radio_num
 			       , &radio_group);
 
    widget_id = EXAM_LOG_CLOSE;
    xmdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Close log file", submenu, widget_id
-			, sii_exam_menu_cb, frame_num );
+			, (GtkSignalFunc)sii_exam_menu_cb, frame_num );
 
    widget_id = EXAM_LOG_FLUSH;
    xmdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Flush to log file", submenu, widget_id
-			, sii_exam_menu_cb, frame_num );
+			, (GtkSignalFunc)sii_exam_menu_cb, frame_num );
 
 
 
@@ -1537,46 +1539,46 @@ void sii_exam_menubar2( GtkWidget  *window, GtkWidget **menubar
    xmdata->equiv_solo_state[widget_id] = REPLOT_THIS_FRAME;
    xmdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Replot This", submenu, widget_id
-			, sii_exam_menu_cb, frame_num );
+			, (GtkSignalFunc)sii_exam_menu_cb, frame_num );
 
    widget_id = EXAM_REPLOT_LINKS;
    xmdata->equiv_solo_state[widget_id] = REPLOT_LOCK_STEP;
    xmdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Replot Links", submenu, widget_id
-		       , sii_exam_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_exam_menu_cb, frame_num );
 
    widget_id = EXAM_REPLOT_ALL;
    xmdata->equiv_solo_state[widget_id] = REPLOT_ALL;
    xmdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Replot All", submenu, widget_id
-		       , sii_exam_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_exam_menu_cb, frame_num );
 
    submenu = sii_submenu ( "Help", mbar );
 
    widget_id = EXAM_OVERVIEW;
    xmdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Overview", submenu, widget_id
-		       , sii_exam_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_exam_menu_cb, frame_num );
 
    widget_id = EXAM_HLP_OPRS;
    xmdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Edit", submenu, widget_id
-		       , sii_exam_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_exam_menu_cb, frame_num );
 
    widget_id = EXAM_HLP_OPTIONS;
    xmdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Options", submenu, widget_id
-		       , sii_exam_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_exam_menu_cb, frame_num );
 
    widget_id = EXAM_HLP_NYQVEL;
    xmdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Nyq Vel", submenu, widget_id
-		       , sii_exam_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_exam_menu_cb, frame_num );
 
    widget_id = EXAM_HLP_LOG_DIR;
    xmdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Log Dir", submenu, widget_id
-		       , sii_exam_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_exam_menu_cb, frame_num );
 
 
    widget_id = EXAM_CANCEL;

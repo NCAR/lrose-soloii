@@ -400,7 +400,8 @@ sii_set_view_info (guint frame_num)
 {
   LinksInfo *li;
   ViewData *vd = (ViewData *)frame_configs[frame_num]->view_data;
-  char str[256], *sptrs[32], *aa, *bb;
+  char str[256], *sptrs[32];
+  const gchar *aa, *bb;
   gint nt, nn, jj;
   gfloat ff,gg;
   gboolean time_series = FALSE;
@@ -1221,7 +1222,7 @@ void sii_view_menu_cb ( GtkWidget *w, gpointer   data )
   guint num = GPOINTER_TO_UINT (data);
   guint frame_num, task, wid, active, jj, task2;
   gfloat f1, f2, rnd = .000001;
-  gchar *aa;
+  const gchar *aa;
   ViewData *vd;
   GtkWidget *widget, *check_item, *rmi;
   gint flag, nn;
@@ -1968,7 +1969,7 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_CLOSE;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Close", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
 # ifdef obsolete
    /* add a seperator */
@@ -1982,25 +1983,25 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_AZRNG;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Az-Rng Overlay", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = VIEW_NO_AZRNG;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "NO Az-Rng", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = VIEW_AZ_ONLY;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Azimuth Only", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = VIEW_RNG_ONLY;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Range Only", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
    /* add a seperator */
@@ -2009,7 +2010,7 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_AZRNG_LABELS;	/* check item */
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Az-Rng Labels", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, 0
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, 0
 			       , &radio_group);
 
    /* add a seperator */
@@ -2018,7 +2019,7 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_MAGIC_RNG_LBLS;	/* check item */
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Magic Rng Lbls", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, 0
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, 0
 			       , &radio_group);
 
 
@@ -2030,25 +2031,25 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_XY_TICS;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "X-Y Tics Marks", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = VIEW_X_TICS_ONLY;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "X Tics Only", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = VIEW_Y_TICS_ONLY;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Y Tics Only", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = VIEW_NO_XY_TICS;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "NO X-Y Tics", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
    /* add a seperator */
@@ -2057,7 +2058,7 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_XY_TIC_LABELS;	/* check item */
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "X-Y Tic Labels", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, 0
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, 0
 			       , &radio_group);
 
    submenu = sii_submenu ( "ViewLinks", mbar );
@@ -2065,34 +2066,34 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_LINKS;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Set Links", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
    submenu = sii_submenu ( "Center", mbar );
 
    widget_id = VIEW_ZERO;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Center On", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
    
    widget_id = CENTER_ON_ONE;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Last click", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
    
    widget_id = CENTER_ON_TWO;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Last 2 clicks", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
    
    widget_id = CENTER_ON_FOUR;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Last 4 clicks", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
    
    widget_id = CENTER_ON_RADAR;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Local Radar", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
    
    /* add a seperator */
    menuitem = sii_submenu_item ( NULL, submenu, 0, NULL, frame_num );
@@ -2103,24 +2104,24 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_ZERO;	/* Label */
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Location", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
    widget_id = CENTER_NO_LINKS;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Local Radar", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = CENTER_FIXED;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Fixed Lat Lon Alt", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = CENTER_OTHER;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Same as Frame 1", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
    /* add a seperator */
@@ -2129,7 +2130,7 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = CENTER_LINKS;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Set Links", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
 
    submenu = sii_submenu ( "Landmark", mbar );
@@ -2140,24 +2141,24 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_ZERO;	/* Label */
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Location", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
    widget_id = LANDMARK_NO_LINKS;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Local Radar", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = LANDMARK_FIXED;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Fixed Lat Lon Alt", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = LANDMARK_OTHER;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Same as Frame 1", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
    /* add a seperator */
@@ -2166,7 +2167,7 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = LANDMARK_LINKS;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Set Links", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
 
    submenu = sii_submenu ( "TimeSeries", mbar );
@@ -2174,7 +2175,7 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_TS_MODE;	/* Check Item */
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "TimeSeries Mode", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, 0
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, 0
 			       , &radio_group);
 
    /* add a seperator */
@@ -2185,18 +2186,18 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_ZERO;	/* Label */
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Plot", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
    widget_id = VIEW_TS_LR;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Left-Right", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = VIEW_TS_RL;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Right-Left", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
    /* add a seperator */
@@ -2205,20 +2206,20 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_ZERO;	/* Label */
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Relative to", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
    radio_group = NULL;
    radio_num = 0;
    
    widget_id = VIEW_TS_RADAR;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Radar", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = VIEW_TS_MSL;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "MSL", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
    /* add a seperator */
@@ -2227,26 +2228,26 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_ZERO;	/* Label */
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Pointing", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
    radio_group = NULL;
    radio_num = 0;
    
    widget_id = VIEW_TS_UP;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Up", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = VIEW_TS_DOWN;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Down", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
    
    widget_id = VIEW_TS_AUTO;
    vdata->data_widget[widget_id] = menuitem =
      sii_toggle_submenu_item ( "Automatic", submenu, widget_id
-			       , sii_view_menu_cb, frame_num, ++radio_num
+			       , (GtkSignalFunc)sii_view_menu_cb, frame_num, ++radio_num
 			       , &radio_group);
 
 
@@ -2255,12 +2256,12 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_REPLOT_LINKS;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Linked Frames", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
    widget_id = VIEW_REPLOT_ALL;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "All Frames", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
 
    submenu = sii_submenu ( "Help", mbar );
@@ -2268,32 +2269,32 @@ void sii_view_menubar2( GtkWidget  *window, GtkWidget **menubar
    widget_id = VIEW_HLP_OVERVIEW;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Overview", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
    widget_id = VIEW_HLP_OPTS;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Options", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
    widget_id = VIEW_HLP_LINKS;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "ViewLinks", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
    widget_id = VIEW_HLP_CTR;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Center", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
    widget_id = VIEW_HLP_LMRK;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "Landmark", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
    widget_id = VIEW_HLP_TS;
    vdata->data_widget[widget_id] = menuitem =
      sii_submenu_item ( "TimeSeries", submenu, widget_id
-		       , sii_view_menu_cb, frame_num );
+		       , (GtkSignalFunc)sii_view_menu_cb, frame_num );
 
 
 

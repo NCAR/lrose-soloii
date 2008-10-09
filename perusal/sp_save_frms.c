@@ -586,7 +586,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 }
 /* c------------------------------------------------------------------------ */
 
-void solo_save_window_info (char *dir, char *a_comment)
+void solo_save_window_info (const char *dir, const char *a_comment)
 {
     int ww, i, ii, j, nn, mark, size=0, frame_count;
     size_t len, lenx;
