@@ -1,12 +1,58 @@
 This file is named .../soloii/README.soloii.
 
-
-
-The current version of soloii and the xltrsii is soloii113.tar.gz for
-version 1.14. You might find newer versions in this directory which
+The current version of soloii and the xltrsii is soloii115.tar.gz for
+version 1.15. You might find newer versions in this directory which
 should be ok
 
-version 1.14  Added yum netcdf install paths to configure script. 
+soloii requires the GTK+ headers and libraries! Also if you will be
+reading or writing netCDF files make sure the netcdf libraries have
+been loaded.  New versions of Linux may not have GTK 1.2 installed
+by default.  This may require the install of packages (RPMs) that
+contain the 1.2 version of GTK.
+
+The build of Soloii is based on autoconf which produces a Bourne shell
+script "configure" from a "configure.ac" file and uses "Makefile.in"
+files in each of the directories to produce the final "Makefile" in
+each directory. The solo distribution is now independent of any
+external files. All code needed by solo is included in the
+distribution and is part of the solo directory tree.
+
+Installation
+============
+
+The Soloii distribution needs to be gunzipped and untarred into a
+directory such as "/rdss" (for example).  Untarring the soloii
+distribution will build a directory tree starting with the "soloii"
+directory. To configure the Makefiles in all directories, you should
+invoke the configure script in the soloii directory.  So to build soloii, 
+installing files under <prefix>/bin and <prefix>/lib, the commands are 
+simply:
+
+    $ ./configure --prefix=<prefix>
+    $ make      # 'make install' is not necessary from the top directory
+
+Or, if you're only interested in the translators or translator library:
+
+    $ ./configure --prefix=<prefix>
+    $ cd translate
+    $ make install
+
+The executable is named soloii and will be written to <prefix>/bin/soloii.
+The environment variable DORADE_DIR should point to a directory containing 
+DORADE sweepfiles. If you start soloii from a directory containing 
+sweepfiles, you do not have to set DORADE_DIR.
+
+For help information check the Help menus in the menu bars of most
+widgets. 
+
+
+Change Log
+==========
+
+version 1.15: Cleaned code to make it work with newer compilers without 
+generating warnings and made configure more robust.
+
+version 1.14: Added yum netcdf install paths to configure script. 
 
 version 1.13: Fixed some bugs for Dorade to netCDF conversion.
 
@@ -25,39 +71,3 @@ version 1.08:  Hooked up logging function for examine widget.
 version 1.07:  Modified translators to work with new WSR88D 
 archive II format.
 
-soloii requires the GTK+ headers and libraries! Also if you will be
-reading or writing netCDF files make sure the netcdf libraries have
-been loaded.  New versions of linux may not have GTK 1.2 installed
-by default.  This may require the install of packages (RPMs) that
-contain the 1.2 version of GTK.
-
-
-The build of Soloii is based on autoconf which produces a Borne shell
-script "configure" from a "configure.ac" file and uses "Makefile.in"
-files in each of the directories to produce the final "Makefile" in
-each directory. The solo distribution is now independent of any
-external files. All code needed by solo is included in the
-distribution and is part of the solo directory tree.
-
-The Soloii distribution needs to be gunzipped and untarred into a
-directory such as "/rdss" (for example).  Untarring the soloii
-distribution will build a directory tree starting with the "soloii"
-directory. To configure the Makefiles in all directories, you should
-invoke the configure script in the soloii directory. There are two
-relevent arguments for the configure script. Only "--exec_prefix" is
-necessary. Thus you might type:
-
-configure --exec_prefix=/rdss --bindir=/rdss/bin
-
-After you have invoked the configure script type "make" to build the
-complete package or if you're only interested in the translaters or
-translater library, cd to ./translate and type "make install".
-
-The executable is named soloii and will have been placed in /rdss/bin
-based on the above example. The environment variable DORADE_DIR should
-point to a directory containing DORADE sweepfiles. If you start soloii
-from a directory containing sweepfiles, you do not have to set
-DORADE_DIR.
-
-For help information check the Help menus in the menu bars of most
-widgets. 
