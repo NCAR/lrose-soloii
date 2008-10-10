@@ -3,7 +3,7 @@
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(perusal/soloii.c)
+AC_INIT(perusal/soloii.c, 1.15)
 
 #
 # Use our parent directory rather than /usr/local as the default prefix
@@ -55,31 +55,10 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 #c-----------------------------------------------------
 AC_PROG_MAKE_SET
-#c-----------------------------------------------------
-dnl Replace `main' with a function in -lm:
-AC_CHECK_LIB(m, main)
-#c-----------------------------------------------------
-
-dnl Checks for header files.
-dnl AC_PATH_X
-dnl AC_HEADER_DIRENT
-dnl AC_HEADER_STDC
-dnl AC_CHECK_HEADERS(fcntl.h malloc.h sys/file.h sys/ioctl.h sys/time.h unistd.h)
-
-dnl Checks for typedefs, structures, and compiler characteristics.
-dnl AC_C_CONST
-dnl AC_TYPE_OFF_T
-dnl AC_TYPE_SIZE_T
-dnl AC_HEADER_TIME
-dnl AC_STRUCT_TM
-dnl AC_STRUCT_TIMEZONE
+AC_CHECK_LIB(m, cos)
 
 dnl Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
-dnl AC_FUNC_MEMCMP
-dnl AC_TYPE_SIGNAL
-dnl AC_FUNC_VPRINTF
-dnl AC_CHECK_FUNCS(gethostname gettimeofday mktime putenv re_comp regcmp regcomp select socket strcspn strstr)
 
 AC_C_BIGENDIAN
 LOCAL_DEFS="-DUNIX"
@@ -112,8 +91,8 @@ done
 dnl AC_MSG_CHECKING("for gtk.h ")
 dnl AC_FIND_LOCALHDR(gtk/gtk.h,/usr/include /usr/include/gtk-1.2 /usr/local/include /usr/local/include/gtk-1.2)
 
-AC_MSG_CHECKING("for glib.h ")
-AC_FIND_LOCALHDR(glib.h,/usr/include /usr/include/glib-1.2 /usr/local/include /usr/local/include/glib-1.2)
+dnl AC_MSG_CHECKING("for glib.h ")
+dnl AC_FIND_LOCALHDR(glib.h,/usr/include /usr/include/glib-1.2 /usr/local/include /usr/local/include/glib-1.2)
 
 AC_MSG_CHECKING("for netcdf.h ")
 AC_FIND_LOCALHDR(netcdf.h,/usr/include /usr/include/netcdf /usr/local/include /usr/local/include/netcdf /usr/lib /usr/lib/netcdf /usr/local/lib/netcdf /usr/include/netcdf-3)
@@ -142,13 +121,22 @@ elif eval "type g77"; then
    WHICHFORTRAN="g77"
 elif eval "type f77"; then
    WHICHFORTRAN="f77"
-
 elif eval "type gfortran"; then
    WHICHFORTRAN="gfortran";
+else
+   AC_MSG_ERROR("No FORTRAN compiler found!")
 fi
 AC_MSG_RESULT( WHICHFORTRAN: $WHICHFORTRAN )
 
+if test "$WHICHFORTRAN" = "g77" || test "$WHICHFORTRAN" = "gfortran"; then
+   FCSTATICFLAG="-static"
+elif test "$WHICHFORTRAN" = "f77"; then
+   FCSTATICFLAG="-Bstatic"
+fi
+
+DAPLIB=libdap.a
 FLIBS="-lm"
+
 if test -n "$NETCDFLIBDIR"; then
    LOCAL_DEFS="$LOCAL_DEFS -DNETCDF"
    LIBS="$LIBS -L$NETCDFLIBDIR -lnetcdf"
@@ -159,18 +147,6 @@ if test -n "$NETCDFLIBDIR"; then
    else
       FLIBS="$FLIBS -L$NETCDFLIBDIR -lnetcdf"
    fi
-fi
-
-if test -z "$WHICHFORTRAN"; then
-   AC_MSG_WARN( FORTRAN NOT found! )
-   DAPLIB=
-else
-   if test "$WHICHFORTRAN" = "g77" || test "$WHICHFORTRAN" = "gfortran"; then
-	FCSTATICFLAG="-static"
-   elif test "$WHICHFORTRAN" = "f77"; then
-	FCSTATICFLAG="-Bstatic"
-   fi
-   DAPLIB=libdap.a
 fi
 
 REODORADE_LIBS=
@@ -250,7 +226,6 @@ elif test "$ac_os_type" = "Linux"; then
      else
           CFLAGS="-m32 "
      fi
-
 fi
 
 ac_sh_test=`type sh`
@@ -263,6 +238,9 @@ do
 done
 
 GTKLIBS=`gtk-config --libs`
+if test $? -ne 0; then
+    AC_MSG_ERROR(Failed to run gtk-config. Is gtk+ (gtk+-devel) installed on the system?)
+fi
 GTKINCLUDES=`gtk-config --cflags`
 
 AC_MSG_RESULT( GTKLIBS: $GTKLIBS )
@@ -314,6 +292,5 @@ echo "#### Ran configure in `pwd` ####"
 echo " "
 dnl End generic configure.in
 
-AC_OUTPUT(editor/Makefile perusal/Makefile translate/Makefile Makefile)
-dnl AC_OUTPUT(Makefile)
-
+AC_CONFIG_FILES(editor/Makefile perusal/Makefile translate/Makefile Makefile)
+AC_OUTPUT
