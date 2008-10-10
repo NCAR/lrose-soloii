@@ -17,6 +17,7 @@ each directory. The solo distribution is now independent of any
 external files. All code needed by solo is included in the
 distribution and is part of the solo directory tree.
 
+
 Installation
 ============
 
@@ -44,6 +45,27 @@ sweepfiles, you do not have to set DORADE_DIR.
 
 For help information check the Help menus in the menu bars of most
 widgets. 
+
+
+Notes for 64-bit Linux Machines
+===============================
+
+Soloii can be built and run on a 64-bit Linux machine, although it will 
+explicitly build a 32-bit binary.  For the build to be successful, 32-bit 
+versions of the libraries used by soloii must be available.  
+
+For Fedora/Red Hat 64-bit systems, it is safe to install both the 64-bit 
+(x86_64) versions and the 32-bit (i386) versions of libraries at the same 
+time.  The minimum set of *i386* packages required for build on Fedora
+or Red Hat systems includes: gtk+-devel, glibc-devel, glib-devel, 
+libXi-devel, libXext-devel, libX11-devel, netcdf-devel.
+
+I have not built soloii on Debian/Ubuntu 64-bit systems, but I
+believe that the ia32-libs package would be required, as well as
+32-bit versions of the packages listed above for Fedora/Red Hat
+(note that the Debian equivalent packages may have slightly different
+names from those above).  Possibility of having 64-bit and 
+32-bit versions of a library installed at the same time is unknown.
 
 
 Change Log
