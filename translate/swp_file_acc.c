@@ -40,6 +40,9 @@ static char vcid[] = "$Id$";
 # include <dgi_func_decl.h>
 # include <stdlib.h>
 # include "FieldRadar.h"
+# ifndef notyet
+#   include <piraq/piraqx.h>
+# endif
 
 # define NEW_MAX_READ MAX_READ/2
 # ifndef NULL_RECORD
@@ -393,8 +396,7 @@ int dd_absorb_ray_info(dgi)
     struct dd_input_sweepfiles_v3 *dis, *dd_return_sweepfile_structs_v3();
     unsigned long gdsos;
 # ifndef notyet
-# include <piraq/piraqx.h>
-    PIRAQX *prqx;
+   PIRAQX *prqx;
 # endif
 
     count++;
