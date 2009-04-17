@@ -1,5 +1,5 @@
 /* 	$Id$	 */
- 
+
 #ifndef lint
 static char vcid[] = "$Id$";
 #endif /* lint */
@@ -99,7 +99,7 @@ struct piraq_useful_items {
     double prev_noise;
     float uniform_cell_spacing;
     float last_rcvr_pulsewidth;
-    
+
     unsigned long ref_time;
     unsigned long trip_time;
     unsigned long unix_day;
@@ -390,7 +390,7 @@ piraqx_dd_conv(interactive_mode)
 
 	    if(!difs->catalog_only)
   		  products();
-	    
+
 	    dd_stuff_ray();	/* pass it off to dorade code */
 	}
 	else {
@@ -440,8 +440,8 @@ piraqx_ini()
     dd_stats = dd_return_stats_ptr();
     gri = return_gri_ptr();
     irq = dd_return_ios(PIRAQ_IO_INDEX, PIRAQX_FMT);
-    irq->min_block_size = sizeof(PIRAQX);
-    
+    irq->min_block_size = PIRAQX_MINHEADERLEN;
+
     pui = (struct piraq_useful_items *)malloc(sizeof(struct piraq_useful_items));
     memset(pui, 0, sizeof(struct piraq_useful_items));
 
@@ -465,8 +465,8 @@ piraqx_ini()
 	sq->swpang = EMPTY_FLAG;
     }
 
-    dwlx_swap = (PIRAQX *)malloc(sizeof(PIRAQX));
-    memset(dwlx_swap, 0, sizeof(PIRAQX));
+    dwlx_swap = (PIRAQX *)malloc(PIRAQX_MAXHEADERLEN);
+    memset(dwlx_swap, 0, PIRAQX_MAXHEADERLEN);
 
     if(aa=get_tagged_string("PROJECT_NAME")) {
 	strcpy(gri->project_name, aa);
@@ -483,15 +483,15 @@ piraqx_ini()
     pui->latitude = pui->longitude = pui->altitude = EMPTY_FLAG;
 
     if(aa=get_tagged_string("RADAR_LATITUDE")) {
-	pui->latitude = 
+	pui->latitude =
 	      d = atof(aa);
     }
     if(aa=get_tagged_string("RADAR_LONGITUDE")) {
-	pui->longitude = 
+	pui->longitude =
 	      d = atof(aa);
     }
     if(aa=get_tagged_string("RADAR_ALTITUDE")) {
-	pui->altitude = 
+	pui->altitude =
 	      d = atof(aa);
     }
     if(aa=get_tagged_string("RCONST_CORRECTION")) {
@@ -600,16 +600,6 @@ piraqx_next_block()
   DD_TIME *d_unstamp_time();
   char *aa, *bb, *cc = NULL, *dd_next_source_dev_name(), *dts_print();
   char mess[256], *last_top;
- typedef struct
-   {
-      char    desc[4];
-      unsigned int  recordlen;
-   } TOP;
-  
- TOP *gh;
-  static TOP *last_gh;
-  /* c...mark */
-
 
   for(;;) {
 
@@ -665,7 +655,7 @@ piraqx_next_block()
 	printf( "EOF number: %d at %.2f MB\n"
 		, dd_stats->file_count
 		, dd_stats->MB);
-	       
+
 	irq->top->bytes_left = 0;
 	if(eof_count > 3) {
 	  nn = irq->top->read_state;
@@ -696,21 +686,23 @@ piraqx_next_block()
       }
     }
     aa = irq->top->at;
-    gh = (TOP *)aa;
-    recordlen = LittleEndian ? gh->recordlen : PX4(gh->recordlen);
+    recordlen = px_recordlen((PIRAQX*)aa);
+    if (px_one((PIRAQX*)aa) != 1)
+	    recordlen = PX4(recordlen);
 
-    dwel_record = !strncmp("DWLX", aa, 4) || !strncmp("DWEL", aa, 4);
+    char *desc = px_desc((PIRAQX*)aa);
+    dwel_record = !strncmp("DWLX", desc, 4) || !strncmp("DWEL", desc, 4);
 
     if (!(dwel_record)) {
       if((illegal_header_count++ % 3) == 0 ) {
-	sprintf(mess, 
+	sprintf(mess,
 		"Illegal header id: %2x %2x %2x %2x %2x %2x rlen: %d  sizeof_read:  %d %d"
-		, (int)gh->desc[0] & 0xff
-		, (int)gh->desc[1] & 0xff
-		, (int)gh->desc[2] & 0xff
-		, (int)gh->desc[3] & 0xff
-		, (int)gh->desc[4] & 0xff
-		, (int)gh->desc[5] & 0xff
+		, (int)aa[0] & 0xff
+		, (int)aa[1] & 0xff
+		, (int)aa[2] & 0xff
+		, (int)aa[3] & 0xff
+		, (int)aa[4] & 0xff
+		, (int)aa[5] & 0xff
 		, recordlen
 		, irq->top->sizeof_read
 		, illegal_header_count
@@ -728,10 +720,7 @@ piraqx_next_block()
       }
     }
 
-    if (dwel_record) {
-      last_gh = gh;
-    }
-    else {
+    if (! dwel_record) {
       if(irq->io_type != BINARY_IO) {
 	irq->top->bytes_left = 0; /* just read another record */
 	continue;
@@ -781,7 +770,7 @@ piraqx_next_block()
       if(pui->check_ugly && dwel_record && ugly) {
 	++ugly_record_count;
 	printf("Ugly record count: %d  rlen: %d  left: %d\n"
-	       , ugly_record_count, dwlx->recordlen
+	       , ugly_record_count, px_recordlen(dwlx)
 	       , irq->top->bytes_left);
 	irq->top->bytes_left = 0;
 	if(ugly_record_count > 5) {
@@ -825,7 +814,7 @@ piraqx_next_ray()
 	}
 	aa = irq->top->at;
 	break;
-    } 
+    }
     rq = pui->ray_que = pui->ray_que->next;
 
     dd_stats->ray_count++;
@@ -844,11 +833,11 @@ piraqx_next_ray()
     rq->ray_num = pui->sweep_ray_num;
 
     dp = dd_return_next_packet(irq);
-    dp->len = dwlx->recordlen;
-    irq->top->at += dwlx->recordlen;
-    irq->top->bytes_left -= dwlx->recordlen;
+    dp->len = px_recordlen(dwlx);
+    irq->top->at += px_recordlen(dwlx);
+    irq->top->bytes_left -= px_recordlen(dwlx);
     pui->count_rays++;
-    
+
 	if( rq->vol_num != rq->last->vol_num) {
 	    pui->possible_new_vol = YES;
 	}
@@ -862,7 +851,7 @@ piraqx_next_ray()
 	    pui->possible_new_sweep = YES;
        }
 
-    if( pui->sweep_ray_num >= dd_max_rays_per_sweep()) 
+    if( pui->sweep_ray_num >= dd_max_rays_per_sweep())
 	{ pui->new_sweep = YES; }
     if(piraqx_isa_new_sweep())
 	{ pui->new_sweep = YES; }
@@ -896,7 +885,7 @@ piraqx_next_ray()
 	pui->sweep_count_flag = pui->new_sweep = YES;
 	gri->sweep_num++;
 	if(pui->options & SPOL_FLAG || pui->options & DOW_FLAG ) {
-	    gri->scan_mode = dwlx->scan_type;
+	    gri->scan_mode = px_scan_type(dwlx);
 	}
 	pui->sweep_ray_num = 1;
 	pui->transition_count = 0;
@@ -914,7 +903,7 @@ piraqx_next_ray()
 
 	pui->swp_que = pui->swp_que->next;
 	pui->swp_que->count = dd_stats->sweep_count;
-	pui->swp_que->rcvr_pulsewidth = dwlx->rcvr_pulsewidth;
+	pui->swp_que->rcvr_pulsewidth = px_rcvr_pulsewidth(dwlx);
 	pui->swp_que->scan_mode = gri->scan_mode;
 	pui->swp_que->swpang = gri->fixed;
 	pui->swp_que->prf = gri->PRF;
@@ -947,10 +936,10 @@ piraqx_next_ray()
     if(pui->runaway) {
 	return(-1);
     }
-    
-    gri->fixed = dwlx->fxd_angle;
-    gri->azimuth = dwlx->az;
-    gri->elevation = dwlx->el;
+
+    gri->fixed = px_fxd_angle(dwlx);
+    gri->azimuth = px_az(dwlx);
+    gri->elevation = px_el(dwlx);
 
     /*
      * calculate antenna movement per ray
@@ -958,7 +947,7 @@ piraqx_next_ray()
     if (!(pui->options & RABID_DOW)) {
       if(fabs(d = pui->ray_que->az_diff) < 5.)
         gri->azimuth = FMOD360(gri->azimuth - .5 * d);
-      
+
       if(fabs(d = pui->ray_que->el_diff) < 5.)
         gri->elevation = FMOD360(gri->elevation - .5 * d);
     }
@@ -971,9 +960,9 @@ piraqx_next_ray()
     }
     gri->tilt = gri->elevation;
 
-    gri->source_sweep_num = dwlx->transition ? 1 : 0;
-    gri->source_sweep_num += 10 * (dwlx->scan_num % 10);
-    gri->source_sweep_num += 100 * (dwlx->vol_num % 10);
+    gri->source_sweep_num = px_transition(dwlx) ? 1 : 0;
+    gri->source_sweep_num += 10 * (px_scan_num(dwlx) % 10);
+    gri->source_sweep_num += 100 * (px_vol_num(dwlx) % 10);
 
     pui->skipped_backwards = NO;
 
@@ -997,6 +986,8 @@ piraqx_map_hdr(aa, gotta_header)
     void swack_long();
     void swack_double();
     uint4 usecs, secs_mask = 0x7fffffff;
+    uint4 rev, unswapped_rev;
+    uint4 headerLen;
     uint8 temp1;
     struct timeval tv;
 
@@ -1009,39 +1000,48 @@ piraqx_map_hdr(aa, gotta_header)
 We're using 48000000 so use 6000000.
      */
 #define    COUNTFREQ    6000000
-    
+
     count++;
 
     dwlx0 = dwlx = (PIRAQX *)aa;
+    rev = px_rev(dwlx0);
 
-    if (dwlx0->one != 1) {
-       swack_long (aa, (char *)dwlx_swap, sizeof (PIRAQX)/sizeof (uint4));
+    if (px_one(dwlx0) != 1) {
+       /*
+       	* Unswap the rev number so we know the size of the header...
+	*/
+       unswapped_rev = rev;
+       swack_long ((char*)&unswapped_rev, (char*)&rev, 1);
+
+       headerLen = (rev == 1) ? sizeof(PIRAQX_REV1) : sizeof(PIRAQX_REV2);
+
+       swack_long (aa, (char *)dwlx_swap, headerLen / sizeof (uint4));
        swack_double ((char *)&dwlx0->pulse_num
 		     , (char *)&dwlx_swap->pulse_num, 1);
        dwlx = dwlx_swap;
     }
-    pui->raw_data = aa + dwlx->byte_offset_to_data;
+    pui->raw_data = aa + px_byte_offset_to_data(dwlx);
 
     gri->gpptr4 = (void *)dwlx;
-    gri->sizeof_gpptr4 = sizeof (PIRAQX);
-    gri->transition = (dwlx->transition) ? IN_TRANSITION : NORMAL;
-    gri->num_bins = (dwlx->gates);
-    gri->num_samples = (dwlx->hits);
-    gri->pulse_width = (dwlx->rcvr_pulsewidth);
-    gri->range_b1 = dwlx->meters_to_first_gate;
-    gri->bin_spacing = dwlx->gate_spacing_meters[0];
+    gri->sizeof_gpptr4 = (rev == 1) ? sizeof(PIRAQX_REV1) : sizeof(PIRAQX_REV2);
+    gri->transition = (px_transition(dwlx)) ? IN_TRANSITION : NORMAL;
+    gri->num_bins = (px_gates(dwlx));
+    gri->num_samples = (px_hits(dwlx));
+    gri->pulse_width = (px_rcvr_pulsewidth(dwlx));
+    gri->range_b1 = px_meters_to_first_gate(dwlx);
+    gri->bin_spacing = px_gate_spacing_meters(dwlx)[0];
     gri->range_b1 += pui->range_correction;
-    strcpy (gri->radar_name, dwlx->radar_name);
-    
+    strcpy (gri->radar_name, px_radar_name(dwlx));
+
     gri->dts->year = 1970;
     gri->dts->month = gri->dts->day = 0;
-    
+
     /* klooge! */
-    usecs = dwlx->secs & secs_mask;
+    usecs = px_secs(dwlx) & secs_mask;
     gettimeofday( &tv, 0);
     jj = tv.tv_sec/86400;
 
-    temp1 = dwlx->pulse_num * (uint8)(dwlx->prt[0] * (float)COUNTFREQ + 0.5);
+    temp1 = px_pulse_num(dwlx) * (uint8)(px_prt(dwlx)[0] * (float)COUNTFREQ + 0.5);
     usecs = dwlx->secs = temp1 / COUNTFREQ;
     pui->unix_day = usecs/86400;
 
@@ -1050,30 +1050,30 @@ We're using 48000000 so use 6000000.
     dwlx->nanosecs *= (uint8)100000; // multiply by 10**5 to get nanoseconds
 
     rq->ptime = usecs;
-    rq->subsec = dwlx->nanosecs;
+    rq->subsec = px_nanosecs(dwlx);
 
-    pui->time =  usecs + (double)(dwlx->nanosecs) * 1.0e-9;
+    pui->time =  usecs + (double)(px_nanosecs(dwlx)) * 1.0e-9;
     pui->time += pui->time_correction;
     gri->dts->time_stamp = gri->time = rq->time = pui->time;
 
     gri->altitude = pui->altitude != EMPTY_FLAG
-	  ? pui->altitude : (dwlx->radar_altitude);
+	  ? pui->altitude : (px_radar_altitude(dwlx));
     gri->latitude = pui->latitude != EMPTY_FLAG
-	  ? pui->latitude : (dwlx->radar_latitude);
+	  ? pui->latitude : (px_radar_latitude(dwlx));
     gri->longitude = pui->longitude != EMPTY_FLAG
-	  ? pui->longitude : (dwlx->radar_longitude);
-    
-    gri->clutter_filter_val = dwlx->clutter_type[0];
+	  ? pui->longitude : (px_radar_longitude(dwlx));
+
+    gri->clutter_filter_val = px_clutter_type(dwlx)[0];
     /*
-    gri->clutter_start = dwlx->clutter_start[0];
-    gri->clutter_end = dwlx->clutter_end[0];
+    gri->clutter_start = px_clutter_start(dwlx)[0];
+    gri->clutter_end = px_clutter_end(dwlx)[0];
      */
-    gri->ipps[0] = dwlx->prt[0] * 1000.; /* convert to milliseconds */
-    gri->PRF = dwlx->prt[0] ? 1./dwlx->prt[0] : EMPTY_FLAG;
-	
-    new_vol = pui->last_dataformat != dwlx->dataformat ||
-	pui->last_gates != dwlx->gates ||
-	pui->last_rcvr_pulsewidth != dwlx->rcvr_pulsewidth;
+    gri->ipps[0] = px_prt(dwlx)[0] * 1000.; /* convert to milliseconds */
+    gri->PRF = px_prt(dwlx)[0] ? 1./px_prt(dwlx)[0] : EMPTY_FLAG;
+
+    new_vol = pui->last_dataformat != px_dataformat(dwlx) ||
+	pui->last_gates != px_gates(dwlx) ||
+	pui->last_rcvr_pulsewidth != px_rcvr_pulsewidth(dwlx);
 
     if( new_vol) {
        gri->binary_format = DD_16_BITS;
@@ -1081,33 +1081,33 @@ We're using 48000000 so use 6000000.
        gri->source_format = PIRAQX_FMT;
        gri->compression_scheme = NO_COMPRESSION;
        gri->missing_data_flag = EMPTY_FLAG;
-       
+
        piraqx_name_replace(gri->radar_name, top_ren);
-       
+
        gri->num_freq = 1;
        gri->num_ipps = 1;
-       gri->wavelength = dwlx->frequency ? SPEED_OF_LIGHT/dwlx->frequency : 0;
-       gri->freq[0] = dwlx->frequency * 1.e-9; /* GHz */
-       
-       gri->pulse_width = dwlx->xmit_pulsewidth;
-       gri->h_beamwidth = dwlx->H_beam_width;
-       gri->v_beamwidth = dwlx->V_beam_width;
+       gri->wavelength = px_frequency(dwlx) ? SPEED_OF_LIGHT/px_frequency(dwlx) : 0;
+       gri->freq[0] = px_frequency(dwlx) * 1.e-9; /* GHz */
+
+       gri->pulse_width = px_xmit_pulsewidth(dwlx);
+       gri->h_beamwidth = px_H_beam_width(dwlx);
+       gri->v_beamwidth = px_V_beam_width(dwlx);
 # ifdef obsolete
-       gri->peak_power = dwlx->peak_power;
-# endif       
-       gri->radar_constant = dwlx->rconst;
-       gri->rcvr_gain = dwlx->receiver_gain;
-       gri->ant_gain = dwlx->antenna_gain;
-       gri->noise_power = dwlx->noise_power;
-       
+       gri->peak_power = px_peak_power(dwlx);
+# endif
+       gri->radar_constant = px_rconst(dwlx);
+       gri->rcvr_gain = px_receiver_gain(dwlx);
+       gri->ant_gain = px_antenna_gain(dwlx);
+       gri->noise_power = px_noise_power(dwlx);
+
        gri->scan_mode = PPI;
        gri->radar_type = GROUND;
        gri->sweep_speed = EMPTY_FLAG;
        gri->rcv_bandwidth = -999.;	/* MHz */
        gri->dd_radar_num = dd_assign_radar_num(gri->radar_name);
        gri->source_vol_num = ++pui->vol_num;
-       
-       switch((int)dwlx->polarization) {
+
+       switch((int)px_polarization(dwlx)) {
 	case 'E':
 	  gri->polarization = ELLIPTICAL;
 	  break;
@@ -1121,11 +1121,11 @@ We're using 48000000 so use 6000000.
 	  gri->polarization = HORIZONTAL;
 	  break;
        }
-       
-       
-       pui->last_dataformat = dwlx->dataformat;
-       pui->last_gates = dwlx->gates;
-       pui->last_rcvr_pulsewidth = dwlx->rcvr_pulsewidth;
+
+
+       pui->last_dataformat = px_dataformat(dwlx);
+       pui->last_gates = px_gates(dwlx);
+       pui->last_rcvr_pulsewidth = px_rcvr_pulsewidth(dwlx);
        if(gri->wavelength > 0 && gri->PRF > 0)
 	 gri->nyquist_vel = gri->wavelength*gri->PRF*.25;
        pui->new_vol = pui->new_sweep = YES;
@@ -1143,16 +1143,16 @@ We're using 48000000 so use 6000000.
 	  strcpy (gri->project_name, str);
        }
     }
-    rq->hits = dwlx->hits;
-    rq->prt = dwlx->prt[0];
-    rq->scan_num = dwlx->scan_num;
-    rq->vol_num = dwlx->vol_num;
-    rq->num_gates = dwlx->gates;
-    rq->scan_type = dwlx->scan_type;
+    rq->hits = px_hits(dwlx);
+    rq->prt = px_prt(dwlx)[0];
+    rq->scan_num = px_scan_num(dwlx);
+    rq->vol_num = px_vol_num(dwlx);
+    rq->num_gates = px_gates(dwlx);
+    rq->scan_type = px_scan_type(dwlx);
 
     rq->az = gri->azimuth;
     rq->el = gri->elevation;
-    rq->rcvr_pulsewidth = dwlx->rcvr_pulsewidth;;
+    rq->rcvr_pulsewidth = px_rcvr_pulsewidth(dwlx);;
 
     rq->az_diff =
 	  angdiff(rq->last->az, rq->az);
@@ -1194,7 +1194,7 @@ piraqx_isa_new_sweep()
 
 	rq = pui->ray_que;
 
-	if(dwlx->transition) {
+	if(px_transition(dwlx)) {
 	    pui->transition_count++;
 	}
 	else {
@@ -1319,7 +1319,7 @@ piraqx_select_ray()
 	}
     }
     if( pui->options & SPOL_FLAG || pui->options & DOW_FLAG ) {
-       if(( pui->options & IGNORE_TRANSITIONS ) && dwlx->transition )
+       if(( pui->options & IGNORE_TRANSITIONS ) && px_transition(dwlx) )
 	 { ok = NO; }
     }
 
@@ -1333,7 +1333,7 @@ piraqx_print_stat_line(count)
 {
     DD_TIME *dts=gri->dts, *d_unstamp_time();
     char *dts_print();
-    
+
     dts->time_stamp = gri->time;
     d_unstamp_time(dts);
     printf(" %5d %3d %7.2f %.2f  %s\n"
@@ -1366,7 +1366,7 @@ void piraqx_reset()
     pui->az_diff_short_sum =
       pui->el_diff_short_sum =
 	pui->az_short_sum =
-	  pui->el_short_sum = 
+	  pui->el_short_sum =
 	    0;
 }
 /* c------------------------------------------------------------------------ */
@@ -1432,8 +1432,8 @@ piraqx_backwards_reset(modest)
 	gri->scan_mode = PPI;
 	pui->transition_count = 1;
     }
-    pui->ray_que->fxdang_diff = 
-	  pui->ray_que->az_diff = 
+    pui->ray_que->fxdang_diff =
+	  pui->ray_que->az_diff =
 		pui->ray_que->el_diff =
 		      pui->ref_time = 0;
 }
@@ -1456,7 +1456,7 @@ These are the parameter names for S-Pol, with some editing and input
 from Vivek.
 
 Bob
-                          
+
                 01234567890123456789012345678901234567890123456789
                 ^         ^         ^         ^         ^
 VE    m/sec     Doppler radial velocity
@@ -1477,7 +1477,7 @@ AV    degrees   Angle of the cross correlation between VV and HV
 RHOHV (no unit) Correlation coefficient between HH and VV
 LDR   dB        Linear depolarization ratio (H tx, V rec)
 DL    dBm       Vertical copolar received power (VV)
-DX    dBm       Cross-polar (H tx, V rec) received power (used 
+DX    dBm       Cross-polar (H tx, V rec) received power (used
                 primarily to threshold LDR)
 ZDR   dB        Differential reflectivity, HH - VV
 PHI   degrees   Differential propagation phase between HH and VV
@@ -1512,7 +1512,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 
     /* these fields are always present */
 
-    ve_ndx = 
+    ve_ndx =
 	pn = gri->num_fields_present++;
     gri->dd_scale[pn] = scale;
     gri->dd_offset[pn] = bias;
@@ -1524,7 +1524,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
     strcpy( gri->field_units[pn], "m/s     " );
     gri->actual_num_bins[pn] = nbins;
 
-    dbm_ndx = 
+    dbm_ndx =
 	pn = gri->num_fields_present++;
     gri->dd_scale[pn] = scale;
     gri->dd_offset[pn] = bias;
@@ -1536,7 +1536,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
     strcpy( gri->field_units[pn], "dBm     " );
     gri->actual_num_bins[pn] = nbins;
 
-    ncp_ndx = 
+    ncp_ndx =
 	pn = gri->num_fields_present++;
     gri->dd_scale[pn] = scale;
     gri->dd_offset[pn] = bias;
@@ -1548,7 +1548,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
     strcpy( gri->field_units[pn], "         " );
     gri->actual_num_bins[pn] = nbins;
 
-    sw_ndx = 
+    sw_ndx =
 	pn = gri->num_fields_present++;
     gri->dd_scale[pn] = scale;
     gri->dd_offset[pn] = bias;
@@ -1560,7 +1560,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
     strcpy( gri->field_units[pn], "m/s     " );
     gri->actual_num_bins[pn] = nbins;
 
-    dz_ndx = 
+    dz_ndx =
 	pn = gri->num_fields_present++;
     gri->dd_scale[pn] = scale;
     gri->dd_offset[pn] = bias;
@@ -1576,7 +1576,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
     strcpy( gri->field_units[pn], "dBz     " );
     gri->actual_num_bins[pn] = nbins;
 
-    dzc_ndx = 
+    dzc_ndx =
 	pn = gri->num_fields_present++;
     gri->dd_scale[pn] = scale;
     gri->dd_offset[pn] = bias;
@@ -1589,11 +1589,11 @@ KDP   Specific diff. prop. phase btwn HH, VV
     gri->actual_num_bins[pn] = nbins;
 
 
-    switch( dwlx->dataformat ) {
+    switch( px_dataformat(dwlx) ) {
 
     case DATA_DUALPP:
 
-	ve1_ndx = 
+	ve1_ndx =
 	    pn = gri->num_fields_present++;
 	gri->dd_scale[pn] = scale;
 	gri->dd_offset[pn] = bias;
@@ -1605,7 +1605,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	strcpy( gri->field_units[pn], "m/s     " );
 	gri->actual_num_bins[pn] = nbins;
 
-	ve2_ndx = 
+	ve2_ndx =
 	    pn = gri->num_fields_present++;
 	gri->dd_scale[pn] = scale;
 	gri->dd_offset[pn] = bias;
@@ -1617,7 +1617,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	strcpy( gri->field_units[pn], "m/s     " );
 	gri->actual_num_bins[pn] = nbins;
 
-	sw1_ndx = 
+	sw1_ndx =
 	    pn = gri->num_fields_present++;
 	gri->dd_scale[pn] = scale;
 	gri->dd_offset[pn] = bias;
@@ -1629,7 +1629,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	strcpy( gri->field_units[pn], "m/s     " );
 	gri->actual_num_bins[pn] = nbins;
 
-	sw2_ndx = 
+	sw2_ndx =
 	    pn = gri->num_fields_present++;
 	gri->dd_scale[pn] = scale;
 	gri->dd_offset[pn] = bias;
@@ -1654,7 +1654,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	    gri->dd_offset[pn] = 0;
 	    gri->field_id_num[pn] = 0;
 	    strcpy( gri->field_name[pn], "LVDR    " );
-	    strncpy( gri->field_long_name[pn] 
+	    strncpy( gri->field_long_name[pn]
 		     , "Linear depolariz. ratio (V tx, H rec)             "
 		     , 40);
 	    strcpy( gri->field_units[pn], "dBm " );
@@ -1665,7 +1665,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	    gri->dd_offset[pn] = 0;
 	    gri->field_id_num[pn] = 0;
 	    strcpy( gri->field_name[pn], "NIQ     " );
-	    strncpy( gri->field_long_name[pn] 
+	    strncpy( gri->field_long_name[pn]
 		     , "Avg magnitude of backscatter power (HH)            "
 		     , 40);
 	    strcpy( gri->field_units[pn], "deg." );
@@ -1676,7 +1676,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	    gri->dd_offset[pn] = 0;
 	    gri->field_id_num[pn] = 0;
 	    strcpy( gri->field_name[pn], "AIQ     " );
-	    strncpy( gri->field_long_name[pn] 
+	    strncpy( gri->field_long_name[pn]
 		     , "Avg phase of backscattered power (HH)               "
 		     , 40);
 	    strcpy( gri->field_units[pn], "deg." );
@@ -1691,7 +1691,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	    gri->dd_offset[pn] = 0;
 	    gri->field_id_num[pn] = 0;
 	    strcpy( gri->field_name[pn], "CH      " );
-	    strncpy( gri->field_long_name[pn] 
+	    strncpy( gri->field_long_name[pn]
 		     , "Mag. of cross corr. between HH and VH              "
 		     , 40);
 	    strcpy( gri->field_units[pn], "    " );
@@ -1702,7 +1702,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	    gri->dd_offset[pn] = 0;
 	    gri->field_id_num[pn] = 0;
 	    strcpy( gri->field_name[pn], "AH      " );
-	    strncpy( gri->field_long_name[pn] 
+	    strncpy( gri->field_long_name[pn]
 		     , "Angle of cross corr. between HH and VH              "
 		     , 40);
 	    strcpy( gri->field_units[pn], "deg." );
@@ -1713,7 +1713,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	    gri->dd_offset[pn] = 0;
 	    gri->field_id_num[pn] = 0;
 	    strcpy( gri->field_name[pn], "CV      " );
-	    strncpy( gri->field_long_name[pn] 
+	    strncpy( gri->field_long_name[pn]
 		     , "Mag. of cross corr. between VV and HV               "
 		     , 40);
 	    strcpy( gri->field_units[pn], "    " );
@@ -1724,7 +1724,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	    gri->dd_offset[pn] = 0;
 	    gri->field_id_num[pn] = 0;
 	    strcpy( gri->field_name[pn], "AV      " );
-	    strncpy( gri->field_long_name[pn] 
+	    strncpy( gri->field_long_name[pn]
 		     , "Angle of cross corr. between VV and HV             "
 		     , 40);
 	    strcpy( gri->field_units[pn], "deg." );
@@ -1733,7 +1733,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 
     case DATA_POL3:
 
-	rhohv_ndx = 
+	rhohv_ndx =
 	    pn = gri->num_fields_present++;
 	gri->dd_scale[pn] = 1000.;
 	gri->dd_offset[pn] = 0;
@@ -1745,38 +1745,38 @@ KDP   Specific diff. prop. phase btwn HH, VV
 	strcpy( gri->field_units[pn], "       " );
 	gri->actual_num_bins[pn] = nbins;
 
-	dbmv_ndx = 
+	dbmv_ndx =
 	    pn = gri->num_fields_present++;
 	gri->dd_scale[pn] = 100.;
 	gri->dd_offset[pn] = 0;
 	gri->field_id_num[pn] = 0;
 	strcpy( gri->field_name[pn], "DL      " );
-	strncpy( gri->field_long_name[pn] 
+	strncpy( gri->field_long_name[pn]
 		 , "Vertical copolar received power (VV)                   "
 		 , 40);
 	strcpy( gri->field_units[pn], "dBm " );
 	gri->actual_num_bins[pn] = nbins;
 
-	if( dwlx->dataformat != DATA_SMHVSIM ) {
-	  ldr_ndx = 
+	if( px_dataformat(dwlx) != DATA_SMHVSIM ) {
+	  ldr_ndx =
 	    pn = gri->num_fields_present++;
 	  gri->dd_scale[pn] = 100.;
 	  gri->dd_offset[pn] = 0;
 	  gri->field_id_num[pn] = 0;
 	  strcpy( gri->field_name[pn], "LDR     " );
-	  strncpy( gri->field_long_name[pn] 
+	  strncpy( gri->field_long_name[pn]
 		   , "Lin. depolarization ratio (H tx, V rec)                "
 		   , 40);
 	  strcpy( gri->field_units[pn], "dBm " );
 	  gri->actual_num_bins[pn] = nbins;
 
-	  dbmx_ndx = 
+	  dbmx_ndx =
 	    pn = gri->num_fields_present++;
 	  gri->dd_scale[pn] = 100.;
 	  gri->dd_offset[pn] = 0;
 	  gri->field_id_num[pn] = 0;
 	  strcpy( gri->field_name[pn], "DX      " );
-	  strncpy( gri->field_long_name[pn] 
+	  strncpy( gri->field_long_name[pn]
 		   , "Cross-polar (H tx, V rec) received power                "
 		   , 40);
 	  strcpy( gri->field_units[pn], "dBm " );
@@ -1785,7 +1785,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
 
     case DATA_POL1:
 
-	zdr_ndx = 
+	zdr_ndx =
 	    pn = gri->num_fields_present++;
 	gri->dd_scale[pn] = scale;
 	gri->dd_offset[pn] = bias;
@@ -1796,8 +1796,8 @@ KDP   Specific diff. prop. phase btwn HH, VV
 		 , 40);
 	strcpy( gri->field_units[pn], "dBm     " );
 	gri->actual_num_bins[pn] = nbins;
-	
-	phi_ndx = 
+
+	phi_ndx =
 	    pn = gri->num_fields_present++;
 	gri->dd_scale[pn] = scale;
 	gri->dd_offset[pn] = bias;
@@ -1818,122 +1818,50 @@ KDP   Specific diff. prop. phase btwn HH, VV
 /* c------------------------------------------------------------------------ */
 
 static
-void products()      
+void products()
 {
    int mark;
 
-   switch(dwlx->dataformat)
+   switch(px_dataformat(dwlx))
      {
-      case PIRAQ_ABPDATA:
+      case DATA_ABPDATA:
 	simplepp2();
 	/*
 	simplepp();
 	newsimplepp();
 	 */
 	break;
-	
+
+      case DATA_SIMPLEPP16:
+	newsimplepp();
+	break;
+
       default:
 	mark = 0;
+	fprintf(stderr, "products() is not implemented for PIRAQX format %d!\n",
+		px_dataformat(dwlx));
 	break;
      }
-   dwlx->h_rconst = h_rconst;
-   dwlx->v_rconst = v_rconst;
+   if (px_rev(dwlx) == 1) {
+     dwlx->h_rconst = h_rconst;
+     dwlx->v_rconst = v_rconst;
+   }
 }
-# define LIGHT_SPEED SPEED_OF_LIGHT   
+# define LIGHT_SPEED SPEED_OF_LIGHT
 
 /* c------------------------------------------------------------------------ */
 
-// create 6 scaled products from the simplepp moments 
+// create 6 scaled products from the simplepp moments
 void simplepp()
 {
-   unsigned int  i;   
+   unsigned int  i;
    float        *aptr,*pptr;
    double       a,b,p,cp,pcorrect;
    double       noise,velconst;
    double       dbm,widthconst,range,rconst,width,r12;
-   double       sqrt();   
-   
- 
-   short *velp=gri->scaled_data[0];
-   short *dbmp=gri->scaled_data[1];
-   short *ncpp=gri->scaled_data[2];
-   short *swp=gri->scaled_data[3];
-   short *dbzp=gri->scaled_data[4];
-   short *dbzcp=gri->scaled_data[5];
-   float f, scale=100., bias=0;
-   
-   h_rconst = rconst = 
-     dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
-   noise = (dwlx->noise_power > -10.0) ? 0.0 : 0.0;
-   velconst = LIGHT_SPEED / (2.0 * dwlx->frequency * 2.0 * M_PI * dwlx->prt[0]);
-   pcorrect = dwlx->data_sys_sat
-	    - 20.0 * log10(0x1000000 * dwlx->rcvr_pulsewidth / 1.25E-7) 
-	    - 10.0 * log10((double)dwlx->hits)
-	    - dwlx->receiver_gain;
-   widthconst = (LIGHT_SPEED / dwlx->frequency) / dwlx->prt[0] / (2.0 * sqrt(2.0) * M_PI);
-   
-   if(0)  velconst = -velconst;   /* // fix later for velsign  */
-     /*  */
-   aptr = (float *)pui->raw_data;
-   range = 0.0;
+   double       sqrt();
 
-   for(i=0; i<dwlx->gates; i++) 
-      {
-      a = *aptr++;
-      b = *aptr++;
-      p = *aptr++;
-      
-      if(i)     range = 20.0 * log10(i * 0.0005 * LIGHT_SPEED * dwlx->rcvr_pulsewidth);
-      
-      /* // compute floating point, scaled, scientific products  */
-      f = velconst * atan2(b,a); /*  // velocity in m/s  */
-      *velp++ = DD_SCALE(f, scale, bias);
 
-      f = dbm = 10.0 * log10(fabs(p)) + pcorrect;      /* // power in dBm  */
-      *dbmp++ = DD_SCALE(f, scale, bias);
-      
-      f = (cp = sqrt(r12 = a*a+b*b))/p; /* // NCP no units  */
-      *ncpp++ = DD_SCALE(f, scale, bias);
-
-      if((width = log(fabs((p-noise)/cp))) < 0.0) width = 0.0001;
-      f = sqrt(width) * widthconst;  /* // s.w. in m/s  */
-      *swp++ = DD_SCALE(f, scale, bias);
- 
-      f = dbm + rconst + range; /* // in dBZ  */
-      *dbzp++ = DD_SCALE(f, scale, bias);
-       
-      f = 10.0 * log10(fabs(cp)) + pcorrect + rconst + range; /* // in dBZ  */
-      *dbzcp++ = DD_SCALE(f, scale, bias);
-
-   }
-   /*
-      if (numProducts == 6) {continue;}
-      *(pptr +  6) = 0.0; 
-      *(pptr +  7) = 0.0; 
-      *(pptr +  8) = 0.0; 
-      *(pptr +  9) = 0.0; 
-      *(pptr + 10) = 0.0; 
-      *(pptr + 11) = 0.0; 
-      *(pptr + 12) = 0.0; 
-      *(pptr + 13) = 0.0; 
-      *(pptr + 14) = 0.0; 
-      *(pptr + 15) = 0.0; 
-      }
-   return dwlx->gates *  numProducts * sizeof(float) ;
-    */
-}
-/* c------------------------------------------------------------------------ */
-
-// create 6 scaled products from the simplepp moments 
-int simplepp2()
-   {
-   unsigned int  i;   
-   float        *aptr,*pptr;
-   double       a,b,p,cp,pcorrect;
-   double       noise,velconst;
-   double       dbm,widthconst,range,rconst,width,r12;
-   int numProducts = 6;
- 
    short *velp=gri->scaled_data[0];
    short *dbmp=gri->scaled_data[1];
    short *ncpp=gri->scaled_data[2];
@@ -1943,47 +1871,127 @@ int simplepp2()
    float f, scale=100., bias=0;
 
    h_rconst = rconst =
-     dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
-   noise = (dwlx->noise_power > -10.0) ? 0.0 : 0.0;
-   velconst = LIGHT_SPEED / (2.0 * dwlx->frequency * 2.0 * M_PI * dwlx->prt[0]);
-   pcorrect = dwlx->data_sys_sat - dwlx->receiver_gain;
-   widthconst = (LIGHT_SPEED / dwlx->frequency) / dwlx->prt[0] / (2.0 * sqrt(2.0) * M_PI);
-   
-   if(0)  velconst = -velconst;   // fix later for velsign 
+     px_rconst(dwlx) - 20.0 * log10(px_xmit_pulsewidth(dwlx) / px_rcvr_pulsewidth(dwlx));
+   noise = (px_noise_power(dwlx) > -10.0) ? 0.0 : 0.0;
+   velconst = LIGHT_SPEED / (2.0 * px_frequency(dwlx) * 2.0 * M_PI * px_prt(dwlx)[0]);
+   pcorrect = px_data_sys_sat(dwlx)
+	    - 20.0 * log10(0x1000000 * px_rcvr_pulsewidth(dwlx) / 1.25E-7)
+	    - 10.0 * log10((double)px_hits(dwlx))
+	    - px_receiver_gain(dwlx);
+   widthconst = (LIGHT_SPEED / px_frequency(dwlx)) / px_prt(dwlx)[0] / (2.0 * sqrt(2.0) * M_PI);
 
+   if(0)  velconst = -velconst;   /* // fix later for velsign  */
+     /*  */
    aptr = (float *)pui->raw_data;
    range = 0.0;
 
-   for(i=0; i<dwlx->gates; i++,pptr += numProducts) // 6 (was 16) products 
+   for(i=0; i<px_gates(dwlx); i++)
       {
       a = *aptr++;
       b = *aptr++;
       p = *aptr++;
-      
-      if(i)     range = 20.0 * log10(i * 0.0005 * LIGHT_SPEED * dwlx->rcvr_pulsewidth);
 
-      // compute floating point, scaled, scientific products 
-      f = velconst * atan2(b,a);    /*  // velocity in m/s  */
+      if(i)     range = 20.0 * log10(i * 0.0005 * LIGHT_SPEED * px_rcvr_pulsewidth(dwlx));
+
+      /* // compute floating point, scaled, scientific products  */
+      f = velconst * atan2(b,a); /*  // velocity in m/s  */
       *velp++ = DD_SCALE(f, scale, bias);
-      
-      f = dbm = 10.0 * log10(fabs(p)) + pcorrect; /* // power in dBm  */
+
+      f = dbm = 10.0 * log10(fabs(p)) + pcorrect;      /* // power in dBm  */
       *dbmp++ = DD_SCALE(f, scale, bias);
-      
-      f = (cp = sqrt(r12 = a*a+b*b))/p;   /* // NCP no units  */
+
+      f = (cp = sqrt(r12 = a*a+b*b))/p; /* // NCP no units  */
       *ncpp++ = DD_SCALE(f, scale, bias);
-      
+
       if((width = log(fabs((p-noise)/cp))) < 0.0) width = 0.0001;
       f = sqrt(width) * widthconst;  /* // s.w. in m/s  */
       *swp++ = DD_SCALE(f, scale, bias);
-      
+
+      f = dbm + rconst + range; /* // in dBZ  */
+      *dbzp++ = DD_SCALE(f, scale, bias);
+
+      f = 10.0 * log10(fabs(cp)) + pcorrect + rconst + range; /* // in dBZ  */
+      *dbzcp++ = DD_SCALE(f, scale, bias);
+
+   }
+   /*
+      if (numProducts == 6) {continue;}
+      *(pptr +  6) = 0.0;
+      *(pptr +  7) = 0.0;
+      *(pptr +  8) = 0.0;
+      *(pptr +  9) = 0.0;
+      *(pptr + 10) = 0.0;
+      *(pptr + 11) = 0.0;
+      *(pptr + 12) = 0.0;
+      *(pptr + 13) = 0.0;
+      *(pptr + 14) = 0.0;
+      *(pptr + 15) = 0.0;
+      }
+   return px_gates(dwlx) *  numProducts * sizeof(float) ;
+    */
+}
+/* c------------------------------------------------------------------------ */
+
+// create 6 scaled products from the simplepp moments
+int simplepp2()
+   {
+   unsigned int  i;
+   float        *aptr,*pptr;
+   double       a,b,p,cp,pcorrect;
+   double       noise,velconst;
+   double       dbm,widthconst,range,rconst,width,r12;
+   int numProducts = 6;
+
+   short *velp=gri->scaled_data[0];
+   short *dbmp=gri->scaled_data[1];
+   short *ncpp=gri->scaled_data[2];
+   short *swp=gri->scaled_data[3];
+   short *dbzp=gri->scaled_data[4];
+   short *dbzcp=gri->scaled_data[5];
+   float f, scale=100., bias=0;
+
+   h_rconst = rconst =
+     px_rconst(dwlx) - 20.0 * log10(px_xmit_pulsewidth(dwlx) / px_rcvr_pulsewidth(dwlx));
+   noise = (px_noise_power(dwlx) > -10.0) ? 0.0 : 0.0;
+   velconst = LIGHT_SPEED / (2.0 * px_frequency(dwlx) * 2.0 * M_PI * px_prt(dwlx)[0]);
+   pcorrect = px_data_sys_sat(dwlx) - px_receiver_gain(dwlx);
+   widthconst = (LIGHT_SPEED / px_frequency(dwlx)) / px_prt(dwlx)[0] / (2.0 * sqrt(2.0) * M_PI);
+
+   if(0)  velconst = -velconst;   // fix later for velsign
+
+   aptr = (float *)pui->raw_data;
+   range = 0.0;
+
+   for(i=0; i<px_gates(dwlx); i++,pptr += numProducts) // 6 (was 16) products
+      {
+      a = *aptr++;
+      b = *aptr++;
+      p = *aptr++;
+
+      if(i)     range = 20.0 * log10(i * 0.0005 * LIGHT_SPEED * px_rcvr_pulsewidth(dwlx));
+
+      // compute floating point, scaled, scientific products
+      f = velconst * atan2(b,a);    /*  // velocity in m/s  */
+      *velp++ = DD_SCALE(f, scale, bias);
+
+      f = dbm = 10.0 * log10(fabs(p)) + pcorrect; /* // power in dBm  */
+      *dbmp++ = DD_SCALE(f, scale, bias);
+
+      f = (cp = sqrt(r12 = a*a+b*b))/p;   /* // NCP no units  */
+      *ncpp++ = DD_SCALE(f, scale, bias);
+
+      if((width = log(fabs((p-noise)/cp))) < 0.0) width = 0.0001;
+      f = sqrt(width) * widthconst;  /* // s.w. in m/s  */
+      *swp++ = DD_SCALE(f, scale, bias);
+
       f = dbm + rconst + range;     /* // in dBZ  */
       *dbzp++ = DD_SCALE(f, scale, bias);
-      
+
       f = 10.0 * log10(fabs(cp)) + pcorrect + rconst + range;  /* // in dBZ  */
       *dbzcp++ = DD_SCALE(f, scale, bias);
      }
    /*
-   return dwlx->gates *  numProducts * sizeof(float) ;
+   return px_gates(dwlx) *  numProducts * sizeof(float) ;
     */
    }
 
@@ -2005,11 +2013,11 @@ int simplepp2()
 /* c------------------------------------------------------------------------ */
 size_t newsimplepp()
    {
-   unsigned int  i;   
+   unsigned int  i;
    short        *aptr;
    double       cp,v,p,pcorrect;
    double       velconst,dbm,widthconst,range,rconst,scale2db,scale2ln;
-   double       sqrt();   
+   double       sqrt();
 
    short *velp=gri->scaled_data[0];
    short *dbmp=gri->scaled_data[1];
@@ -2019,26 +2027,26 @@ size_t newsimplepp()
    short *dbzcp=gri->scaled_data[5];
    float f, scale=100., bias=0;
 
-   scale2ln = 0.004 * log(10.0) / 10.0;  // from counts to natural log 
-   scale2db = 0.004 / scale2ln;         // from natural log to 10log10() 
+   scale2ln = 0.004 * log(10.0) / 10.0;  // from counts to natural log
+   scale2db = 0.004 / scale2ln;         // from natural log to 10log10()
 # define LIGHT_SPEED SPEED_OF_LIGHT
-   velconst = LIGHT_SPEED / (2.0 * dwlx->frequency * 2.0 * fabs(dwlx->prt[0]) * 32768.0);
+   velconst = LIGHT_SPEED / (2.0 * px_frequency(dwlx) * 2.0 * fabs(px_prt(dwlx)[0]) * 32768.0);
    h_rconst = rconst =
-     dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
-   pcorrect = dwlx->data_sys_sat
-	    - 20.0 * log10(0x10000) 
-	    - dwlx->receiver_gain;
-   // NOTE: 0x10000 is just the standard offset for all systems 
-   widthconst = (LIGHT_SPEED / dwlx->frequency) / dwlx->prt[0] / (2.0 * sqrt(2.0) * M_PI);
-   
+     px_rconst(dwlx) - 20.0 * log10(px_xmit_pulsewidth(dwlx) / px_rcvr_pulsewidth(dwlx));
+   pcorrect = px_data_sys_sat(dwlx)
+	    - 20.0 * log10(0x10000)
+	    - px_receiver_gain(dwlx);
+   // NOTE: 0x10000 is just the standard offset for all systems
+   widthconst = (LIGHT_SPEED / px_frequency(dwlx)) / px_prt(dwlx)[0] / (2.0 * sqrt(2.0) * M_PI);
+
  # ifdef obsolete
    aptr = (short *)dwell->abp;
 # endif
 
    aptr = (short *)pui->raw_data;
    range = 0.0;
-   
-   for(i=0; i<dwlx->gates; i++) {
+
+   for(i=0; i<px_gates(dwlx); i++) {
       if(LittleEndian) {
 	 cp = (*aptr++);	/* // 0.004 dB / bit */
 	 v = (*aptr++);	/* // nyquist = 65536 = +/- 32768 */
@@ -2049,35 +2057,35 @@ size_t newsimplepp()
 	 v = PX2(*aptr++);
 	 p = PX2(*aptr++);
       }
-      if(i) range = 20.0 * log10(i * 0.0005 * LIGHT_SPEED * dwlx->rcvr_pulsewidth);
-      
-      // compute floating point, scaled, scientific products 
-	f = velconst * v;                 // velocity in m/s 
+      if(i) range = 20.0 * log10(i * 0.0005 * LIGHT_SPEED * px_rcvr_pulsewidth(dwlx));
+
+      // compute floating point, scaled, scientific products
+	f = velconst * v;                 // velocity in m/s
 	  *velp++ = DD_SCALE(f, scale, bias);
-      f = dbm = 0.004 * p + pcorrect;      // power in dBm 
+      f = dbm = 0.004 * p + pcorrect;      // power in dBm
 	*dbmp++ = DD_SCALE(f, scale, bias);
-      f = exp(scale2ln*(cp - p));                // NCP no units 
+      f = exp(scale2ln*(cp - p));                // NCP no units
 	*ncpp++ = DD_SCALE(f, scale, bias);
-      f = sqrt(scale2ln * fabs(p-cp)) * widthconst;  // s.w. in m/s 
+      f = sqrt(scale2ln * fabs(p-cp)) * widthconst;  // s.w. in m/s
 	*swp++ = DD_SCALE(f, scale, bias);
-      f = dbm + rconst + range;                          // in dBZ 
+      f = dbm + rconst + range;                          // in dBZ
 	*dbzp++ = DD_SCALE(f, scale, bias);
       f = 0.004 * cp + pcorrect + rconst + range;  // Coherent DBZ (in dBZ)
 	*dbzcp++ = DD_SCALE(f, scale, bias);
 
       // pptr += 10;
    }
-   return dwlx->gates *  6 * sizeof(float) ;
+   return px_gates(dwlx) *  6 * sizeof(float) ;
    }
 /* c------------------------------------------------------------------------ */
 
-static void 
-xnewsimplepp()      
+static void
+xnewsimplepp()
 {
    /* 16-bit integers instead of floats
     */
     int mark;
-    int  i;   
+    int  i;
     short        *aptr, itemp;
     double       cp,v,p,pcorrect;
     double       logstuff,noise,velconst;
@@ -2094,18 +2102,18 @@ xnewsimplepp()
     float f, scale=100., bias=0;
     /*  */
 
-   scale2ln = 0.004 * log(10.0) / 10.0;  // from counts to natural log 
-   scale2db = 0.004 / scale2ln;         // from natural log to 10log10() 
-   velconst = SPEED_OF_LIGHT / (2.0 * dwlx->frequency * 2.0 * fabs(dwlx->prt[0]) * 32768.0);
+   scale2ln = 0.004 * log(10.0) / 10.0;  // from counts to natural log
+   scale2db = 0.004 / scale2ln;         // from natural log to 10log10()
+   velconst = SPEED_OF_LIGHT / (2.0 * px_frequency(dwlx) * 2.0 * fabs(px_prt(dwlx)[0]) * 32768.0);
    h_rconst = rconst =
-     dwlx->rconst - 20.0 * log10(dwlx->xmit_pulsewidth / dwlx->rcvr_pulsewidth);
-   pcorrect = dwlx->data_sys_sat
-	    - 20.0 * log10(0x10000) 
-	    - dwlx->receiver_gain;
-   
+     px_rconst(dwlx) - 20.0 * log10(px_xmit_pulsewidth(dwlx) / px_rcvr_pulsewidth(dwlx));
+   pcorrect = px_data_sys_sat(dwlx)
+	    - 20.0 * log10(0x10000)
+	    - px_receiver_gain(dwlx);
+
     /* // NOTE: 0x10000 is just the standard offset for all systems  */
-   widthconst = (SPEED_OF_LIGHT / dwlx->frequency) / dwlx->prt[0] / (2.0 * sqrt(2.0) * M_PI);
-   
+   widthconst = (SPEED_OF_LIGHT / px_frequency(dwlx)) / px_prt(dwlx)[0] / (2.0 * sqrt(2.0) * M_PI);
+
 # ifdef obsolete
     aptr = dwell->abp;
 # endif
@@ -2113,7 +2121,7 @@ xnewsimplepp()
     aptr = (short *)pui->raw_data;
     range = 0.0;
 
-    for(i=0; i < dwlx->gates; i++) {
+    for(i=0; i < px_gates(dwlx); i++) {
        if(LittleEndian) {
 	  cp = (*aptr++);	/* // 0.004 dB / bit */
 	  v = (*aptr++);	/* // nyquist = 65536 = +/- 32768 */
@@ -2125,7 +2133,7 @@ xnewsimplepp()
 	  p = PX2(*aptr++);
        }
        if(i) range = 20.0 * log10(i * 0.0005 * SPEED_OF_LIGHT
-				  * dwlx->rcvr_pulsewidth);
+				  * px_rcvr_pulsewidth(dwlx));
 
 	/* compute floating point, scaled, scientific products
 	 */
@@ -2160,11 +2168,11 @@ pc_swap8(ov)		/* swap real*8 */
 	unsigned char nv[8];
     }u;
 
-    u.nv[7] = ov[0];		
-    u.nv[6] = ov[1];		
-    u.nv[5] = ov[2];		
-    u.nv[4] = ov[3];		
-    u.nv[3] = ov[4];		
+    u.nv[7] = ov[0];
+    u.nv[6] = ov[1];
+    u.nv[5] = ov[2];
+    u.nv[4] = ov[3];
+    u.nv[3] = ov[4];
     u.nv[2] = ov[5];
     u.nv[1] = ov[6];
     u.nv[0] = ov[7];
@@ -2364,7 +2372,7 @@ Option = "
 	    /* assume they have hit a <return>
 	     */
 	    if(skip_secs > 0)
-		 dtarget = gri->time + skip_secs; 
+		 dtarget = gri->time + skip_secs;
 	}
 	else if(skip_secs = dd_relative_time(str)) {
 	    dtarget = gri->time + skip_secs;
@@ -2586,12 +2594,14 @@ piraqx_print_hdr(slm)
     DD_TIME dts, *d_unstamp_time();
     double d;
     char *dts_print();
+    PIRAQX_REV1 *dwlx_r1 = (PIRAQX_REV1*)dwlx;
+    PIRAQX_REV2 *dwlx_r2 = (PIRAQX_REV2*)dwlx;
 
 
 # ifdef obsolete
-    sprintf(aa, " %e", dwlx->  );
+    sprintf(aa, " %e", px_(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, " %d", dwlx->  );
+    sprintf(aa, " %d", px_(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 # endif
 
@@ -2601,61 +2611,61 @@ piraqx_print_hdr(slm)
     sprintf(aa, "Contents of piraqx ray header");
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "desc[4]         %s", str_terminate(tmp,dwlx->desc,4));
+    sprintf(aa, "desc[4]         %s", str_terminate(tmp,px_desc(dwlx),4));
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "recordlen       %d", dwlx->recordlen      );
+    sprintf(aa, "recordlen       %d", px_recordlen(dwlx)      );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "channel         %d", dwlx->channel  );
+    sprintf(aa, "channel         %d", px_channel(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "rev             %d", dwlx->rev  );
+    sprintf(aa, "rev             %d", px_rev(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "one             %d", dwlx->one  );
+    sprintf(aa, "one             %d", px_one(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "byte_offset_to_data %d", dwlx->byte_offset_to_data  );
+    sprintf(aa, "byte_offset_to_data %d", px_byte_offset_to_data(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "dataformat      %d", dwlx->dataformat  );
-    solo_add_list_entry(slm, aa, strlen(aa));
-
-    sprintf(aa, "typeof_compression %d", dwlx->typeof_compression  );
+    sprintf(aa, "dataformat      %d", px_dataformat(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "pulse_num       %X", dwlx->pulse_num  );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "beam_num        %X", dwlx->beam_num  );
+    sprintf(aa, "typeof_compression %d", px_typeof_compression(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "gates           %d", dwlx->gates          );
+    sprintf(aa, "pulse_num       %X", px_pulse_num(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "start_gate      %d", dwlx->start_gate          );
+    sprintf(aa, "beam_num        %X", px_beam_num(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "hits            %d", dwlx->hits           );
+
+    sprintf(aa, "gates           %d", px_gates(dwlx)          );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "ctrlflags       %d", dwlx->ctrlflags  );
+    sprintf(aa, "start_gate      %d", px_start_gate(dwlx)          );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "bytespergate    %d", dwlx->bytespergate  );
+    sprintf(aa, "hits            %d", px_hits(dwlx)           );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "ctrlflags       %d", px_ctrlflags(dwlx)  );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "bytespergate    %d", px_bytespergate(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 
 
-    sprintf(aa, "rcvr_pulsewidth %e", dwlx->rcvr_pulsewidth);
+    sprintf(aa, "rcvr_pulsewidth %e", px_rcvr_pulsewidth(dwlx));
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "prt[4]          %e %e %e %e", dwlx->prt[0] , dwlx->prt[1]
-	    , dwlx->prt[2] , dwlx->prt[3]            );
+    sprintf(aa, "prt[4]          %e %e %e %e", px_prt(dwlx)[0] , px_prt(dwlx)[1]
+	    , px_prt(dwlx)[2] , px_prt(dwlx)[3]            );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "meters_to_first_gate %e", dwlx->meters_to_first_gate );
+    sprintf(aa, "meters_to_first_gate %e", px_meters_to_first_gate(dwlx) );
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "num_segments    %d", dwlx->num_segments  );
+    sprintf(aa, "num_segments    %d", px_num_segments(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 
     strcpy (aa, "gate_spacing_meters[]");
-    for (ii=0; ii < dwlx->num_segments; ii++) {
-       sprintf (aa+strlen(aa), " %.2f", dwlx->gate_spacing_meters[ii]);
+    for (ii=0; ii < px_num_segments(dwlx); ii++) {
+       sprintf (aa+strlen(aa), " %.2f", px_gate_spacing_meters(dwlx)[ii]);
     }
     solo_add_list_entry(slm, aa, strlen(aa));
 
     strcpy (aa, "gates_in_segment[]");
-    for (ii=0; ii < dwlx->num_segments; ii++) {
-       sprintf (aa+strlen(aa), "%4d ", dwlx->gates_in_segment[ii]);
+    for (ii=0; ii < px_num_segments(dwlx); ii++) {
+       sprintf (aa+strlen(aa), "%4d ", px_gates_in_segment(dwlx)[ii]);
     }
     solo_add_list_entry(slm, aa, strlen(aa));
 
@@ -2663,169 +2673,169 @@ piraqx_print_hdr(slm)
 
     strcpy (aa, "clutter_start[]");
     for (ii=0; ii < nn; ii++) {
-       sprintf (aa+strlen(aa), "%4d ", dwlx->clutter_start[ii]);
+       sprintf (aa+strlen(aa), "%4d ", px_clutter_start(dwlx)[ii]);
     }
     solo_add_list_entry(slm, aa, strlen(aa));
 
     strcpy (aa, "clutter_end[]  ");
     for (ii=0; ii < nn; ii++) {
-       sprintf (aa+strlen(aa), "%4d ", dwlx->clutter_end[ii]);
+       sprintf (aa+strlen(aa), "%4d ", px_clutter_end(dwlx)[ii]);
     }
     solo_add_list_entry(slm, aa, strlen(aa));
 
     strcpy (aa, "clutter_type[] ");
     for (ii=0; ii < nn; ii++) {
-       sprintf (aa+strlen(aa), "%4d ", dwlx->clutter_type[ii]);
+       sprintf (aa+strlen(aa), "%4d ", px_clutter_type(dwlx)[ii]);
     }
     solo_add_list_entry(slm, aa, strlen(aa));
 
     dts.time_stamp = pui->time;
-    sprintf(aa, "secs            %X  %s", dwlx->secs
+    sprintf(aa, "secs            %X  %s", px_secs(dwlx)
 	    , dts_print(d_unstamp_time(&dts))           );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "nanosecs        %d", dwlx->nanosecs      );
+    sprintf(aa, "nanosecs        %d", px_nanosecs(dwlx)      );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "az              %e", dwlx->az             );
+    sprintf(aa, "az              %e", px_az(dwlx)             );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "el              %e", dwlx->el             );
+    sprintf(aa, "el              %e", px_el(dwlx)             );
 
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "radar_longitude %e", dwlx->radar_longitude);
+    sprintf(aa, "radar_longitude %e", px_radar_longitude(dwlx));
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "radar_latitude  %e", dwlx->radar_latitude);
+    sprintf(aa, "radar_latitude  %e", px_radar_latitude(dwlx));
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "radar_altitude  %e", dwlx->radar_altitude );
+    sprintf(aa, "radar_altitude  %e", px_radar_altitude(dwlx) );
     solo_add_list_entry(slm, aa, strlen(aa));
     strcpy (aa, "gps_datum         ");
-    str_terminate (aa+strlen(aa), dwlx->gps_datum, PX_MAX_GPS_DATUM);
+    str_terminate (aa+strlen(aa), px_gps_datum(dwlx), PX_MAX_GPS_DATUM);
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "ts_start_gate   %d", dwlx->ts_start_gate     );
+    sprintf(aa, "ts_start_gate   %d", px_ts_start_gate(dwlx)     );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "ts_end_gate     %d", dwlx->ts_end_gate     );
-    solo_add_list_entry(slm, aa, strlen(aa));
-
-    sprintf(aa, "ew_velocity     %e", dwlx->ew_velocity    );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "ns_velocity     %e", dwlx->ns_velocity    );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "vert_velocity   %e", dwlx->vert_velocity  );
+    sprintf(aa, "ts_end_gate     %d", px_ts_end_gate(dwlx)     );
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "fxd_angle       %e", dwlx->fxd_angle  );
+    sprintf(aa, "ew_velocity     %e", px_ew_velocity(dwlx)    );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "true_scan_rate  %e", dwlx->true_scan_rate  );
+    sprintf(aa, "ns_velocity     %e", px_ns_velocity(dwlx)    );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "scan_type       %d", dwlx->scan_type  );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "scan_num        %d", dwlx->scan_num  );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "vol_num         %d", dwlx->vol_num  );
+    sprintf(aa, "vert_velocity   %e", px_vert_velocity(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "transition      %d", dwlx->transition  );
+    sprintf(aa, "fxd_angle       %e", px_fxd_angle(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "xmit_power      %f", dwlx->xmit_power  );
+    sprintf(aa, "true_scan_rate  %e", px_true_scan_rate(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-
-    sprintf(aa, "yaw             %f", dwlx->yaw  );
+    sprintf(aa, "scan_type       %d", px_scan_type(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "pitch           %f", dwlx->pitch  );
+    sprintf(aa, "scan_num        %d", px_scan_num(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "roll            %f", dwlx->roll  );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "track           %f", dwlx->track  );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "gate0mag        %f", dwlx->gate0mag  );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "dacv            %f", dwlx->dacv  );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "packetflag      %d", dwlx->packetflag  );
+    sprintf(aa, "vol_num         %d", px_vol_num(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "year            %d", dwlx->year  );
+    sprintf(aa, "transition      %d", px_transition(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "julian_day      %d", dwlx->julian_day  );
+    sprintf(aa, "xmit_power      %f", px_xmit_power(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "radar_name[16]  %s", str_terminate(tmp,dwlx->radar_name
+    sprintf(aa, "yaw             %f", px_yaw(dwlx)  );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "pitch           %f", px_pitch(dwlx)  );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "roll            %f", px_roll(dwlx)  );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "track           %f", px_track(dwlx)  );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "gate0mag        %f", px_gate0mag(dwlx)  );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "dacv            %f", px_dacv(dwlx)  );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "packetflag      %d", px_packetflag(dwlx)  );
+    solo_add_list_entry(slm, aa, strlen(aa));
+
+    sprintf(aa, "year            %d", px_year(dwlx)  );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "julian_day      %d", px_julian_day(dwlx)  );
+    solo_add_list_entry(slm, aa, strlen(aa));
+
+    sprintf(aa, "radar_name[16]  %s", str_terminate(tmp,px_radar_name(dwlx)
 						    ,PX_MAX_RADAR_NAME));
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "channel_name[16] %s", str_terminate(tmp,dwlx->channel_name
+    sprintf(aa, "channel_name[16] %s", str_terminate(tmp,px_channel_name(dwlx)
 						    ,PX_MAX_CHANNEL_NAME));
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "project_name[16] %s", str_terminate(tmp,dwlx->project_name
+    sprintf(aa, "project_name[16] %s", str_terminate(tmp,px_project_name(dwlx)
 						    ,PX_MAX_PROJECT_NAME));
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "operator_name[16] %s", str_terminate(tmp,dwlx->operator_name
+    sprintf(aa, "operator_name[16] %s", str_terminate(tmp,px_operator_name(dwlx)
 						    ,PX_MAX_OPERATOR_NAME));
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "site_name[16]   %s", str_terminate(tmp,dwlx->site_name
+    sprintf(aa, "site_name[16]   %s", str_terminate(tmp,px_site_name(dwlx)
 						    ,PX_MAX_SITE_NAME));
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "polarization    %d", dwlx->polarization    );
+    sprintf(aa, "polarization    %d", px_polarization(dwlx)    );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "test_pulse_pwr  %e", dwlx->test_pulse_pwr  );
+    sprintf(aa, "test_pulse_pwr  %e", px_test_pulse_pwr(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "test_pulse_frq  %e", dwlx->test_pulse_frq  );
+    sprintf(aa, "test_pulse_frq  %e", px_test_pulse_frq(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "frequency       %e", dwlx->frequency       );
-    solo_add_list_entry(slm, aa, strlen(aa));
-
-    sprintf(aa, "noise_figure    %e", dwlx->noise_figure    );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "noise_power     %e", dwlx->noise_power     );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "receiver_gain   %e", dwlx->receiver_gain   );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "E_plane_angle   %e", dwlx->E_plane_angle   );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "H_plane_angle   %e", dwlx->H_plane_angle   );
+    sprintf(aa, "frequency       %e", px_frequency(dwlx)       );
     solo_add_list_entry(slm, aa, strlen(aa));
 
-
-    sprintf(aa, "data_sys_sat    %e", dwlx->data_sys_sat    );
+    sprintf(aa, "noise_figure    %e", px_noise_figure(dwlx)    );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "antenna_gain    %e", dwlx->antenna_gain    );
+    sprintf(aa, "noise_power     %e", px_noise_power(dwlx)     );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "H_beam_width %e", dwlx->H_beam_width );
+    sprintf(aa, "receiver_gain   %e", px_receiver_gain(dwlx)   );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "V_beam_width %e", dwlx->V_beam_width );
-
+    sprintf(aa, "E_plane_angle   %e", px_E_plane_angle(dwlx)   );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "xmit_pulsewidth %e", dwlx->xmit_pulsewidth );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "rconst          %e", dwlx->rconst          );
-    solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "phaseoffset     %e", dwlx->phaseoffset  );
+    sprintf(aa, "H_plane_angle   %e", px_H_plane_angle(dwlx)   );
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "zdr_fudge_factor %e", dwlx->zdr_fudge_factor  );
+
+    sprintf(aa, "data_sys_sat    %e", px_data_sys_sat(dwlx)    );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "antenna_gain    %e", px_antenna_gain(dwlx)    );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "H_beam_width %e", px_H_beam_width(dwlx) );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "V_beam_width %e", px_V_beam_width(dwlx) );
+
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "xmit_pulsewidth %e", px_xmit_pulsewidth(dwlx) );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "rconst          %e", px_rconst(dwlx)          );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "phaseoffset     %e", px_phaseoffset(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "mismatch_loss    %e", dwlx->mismatch_loss  );
+    sprintf(aa, "zdr_fudge_factor %e", px_zdr_fudge_factor(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "rcvr_const       %e", dwlx->rcvr_const  );
+
+    sprintf(aa, "mismatch_loss    %e", px_mismatch_loss(dwlx)  );
+    solo_add_list_entry(slm, aa, strlen(aa));
+    sprintf(aa, "rcvr_const       %e", px_rcvr_const(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 
     sprintf(aa, "test_pulse_rngs_km[2] %e %e"
-	    , dwlx->test_pulse_rngs_km[0] , dwlx->test_pulse_rngs_km[1] );
+	    , px_test_pulse_rngs_km(dwlx)[0] , px_test_pulse_rngs_km(dwlx)[1] );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "antenna_rotation_angle %e", dwlx->antenna_rotation_angle  );
+    sprintf(aa, "antenna_rotation_angle %e", px_antenna_rotation_angle(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 
     strcpy (aa, "comment: ");
-    str_terminate (aa+strlen(aa), dwlx->comment, PX_SZ_COMMENT);
+    str_terminate (aa+strlen(aa), px_comment(dwlx), PX_SZ_COMMENT);
     solo_add_list_entry(slm, aa, strlen(aa));
 
-    sprintf(aa, "i_norm           %e", dwlx->i_norm  );
+    sprintf(aa, "i_norm           %e", px_i_norm(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "q_norm           %e", dwlx->q_norm  );
+    sprintf(aa, "q_norm           %e", px_q_norm(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "i_compand        %e", dwlx->i_compand  );
+    sprintf(aa, "i_compand        %e", px_i_compand(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
-    sprintf(aa, "q_compand        %e", dwlx->q_compand  );
+    sprintf(aa, "q_compand        %e", px_q_compand(dwlx)  );
     solo_add_list_entry(slm, aa, strlen(aa));
 
     strcpy (aa, "transform_matrix[i][j][2] ");
@@ -2833,23 +2843,28 @@ piraqx_print_hdr(slm)
 
     for (ii=0; ii < 2; ii++) {
        for (jj=0; jj < 2; jj++) {
-	  sprintf (aa, "  i:%d j:%d  %16e  %16e", ii, jj
-		   , dwlx->transform_matrix[ii][jj][0]
-		   , dwlx->transform_matrix[ii][jj][1]);
-	  solo_add_list_entry(slm, aa, strlen(aa));
-
+	   if (px_rev(dwlx) == 1)
+	   {
+	     sprintf (aa, "  i:%d j:%d  %16e  %16e", ii, jj
+		      , dwlx_r1->transform_matrix[ii][jj][0]
+		      , dwlx_r1->transform_matrix[ii][jj][1]);
+	   } else {
+	     sprintf (aa, "  i:%d j:%d  %16e  %16e", ii, jj
+		      , dwlx_r2->transform_matrix[ii][jj][0]
+		      , dwlx_r2->transform_matrix[ii][jj][1]);
+	   }
+	   solo_add_list_entry(slm, aa, strlen(aa));
        }
     }
-    sprintf(aa, "stokes[4] %e %e %e %e", dwlx->stokes[0] , dwlx->stokes[1] 
-	    , dwlx->stokes[2] , dwlx->stokes[3]  );
+    sprintf(aa, "stokes[4] %e %e %e %e", px_stokes(dwlx)[0] , px_stokes(dwlx)[1]
+	    , px_stokes(dwlx)[2] , px_stokes(dwlx)[3]  );
     solo_add_list_entry(slm, aa, strlen(aa));
     strcpy (aa, "spare[20]");
     solo_add_list_entry(slm, aa, strlen(aa));
 
 
 }
-# ifdef notyet
-# endif
+
 # ifdef notyet
 /* c------------------------------------------------------------------------ */
 
@@ -2861,7 +2876,7 @@ piraqx_ts_stats()
     static double sumhh = 0, sumvv = 0, sumhv;
     static double sumSqhh = 0, sumSqvv = 0, sumSqhv;
 
-  
+
     static int ray_count=0;
     static int total_hits;
     static float prev_prt = 0;
@@ -2873,7 +2888,7 @@ piraqx_ts_stats()
     double I, Q, mean, sdev;
     char message[256], *aa;
 
-    switch(dwlx->dataformat) {
+    switch(px_dataformat(dwlx)) {
     case DATA_POL12:
 	num_fields = 12;
 	break;
@@ -2892,10 +2907,10 @@ piraqx_ts_stats()
     }
 
     sizeof_gate = num_fields * sizeof( short );
-    len = dwlx->recordlen - sizeof( LeHEADERV ) - ( dwlx->gates * sizeof_gate );
+    len = px_recordlen(dwlx) - sizeof( LeHEADERV ) - ( px_gates(dwlx) * sizeof_gate );
     kk = len/sizeof(float);
 
-    if( kk < dwlx->hits ) {
+    if( kk < px_hits(dwlx) ) {
 	if( sizeof_ts_fi > 0 ) {
 	    fclose( ts_fid );
 	    sizeof_ts_fi = 0;
@@ -2910,7 +2925,7 @@ piraqx_ts_stats()
 	ts_fid = fopen( message, "w" );
     }
 
-    if( fabs( (double)( dwlx->prt - prev_prt ) ) > .001 ) {
+    if( fabs( (double)( px_prt(dwlx) - prev_prt ) ) > .001 ) {
 	new_prt = YES;
     }
     if( new_prt || (ray_count > 1 && ray_count < 22) || !( ray_count & 100 )) {
@@ -2936,24 +2951,24 @@ piraqx_ts_stats()
     }
 
     if( new_prt ) {
-	prev_prt = dwlx->prt;
+	prev_prt = px_prt(dwlx);
 	sumhh = sumvv = sumhv = 0;
 	sumSqhh = sumSqvv = sumSqhv = 0;
 	N = 0;
     }
 
-    fpx = (float *)( pui->raw_data + dwlx->gates * num_fields * sizeof(short) );
-    N += dwlx->hits;
+    fpx = (float *)( pui->raw_data + px_gates(dwlx) * num_fields * sizeof(short) );
+    N += px_hits(dwlx);
     aa = message;
     sprintf( aa
 	     , "beam: %d tsgate: %d hits: %d prt: %.4f az: %.2f el: %.2f %d \n"
-	     , ray_count, dwlx->tsgate, dwlx->hits, dwlx->prt, dwlx->az, dwlx->el
+	     , ray_count, px_tsgate(dwlx), px_hits(dwlx), px_prt(dwlx), px_az(dwlx), px_el(dwlx)
 	     , len );
     fputs( message, ts_fid );
     sizeof_ts_fi += sizeof( message );
 
-    for( ii = 0; ii < dwlx->hits >> 1; ii++ ) {
-      
+    for( ii = 0; ii < px_hits(dwlx) >> 1; ii++ ) {
+
 	aa = message;
 
 	I = PX4F( *fpx++ );
@@ -2979,7 +2994,7 @@ piraqx_ts_stats()
 	xx = sqrt( I*I + Q*Q );
 	sumhv += xx;
 	sumSqhv += xx*xx;
-# endif	
+# endif
 	aa += strlen(aa);
 	strcat( aa, "\n" );
 	fputs( message, ts_fid );
