@@ -34,10 +34,10 @@
 #define	DATA_ABPDATA   16
 
 /* Staggered PRT ABP data computed  in piraq3: rapidDOW project */
-#define    PIRAQ_ABPDATA_STAGGER_PRT 17
+#define    DATA_STAGGER_PRT 17
 
 
-#define DATA_TYPE_MAX PIRAQ_ABPDATA_STAGGER_PRT /* limit of data types */
+#define DATA_TYPE_MAX DATA_STAGGER_PRT /* limit of data types */
 
 #define DATA_POL_PLUS_CMP 29	/* full pol plus */
 #define DATA_MAX_POL_CMP  30	/* same as full plus plus more gates */
