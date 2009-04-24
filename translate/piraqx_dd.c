@@ -301,6 +301,7 @@ static void piraqx_map_hdr();
 static void piraqx_header();
 static void piraqx_fields();
 static void simplepp();
+static void dualprtfloat();
 double pc_swap4f();
 long pc_swap4();
 void piraqx_positioning();
@@ -1836,6 +1837,10 @@ void products()
 	newsimplepp();
 	break;
 
+      case DATA_DUALPPFLOAT:
+	dualprtfloat();
+	break;
+
       default:
 	mark = 0;
 	fprintf(stderr, "products() is not implemented for PIRAQX format %d!\n",
@@ -2157,6 +2162,103 @@ xnewsimplepp()
     }
 }
 
+/* c------------------------------------------------------------------------ */
+void dualprtfloat() {
+    int  i;
+    float        *abpptr;
+    double       a1, b1, p1, a2, b2, p2, biga, bigb;
+    double       cp1, cp2, cp, vel, p, ncorrect, pcorrect;
+    double       ncp1, ncp2, ncp;
+    double       velconst, dbm, widthconst, range, rconst;
+
+    short *velp=gri->scaled_data[0];
+    short *dbmp=gri->scaled_data[1];
+    short *ncpp=gri->scaled_data[2];
+    short *swp=gri->scaled_data[3];
+    short *dbzp=gri->scaled_data[4];
+    short *dbzcp=gri->scaled_data[5];
+    float f, scale=100., bias=0;
+
+    velconst = SPEED_OF_LIGHT /
+	    (2.0 * px_frequency(dwlx) * 2.0 * M_PI * fabs(px_prt(dwlx)[0] - px_prt(dwlx)[1]));
+    /*
+     * Radar constant.  NOTE: 0x10000 is just the standard
+     * offset for all systems.
+     */
+    rconst = px_rconst(dwlx) - 20.0 * log10(px_xmit_pulsewidth(dwlx) /
+	    px_rcvr_pulsewidth(dwlx));
+    /*
+     * This correction factor comes from Mitch. I don't know its derivation...
+     */
+#define ADFULLSCALE	8192
+    ncorrect = px_data_sys_sat(dwlx) -														// Correct
+	    20.0 * log10((double)((ADFULLSCALE << 14)/65536)*(px_rcvr_pulsewidth(dwlx)*1.0e7 + 0.5)) -
+	    20.0 * log10((double)0x10000) - px_receiver_gain(dwlx);
+    /*
+     * Power correction
+     */
+    pcorrect = ncorrect - 10.0*log10((double)px_hits(dwlx)/2.0);
+    /*
+     * Combined spectrum width constant.
+     */
+    widthconst = (SPEED_OF_LIGHT / px_frequency(dwlx)) /
+	     (0.5 * (px_prt(dwlx)[0] + px_prt(dwlx)[1])) /
+	     (2.0 * sqrtf(2.0) * M_PI);
+
+    abpptr = (float *)pui->raw_data;
+    range = 0.0;
+
+    for(i = 0; i < px_gates(dwlx); i++) {
+	if( LittleEndian ) {
+	    a1 = *abpptr++;
+	    b1 = *abpptr++;
+	    p1 = *abpptr++;
+	    a2 = *abpptr++;
+	    b2 = *abpptr++;
+	    p2 = *abpptr++;
+	}
+	else {
+	    a1 = PX4F(*abpptr++);
+	    b1 = PX4F(*abpptr++);
+	    p1 = PX4F(*abpptr++);
+	    a2 = PX4F(*abpptr++);
+	    b2 = PX4F(*abpptr++);
+	    p2 = PX4F(*abpptr++);
+	}
+
+	// Unfold velocity.  This is just a complex multiply.
+	biga = a1 * a2 + b1 * b2;
+	bigb = a2 * b1 - a1 * b2;
+	vel = velconst * atan2(bigb, biga);        /* velocity in m/s */
+
+	cp1 = hypot(a1, b1);
+	cp2 = hypot(a2, b2);
+	cp = 0.5 * (cp1 + cp2);
+	p = 0.5 * (p1 + p2);
+	ncp = cp / p;
+
+	range = (i == 0) ?
+	    0.0 : 20.0 * log10(i * 0.0005 * SPEED_OF_LIGHT * px_rcvr_pulsewidth(dwlx));
+
+	/* compute floating point, scaled, scientific products */
+	*velp++ = DD_SCALE(vel, scale, bias);
+
+	dbm = 10.0 * log10(p) + pcorrect;      /* power in dBm */
+	*dbmp++ = DD_SCALE(dbm, scale, bias);
+
+	*ncpp++ = DD_SCALE(ncp, scale, bias); /* NCP no units */
+
+	f = sqrtf(log(p / cp)) * widthconst;       /* combined s.w. */
+	*swp++ = DD_SCALE(f, scale, bias);
+
+	f = dbm + rconst + range;            /* in dBZ */
+	*dbzp++ = DD_SCALE(f, scale, bias);
+
+	f = 10.0 * log10(cp) + pcorrect + rconst + range;  /* in dBZ */
+	*dbzcp++ = DD_SCALE(f, scale, bias);
+
+    }
+}
 /* c------------------------------------------------------------------------ */
 
 long long
@@ -2925,7 +3027,7 @@ piraqx_ts_stats()
 	ts_fid = fopen( message, "w" );
     }
 
-    if( fabs( (double)( px_prt(dwlx) - prev_prt ) ) > .001 ) {
+    if( fabs( (double)( px_prt(dwlx)[0] - prev_prt ) ) > .001 ) {
 	new_prt = YES;
     }
     if( new_prt || (ray_count > 1 && ray_count < 22) || !( ray_count & 100 )) {
@@ -2951,7 +3053,7 @@ piraqx_ts_stats()
     }
 
     if( new_prt ) {
-	prev_prt = px_prt(dwlx);
+	prev_prt = px_prt(dwlx)[0];
 	sumhh = sumvv = sumhv = 0;
 	sumSqhh = sumSqvv = sumSqhv = 0;
 	N = 0;
@@ -2962,7 +3064,7 @@ piraqx_ts_stats()
     aa = message;
     sprintf( aa
 	     , "beam: %d tsgate: %d hits: %d prt: %.4f az: %.2f el: %.2f %d \n"
-	     , ray_count, px_tsgate(dwlx), px_hits(dwlx), px_prt(dwlx), px_az(dwlx), px_el(dwlx)
+	     , ray_count, px_tsgate(dwlx), px_hits(dwlx), px_prt(dwlx)[0], px_az(dwlx), px_el(dwlx)
 	     , len );
     fputs( message, ts_fid );
     sizeof_ts_fi += sizeof( message );
