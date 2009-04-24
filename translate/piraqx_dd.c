@@ -1593,6 +1593,7 @@ KDP   Specific diff. prop. phase btwn HH, VV
     switch( px_dataformat(dwlx) ) {
 
     case DATA_DUALPP:
+    case DATA_DUALPPFLOAT:
 
 	ve1_ndx =
 	    pn = gri->num_fields_present++;
@@ -2167,9 +2168,10 @@ void dualprtfloat() {
     int  i;
     float        *abpptr_prt1, *abpptr_prt2;
     double       a1, b1, p1, a2, b2, p2, biga, bigb;
-    double       cp1, cp2, cp, vel, p, ncorrect, pcorrect;
+    double       cp1, cp2, cp, vel1, vel2, vel, p, ncorrect, pcorrect;
     double       ncp1, ncp2, ncp;
-    double       velconst, dbm, widthconst, range, rconst;
+    double       velconst, velconst1, velconst2, dbm;
+    double       widthconst1, widthconst2, widthconst, range, rconst;
 
     short *velp=gri->scaled_data[0];
     short *dbmp=gri->scaled_data[1];
@@ -2177,10 +2179,18 @@ void dualprtfloat() {
     short *swp=gri->scaled_data[3];
     short *dbzp=gri->scaled_data[4];
     short *dbzcp=gri->scaled_data[5];
+    short *v1p=gri->scaled_data[6];
+    short *v2p=gri->scaled_data[7];
+    short *w1p=gri->scaled_data[8];
+    short *w2p=gri->scaled_data[9];
     float f, scale=100., bias=0;
 
     velconst = SPEED_OF_LIGHT /
 	    (2.0 * px_frequency(dwlx) * 2.0 * M_PI * fabs(px_prt(dwlx)[0] - px_prt(dwlx)[1]));
+    velconst1 = SPEED_OF_LIGHT /
+	    (2.0 * px_frequency(dwlx) * 2.0 * M_PI * px_prt(dwlx)[0]);
+    velconst2 = SPEED_OF_LIGHT /
+	    (2.0 * px_frequency(dwlx) * 2.0 * M_PI * px_prt(dwlx)[1]);
     /*
      * Radar constant.  NOTE: 0x10000 is just the standard
      * offset for all systems.
@@ -2204,6 +2214,10 @@ void dualprtfloat() {
     widthconst = (SPEED_OF_LIGHT / px_frequency(dwlx)) /
 	     (0.5 * (px_prt(dwlx)[0] + px_prt(dwlx)[1])) /
 	     (2.0 * sqrtf(2.0) * M_PI);
+    widthconst1 = (SPEED_OF_LIGHT / px_frequency(dwlx)) /
+	     px_prt(dwlx)[0] / (2.0 * sqrtf(2.0) * M_PI);
+    widthconst2 = (SPEED_OF_LIGHT / px_frequency(dwlx)) /
+	     px_prt(dwlx)[1] / (2.0 * sqrtf(2.0) * M_PI);
 
     abpptr_prt1 = (float *)pui->raw_data;
     abpptr_prt2 = (float *)pui->raw_data +  3 * px_gates(dwlx);
@@ -2226,6 +2240,9 @@ void dualprtfloat() {
 	    b2 = PX4F(*abpptr_prt2++);
 	    p2 = PX4F(*abpptr_prt2++);
 	}
+
+	vel1 = velconst1 * atan2(b1, a1);
+	vel2 = velconst2 * atan2(b2, a2);
 
 	// Unfold velocity.  This is just a complex multiply.
 	biga = a1 * a2 + b1 * b2;
@@ -2258,6 +2275,15 @@ void dualprtfloat() {
 	f = 10.0 * log10(cp) + pcorrect + rconst + range;  /* in dBZ */
 	*dbzcp++ = DD_SCALE(f, scale, bias);
 
+	*v1p++ = DD_SCALE(vel1, scale, bias);
+
+	*v2p++ = DD_SCALE(vel2, scale, bias);
+
+	f = sqrtf(log(p1 / cp1)) * widthconst1;
+	*w1p++ = DD_SCALE(f, scale, bias);
+
+	f = sqrtf(log(p2 / cp2)) * widthconst1;
+	*w2p++ = DD_SCALE(f, scale, bias);
     }
 }
 /* c------------------------------------------------------------------------ */
