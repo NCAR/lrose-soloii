@@ -2165,7 +2165,7 @@ xnewsimplepp()
 /* c------------------------------------------------------------------------ */
 void dualprtfloat() {
     int  i;
-    float        *abpptr;
+    float        *abpptr_prt1, *abpptr_prt2;
     double       a1, b1, p1, a2, b2, p2, biga, bigb;
     double       cp1, cp2, cp, vel, p, ncorrect, pcorrect;
     double       ncp1, ncp2, ncp;
@@ -2205,25 +2205,26 @@ void dualprtfloat() {
 	     (0.5 * (px_prt(dwlx)[0] + px_prt(dwlx)[1])) /
 	     (2.0 * sqrtf(2.0) * M_PI);
 
-    abpptr = (float *)pui->raw_data;
+    abpptr_prt1 = (float *)pui->raw_data;
+    abpptr_prt2 = (float *)pui->raw_data +  3 * px_gates(dwlx);
     range = 0.0;
 
     for(i = 0; i < px_gates(dwlx); i++) {
 	if( LittleEndian ) {
-	    a1 = *abpptr++;
-	    b1 = *abpptr++;
-	    p1 = *abpptr++;
-	    a2 = *abpptr++;
-	    b2 = *abpptr++;
-	    p2 = *abpptr++;
+	    a1 = *abpptr_prt1++;
+	    b1 = *abpptr_prt1++;
+	    p1 = *abpptr_prt1++;
+	    a2 = *abpptr_prt2++;
+	    b2 = *abpptr_prt2++;
+	    p2 = *abpptr_prt2++;
 	}
 	else {
-	    a1 = PX4F(*abpptr++);
-	    b1 = PX4F(*abpptr++);
-	    p1 = PX4F(*abpptr++);
-	    a2 = PX4F(*abpptr++);
-	    b2 = PX4F(*abpptr++);
-	    p2 = PX4F(*abpptr++);
+	    a1 = PX4F(*abpptr_prt1++);
+	    b1 = PX4F(*abpptr_prt1++);
+	    p1 = PX4F(*abpptr_prt1++);
+	    a2 = PX4F(*abpptr_prt2++);
+	    b2 = PX4F(*abpptr_prt2++);
+	    p2 = PX4F(*abpptr_prt2++);
 	}
 
 	// Unfold velocity.  This is just a complex multiply.
