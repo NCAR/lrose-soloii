@@ -18,6 +18,7 @@
 
 #define DATA_SIMPLEPP    0 /* simple pulse pair ABP */
 #define DATA_POLYPP      1 /* poly pulse pair ABPAB */
+#define DATA_DUALPPFLOAT 2 /* ARC HiQ dual PRT (float ABP,ABP) */
 #define DATA_POL1        3 /* dual polarization pulse pair ABP,ABP */
 #define DATA_POL2        4 /* more complex dual polarization ??????? */
 #define DATA_POL3        5 /* almost full dual polarization with log integers */
@@ -34,10 +35,10 @@
 #define	DATA_ABPDATA   16
 
 /* Staggered PRT ABP data computed  in piraq3: rapidDOW project */
-#define    DATA_STAGGER_PRT 17
+#define    PIRAQ_ABPDATA_STAGGER_PRT 17
 
 
-#define DATA_TYPE_MAX DATA_STAGGER_PRT /* limit of data types */
+#define DATA_TYPE_MAX PIRAQ_ABPDATA_STAGGER_PRT /* limit of data types */
 
 #define DATA_POL_PLUS_CMP 29	/* full pol plus */
 #define DATA_MAX_POL_CMP  30	/* same as full plus plus more gates */
