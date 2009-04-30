@@ -983,10 +983,12 @@ piraqx_map_hdr(aa, gotta_header)
     struct piraq_ray_que *rq=pui->ray_que;
     int sparc_alignment = 0;
     int tdiff;
+    int fmt;
+    float prt;
     char message[256], str[256], tstr[32], tstr2[32];
     void swack_long();
     void swack_double();
-    uint4 usecs, secs_mask = 0x7fffffff;
+    uint4 secs_mask = 0x7fffffff;
     uint4 rev, unswapped_rev;
     uint4 headerLen;
     uint8 temp1;
@@ -1038,22 +1040,32 @@ We're using 48000000 so use 6000000.
     gri->dts->month = gri->dts->day = 0;
 
     /* klooge! */
-    usecs = px_secs(dwlx) & secs_mask;
-    gettimeofday( &tv, 0);
-    jj = tv.tv_sec/86400;
+    dwlx->secs = dwlx->secs & secs_mask;
 
-    temp1 = px_pulse_num(dwlx) * (uint8)(px_prt(dwlx)[0] * (float)COUNTFREQ + 0.5);
-    usecs = dwlx->secs = temp1 / COUNTFREQ;
-    pui->unix_day = usecs/86400;
+    /*
+     * Calculate average PRT, so our pulse number to time calculation below
+     * works properly.
+     */
+    fmt = px_dataformat(dwlx);
+    if (fmt == DATA_DUALPP || fmt == DATA_DUALPPFLOAT) {
+	   prt = 0.5 * (px_prt(dwlx)[0] + px_prt(dwlx)[1]);
+    } else {
+	   prt = px_prt(dwlx)[0];
+    }
+    /*
+     * Turn pulse number into clock counts (at COUNTFREQ) since the epoch,
+     * then calculate seconds and nanoseconds since the epoch.
+     */
+    temp1 = px_pulse_num(dwlx) * (uint8)(prt * (float)COUNTFREQ + 0.5);  // clock counts at COUNTFREQ since epoch
+    dwlx->secs = temp1 / COUNTFREQ;
+    dwlx->nanosecs = ((uint8)1000000000 * (temp1 % ((uint8)COUNTFREQ))) / (uint8)COUNTFREQ;
 
-    dwlx->nanosecs =
-      ((uint8)10000 * (temp1 % ((uint8)COUNTFREQ))) / (uint8)COUNTFREQ;
-    dwlx->nanosecs *= (uint8)100000; // multiply by 10**5 to get nanoseconds
+    pui->unix_day = px_secs(dwlx)/86400;
 
-    rq->ptime = usecs;
+    rq->ptime = px_secs(dwlx);
     rq->subsec = px_nanosecs(dwlx);
 
-    pui->time =  usecs + (double)(px_nanosecs(dwlx)) * 1.0e-9;
+    pui->time =  px_secs(dwlx) + (double)(px_nanosecs(dwlx)) * 1.0e-9;
     pui->time += pui->time_correction;
     gri->dts->time_stamp = gri->time = rq->time = pui->time;
 
@@ -2169,7 +2181,7 @@ void dualprtfloat() {
     float        *abpptr_prt1, *abpptr_prt2;
     double       a1, b1, p1, a2, b2, p2, biga, bigb;
     double       cp1, cp2, cp, vel1, vel2, vel, p, ncorrect, pcorrect;
-    double       ncp1, ncp2, ncp;
+    double       ncp;
     double       velconst, velconst1, velconst2, dbm;
     double       widthconst1, widthconst2, widthconst, range, rconst;
 
@@ -2244,9 +2256,19 @@ void dualprtfloat() {
 	vel1 = velconst1 * atan2(b1, a1);
 	vel2 = velconst2 * atan2(b2, a2);
 
-	// Unfold velocity.  This is just a complex multiply.
+	// Unfold velocity.  This is just a complex multiply:
+	//               ___________
+	// (a1 + b1*i) * (a2 + b2*i) = (a1 + b1*i) * (a2 - b2*i)
+	//                           = a1*a2 + b1*b2 + (-a1*b2 + a2*b1)i
+//	biga = a1 * a2 + b1 * b2;
+//	bigb = a2 * b1 - a1 * b2;
+
+	// 4/28/09 cb: Looks like we really need to conjugate the first
+	// component and not the second to get the right sign on the velocity:
+	//   ___________
+	//   (a1 + b1*i) * (a2 + b2*i) = (a1*a2 + b1*b2) + (a1*b2 - a2*b1)i
 	biga = a1 * a2 + b1 * b2;
-	bigb = a2 * b1 - a1 * b2;
+	bigb = a1 * b2 - a2 * b1;
 	vel = velconst * atan2(bigb, biga);        /* velocity in m/s */
 
 	cp1 = hypot(a1, b1);
