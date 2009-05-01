@@ -1064,7 +1064,8 @@ We're using 48000000 so use 6000000.
 	    }
 	    /*
 	     * Turn pulse number into clock counts (at COUNTFREQ) since the
-	     * epoch, then calculate seconds and nanoseconds since the epoch.
+	     * epoch, then calculate seconds and nanoseconds since the epoch
+	     * and overwrite the old values in the header.
 	     */
 	    temp1 = px_pulse_num(dwlx) * (uint8)(prt * (float)COUNTFREQ + 0.5);
 	    dwlx->secs = temp1 / COUNTFREQ;
