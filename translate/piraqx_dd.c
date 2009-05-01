@@ -223,7 +223,8 @@ struct piraq_swp_que {
 # define       HZO_IMPROVE_FLAG 0x200000
 # define         DZ_TO_DBZ_FLAG 0x400000
 # define              RABID_DOW 0x800000
-# define       PIRAQX_TIME_GOOD 0x1000000
+# define      PIRAQX_TRUST_TIME 0x1000000
+# define   PIRAQX_100X_NANOSECS 0x2000000
 
 extern int LittleEndian;
 
@@ -541,8 +542,10 @@ piraqx_ini()
 	  { pui->options |= DZ_TO_DBZ_FLAG; }
 	if(strstr(aa, "IGNORE_TRANS")) /*  */
 	  { pui->options |= IGNORE_TRANSITIONS; }
-	if(strstr(aa, "PIRAQX_TIME_GOOD"))
-	  { pui->options |= PIRAQX_TIME_GOOD; }
+	if(strstr(aa, "PIRAQX_TRUST_TIME"))
+	  { pui->options |= PIRAQX_TRUST_TIME; }
+	if(strstr(aa, "PIRAQX_100X_NANOSECS"))
+	  { pui->options |= PIRAQX_100X_NANOSECS; }
     }
 
     nn = dd_min_rays_per_sweep();
@@ -1048,7 +1051,7 @@ We're using 48000000 so use 6000000.
      * pulse_num from the header into a time with good subsecond precision
      * and write that calculated time back into the header.
      */
-    if (! (pui->options & PIRAQX_TIME_GOOD)) {
+    if (! (pui->options & PIRAQX_TRUST_TIME)) {
 	    /* klooge! */
 	    dwlx->secs = dwlx->secs & secs_mask;
 
@@ -1071,6 +1074,14 @@ We're using 48000000 so use 6000000.
 	    dwlx->secs = temp1 / COUNTFREQ;
 	    dwlx->nanosecs = ((uint8)1000000000 *
 		(temp1 % ((uint8)COUNTFREQ))) / (uint8)COUNTFREQ;
+    }
+
+    /*
+     * Some files have nanoseconds off by a factor of 100.  Fix them if
+     * requested.
+     */
+    if (pui->options & PIRAQX_100X_NANOSECS) {
+	    dwlx->nanosecs *= 100;
     }
 
     pui->unix_day = px_secs(dwlx)/86400;
