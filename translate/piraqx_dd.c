@@ -223,6 +223,7 @@ struct piraq_swp_que {
 # define       HZO_IMPROVE_FLAG 0x200000
 # define         DZ_TO_DBZ_FLAG 0x400000
 # define              RABID_DOW 0x800000
+# define       PIRAQX_TIME_GOOD 0x1000000
 
 extern int LittleEndian;
 
@@ -540,6 +541,8 @@ piraqx_ini()
 	  { pui->options |= DZ_TO_DBZ_FLAG; }
 	if(strstr(aa, "IGNORE_TRANS")) /*  */
 	  { pui->options |= IGNORE_TRANSITIONS; }
+	if(strstr(aa, "PIRAQX_TIME_GOOD"))
+	  { pui->options |= PIRAQX_TIME_GOOD; }
     }
 
     nn = dd_min_rays_per_sweep();
@@ -1039,26 +1042,35 @@ We're using 48000000 so use 6000000.
     gri->dts->year = 1970;
     gri->dts->month = gri->dts->day = 0;
 
-    /* klooge! */
-    dwlx->secs = dwlx->secs & secs_mask;
+    /*
+     * By default, PIRAQX data has only 1-second precision time in the header
+     * (i.e., nanosecs is a useless value).  Hence, we translate the
+     * pulse_num from the header into a time with good subsecond precision
+     * and write that calculated time back into the header.
+     */
+    if (! (pui->options & PIRAQX_TIME_GOOD)) {
+	    /* klooge! */
+	    dwlx->secs = dwlx->secs & secs_mask;
 
-    /*
-     * Calculate average PRT, so our pulse number to time calculation below
-     * works properly.
-     */
-    fmt = px_dataformat(dwlx);
-    if (fmt == DATA_DUALPP || fmt == DATA_DUALPPFLOAT) {
-	   prt = 0.5 * (px_prt(dwlx)[0] + px_prt(dwlx)[1]);
-    } else {
-	   prt = px_prt(dwlx)[0];
+	    /*
+	     * Calculate average PRT, so our pulse number to time calculation
+	     * below works properly.
+	     */
+	    fmt = px_dataformat(dwlx);
+	    if (fmt == DATA_DUALPP || fmt == DATA_DUALPPFLOAT) {
+		    prt = 0.5 * (px_prt(dwlx)[0] + px_prt(dwlx)[1]);
+	    } else {
+		    prt = px_prt(dwlx)[0];
+	    }
+	    /*
+	     * Turn pulse number into clock counts (at COUNTFREQ) since the
+	     * epoch, then calculate seconds and nanoseconds since the epoch.
+	     */
+	    temp1 = px_pulse_num(dwlx) * (uint8)(prt * (float)COUNTFREQ + 0.5);
+	    dwlx->secs = temp1 / COUNTFREQ;
+	    dwlx->nanosecs = ((uint8)1000000000 *
+		(temp1 % ((uint8)COUNTFREQ))) / (uint8)COUNTFREQ;
     }
-    /*
-     * Turn pulse number into clock counts (at COUNTFREQ) since the epoch,
-     * then calculate seconds and nanoseconds since the epoch.
-     */
-    temp1 = px_pulse_num(dwlx) * (uint8)(prt * (float)COUNTFREQ + 0.5);  // clock counts at COUNTFREQ since epoch
-    dwlx->secs = temp1 / COUNTFREQ;
-    dwlx->nanosecs = ((uint8)1000000000 * (temp1 % ((uint8)COUNTFREQ))) / (uint8)COUNTFREQ;
 
     pui->unix_day = px_secs(dwlx)/86400;
 
