@@ -9,7 +9,7 @@
 <body>
 <A NAME = "TRN"></a>
 <hr>
-<H1><IMG  SRC="solo_logo3.gif" width="95" height="62"> Preparing Data: the Data Translaters</H1>
+<H1><IMG  SRC="solo_logo3.gif" width="95" height="62"> Preparing Data: the Data Translators</H1>
 <P>
 
 <h2>
@@ -36,15 +36,15 @@
 <A NAME = "INTRO">
 The first thing</a> that needs to be done in order to look at radar data
 is to get it on disk in a format acceptable to <b>SOLO</b>. This is
-one of the purposes of the <B>Data Translater</B>. The
-<b>Translater</B> accepts several formats of radar data and produces
+one of the purposes of the <B>Data Translator</B>. The
+<b>Translator</B> accepts several formats of radar data and produces
 one or more products. Most often the product is
 <b>DORADE</b> sweepfiles, which are used by <b>SOLO</b> to display
-the data. The translater can also produce a catalog of the data, and
+the data. The translator can also produce a catalog of the data, and
 DORADE, UF format output tapes and netCDF sweepfiles. see
 <P>
 
-<P> The input formats that can be handled by the translater are
+<P> The input formats that can be handled by the translator are
 DORADE_FORMAT, WSR_88D_FORMAT, UF_FORMAT, NCAR's FOF_FORMAT,
 HRD_FORMAT and NETCDF_FORMAT. References to P3 and HRD are considered
 synonymous in this context.  In addition in-house formats
@@ -53,7 +53,7 @@ synonymous in this context.  In addition in-house formats
 
  <p>
 <p>
-Translaters are driven with environment variables usually set in a 
+Translators are driven with environment variables usually set in a 
 script file. This file can be named by the user and must be executable. 
 To make a file executable the protection must be changed with the chmod 
 command.For example:
@@ -82,7 +82,7 @@ providing only the owner with read and write abilities. <P>
 	setenv FIXED_ANGLES "0.0 < 2.0 4.0 < 5.0"
 	setenv SOURCE_DEV /dev/nexa
 	nice +11 /local/bin/xltrsii  # be sure to specify the proper 
-			 	     # path to the translater
+			 	     # path to the translator
         #
 </pre>
 <P>
@@ -92,7 +92,7 @@ compressed sweep files and a catalog of scans with elevation angles
 between 0 and 2 degrees and 4 and 5 degrees in the "/scr/mead/nexrad"
 directory for the time period indicated on August 3, 1994 from the
 data tape in the source device /dev/nexa. The last line of the script
-invokes the actual translater program. Be sure that the full pathname
+invokes the actual translator program. Be sure that the full pathname
 of the executable is specified, or that your environment variable
 "PATH" is set to include the proper version of the executable.  When 
 substituting your source device, be sure to specify a device name 
@@ -121,7 +121,7 @@ line "<tt>setenv <b>BATCH_MODE</b></tt>" must be removed. A <A NAME =
 </pre>
 <P>
 
-To invoke the translater, type the script filename at the prompt. The 
+To invoke the translator, type the script filename at the prompt. The 
 following menu should appear:
 <P>
 
@@ -132,7 +132,7 @@ following menu should appear:
 </PRE> 
 <P>
 
-You are now in the interactive version of the translater. Typing a 0
+You are now in the interactive version of the translator. Typing a 0
 and hitting <b>&lt;return&gt;</b>, or just hitting
 <b>&lt;return&gt;</b> should bring up the next menu which looks like
 the following: <P>
@@ -160,7 +160,7 @@ the following: <P>
 </PRE>
 <P>
 
-This version of the translater gives you more flexibility to move
+This version of the translator gives you more flexibility to move
 around in and familiarize yourself with what the data contain, whereas
 batch mode is more useful if you are familiar with the data and with
 exactly what times and angles you want to use. The following is a
@@ -205,7 +205,7 @@ brief description of the options in the above menu.<P>
 
   9 = 	Search forward for a specified fixed angle.   Specify the 
 	nominal angle, and a tolerance.  For example, typing <I>2.0 0.5</I>
-	would set the translater searching for a fixed angle between,
+	would set the translator searching for a fixed angle between,
 	and including, 1.5 and 2.5 degrees. You only need to give the 
 	range number if you want to change its value other wise the 
 	last one used will be remembered.  The default is a 0.2 degree 
@@ -218,11 +218,11 @@ brief description of the options in the above menu.<P>
 	 1 = Enter time span - Specify time limits in which data is processed
 	 2 = Enter scan count - Set the number of sweep files written to disk
 	 3 = Enter volume count - Specifies the number of volumes to process
-	 4 = Enter ray count - Number of rays translater will process
+	 4 = Enter ray count - Number of rays translator will process
 	 5 = Enter fixed angle limits - Used if you only want certain angles processed
 	 6 = Enter PRF limits - Will only process scans with prf's within this limit
 	 7 = Enter num lines in browser display - allows you to customize
-	     the number of lines you want the translater to display in
+	     the number of lines you want the translator to display in
 	     your window
 
  11 = 	Give a listing of the header information.
@@ -245,7 +245,7 @@ by a return.<P>
 
 After some data (at least one full sweep) have been loaded to disk,
 you are ready to begin using <b>SOLO</b>.  When using the interactive
-version of the translater to search through data, you may want to keep
+version of the translator to search through data, you may want to keep
 it going in one window and to open <b>SOLO</b> in another. <b>SOLO</b>
 is able to see new data as they are read to disk without exiting and
 re-entering the program. It may be necessary to "pop up" the <i>sweep
@@ -275,7 +275,7 @@ confirm.  <P>
 
 There are <A NAME = "EVL"><B>many environment variables</B></A>
 besides the 
-ones listed in the example scripts that can be set to control the translater. 
+ones listed in the example scripts that can be set to control the translator. 
 Some environment variables are unique to certain input formats and
 output flags. The user should be aware that on some
 systems in certain shells (most notably hpux and the csh environment),
@@ -304,7 +304,7 @@ side.
 blanks or unusual characters.  Omission of necessary quotes will cause
 unexpected results!<p>
 
-A list of currently defined environmental variables follows (in the
+A list of currently defined environment variables follows (in the
 list, the environment variable is provided first, followed by an
 example of its usage, followed by a description of usage):<P>
 
@@ -457,7 +457,7 @@ specification, the software assumes you will be writing to tape(s); if
 not, the software assumes you are specifying a destination directory
 for DORADE data different from the <A HREF="#DDIR">DORADE_DIR</A>
 directory. The name of the file will be manufactured by the
-<b>Translater</b> program. With a /dev it is possible to specify more
+<b>Translator</b> program. With a /dev it is possible to specify more
 than one device name between the double quotes. This feature along
 with <A HREF="#MDTS">MAX_DORADE_TAPE_SIZE</A> allows a user to specify
 output to more than one physical device and the approximate amount of
@@ -550,7 +550,7 @@ sectors defined by the AZ_SECTORS environment variable.<p>
 
 <dd>
 This format requires three tables to work properly. These tables
-are installed in the <b>SOLO</b>/lib directory, and the translater
+are installed in the <b>SOLO</b>/lib directory, and the translator
 will expect to find them there unless the environment variable
 NEXRAD_DIR is set.  The file names begin with "nexrad" and end with
 ".txt". One table is site information that has lat/lon/alt plus
@@ -559,7 +559,7 @@ the four character radar id to access the proper entry in the table
 (use the RADAR_NAME environment variable).  These are text files that
 can be examined and changed independent of the software.  Any reliable
 information concerning these parameters would be welcome.  The
-translater for this format
+translator for this format
 can also ingest user supplied information such as the lat/lon/alt of
 the radar, project name, and site name (use RADAR_LATITUDE,
 RADAR_LONGITUDE, RADAR_ALTITUDE, PROJECT_NAME, and SITE_NAME).
@@ -574,7 +574,7 @@ truncated at the point where the velocity ends. For MAX_RANGE the gate
 spacing becomes 500 meters rather than 250 meters yielding the same
 number of gates with decimated velocity data.<p>
 
-If you're using the soloii version of the translaters (xltrsii), all
+If you're using the soloii version of the translators (xltrsii), all
 tables used for translating 88D data are internal. If you need to
 supply new information not in the internal tables, use the environment
 variables described above or if you have and edited version of the
@@ -641,7 +641,7 @@ nice +11 /rdss/solo/bin/xltrsii
 <dd> This is the format of the tapes from NOAA P3s. The project name
 must be supplied by the user.<p>
 
-The translaters separate the HRD tail radar data as if it were two
+The translators separate the HRD tail radar data as if it were two
 radars, and data are designated as fore "TF" or aft "TA" depending on
 the tilt angle.
 
@@ -918,6 +918,53 @@ for horizontal only IMPROVE data (currently set to 6.0).
 <p>
 
 
+<dt><tt>PIRAQX_FORMAT </tt></dt>
+
+<dd>The raw field format generated by systems based on some PIRAQ cards and
+on systems using ARC's HiQ receiver card.  Generally not useful to anyone 
+outside of the data management group.
+<P>
+
+Applicable environment variables are: <p>
+RENAME which renames the radar.<p>
+SITE_NAME to set the radar site name. <p>
+PROJECT_NAME to set the project name. <p>
+RADAR_LATITUDE in degrees as a decimal fraction. <p>
+RADAR_LONGITUDE in degrees as a decimal fraction. <p>
+RADAR_ALTITUDE in meters. <p>
+RCONST_CORRECTION is an additive correction to reflectivity. <p>
+ZDR_BIAS is an additive correction in db. <p>
+RANGE_CORRECTION additive correction in meters. <p>
+TIME_CORRECTION additive time correction as a floating point seconds. <p>
+
+TAPE_DIR constructs a list of all the files with the suffix ".tape" and passes
+through them.<p>
+
+<A HREF="#OPTS">OPTIONS</A> flags for this format are:
+<p>
+DOW_FLAG flags the presence and use of scan and volume counters for
+delineating sweeps and volumes.<p>
+FULL_MATRIX specifies the inclusion of cross correlation fields and
+(where present) I and Q fields.<p>
+HEADER_SUBSEC specifies use of the subsecond value in the header to
+assign a time stamp to the beam.<p>
+IGNORE_TRANSITIONS specifies omitting beams where the transition flag
+is on.<p>
+PIRAQX_TRUST_TIME indicates that the time in ray headers is good to subsecond
+precision. Otherwise, the 'nanosecs' field of the header is considered useless, 
+so more precise beam times are calculated using the 'pulse_num' field, and the
+'secs' and 'nanosecs' fields get overwritten.<p>
+PIRAQX_100X_NANOSECS indicates that the 'nanosecs' field of the header contains
+accurate values, but needs to be multiplied by 100 to get the correct value.  
+<em>This option only has effect if PIRAQX_TRUST_TIME is also set</em>.<p>
+RABID_DOW disables scan angle smoothing, which is applied by default to PIRAQX
+data.
+<p>
+<p>
+<p>
+<p>
+
+
 <dt><tt><A NAME="FOFM">FOF_FORMAT</a> </tt></dt>
 
 <dd> The internal format for NCAR ATD radar data; this format has been
@@ -1067,7 +1114,7 @@ specification, the software assumes you will be writing to tape(s); if
 not, the software assumes you are specifying a destination directory
 for DORADE data different from the <A HREF="#DDIR">DORADE_DIR</A>
 directory. The name of the file will be manufactured by the
-translater program. <p>
+translator program. <p>
 
 <dt><code><A NAME="DUFD">UF_DATA</A> </code></dt>
 
@@ -1216,7 +1263,7 @@ the old name and to the right is the replacement name.<P>
 Allows the user to filter the input for the radars indicated. The
 patterns present need to uniquely match a pattern in the radar name in
 order for it to be selected. In the production of ELDORA and HRD tail
-data the translaters manufacture the radar name beginning with "TA" to
+data the translators manufacture the radar name beginning with "TA" to
 indicate and aft pointing radar and "TF" to indicate a fore pointing
 radar. This option also works for selecting a particular radar from UF
 data. <P>
