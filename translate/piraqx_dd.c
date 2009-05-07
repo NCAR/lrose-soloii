@@ -987,7 +987,6 @@ piraqx_map_hdr(aa, gotta_header)
     int jj, kk, nn, mark, new_vol = NO;
     double d, subsec;
     struct piraq_ray_que *rq=pui->ray_que;
-    int sparc_alignment = 0;
     int tdiff;
     int fmt;
     float prt;
@@ -1046,13 +1045,30 @@ We're using 48000000 so use 6000000.
     gri->dts->month = gri->dts->day = 0;
 
     /*
-     * By default, PIRAQX data has only 1-second precision time in the header
-     * (i.e., nanosecs is a useless value).  Hence, we translate the
-     * pulse_num from the header into a time with good subsecond precision
-     * and write that calculated time back into the header.
+     * Deal with times.  Only if the PIRAQX_TRUST_TIME option is set do we
+     * accept the time in the header. Otherwise we calculate time from pulse
+     * number in the header.
      */
-    if (! (pui->options & PIRAQX_TRUST_TIME)) {
-	    /* klooge! */
+    if (pui->options & PIRAQX_TRUST_TIME) {
+	    /*
+    	     * Even if we're otherwise trusting time from the file,
+    	     * some files have nanoseconds off by a factor of 100.  Fix
+    	     * that if requested.
+    	     */
+	    if (pui->options & PIRAQX_100X_NANOSECS) {
+	    	    dwlx->nanosecs *= 100;
+	    }
+    } else {
+	    /*
+	     * By default, PIRAQX data has only 1-second precision time in the
+	     * header (i.e., secs is good, but nanosecs is a useless value).
+	     * Hence, we translate the pulse_num from the header into a time
+	     * with good subsecond precision and write that calculated time
+	     * back into the header.
+	     */
+
+	    /* klooge! (This is a leftover from Dick.  Not clear why this is
+	     * here...  5/4/2009 CB)*/
 	    dwlx->secs = dwlx->secs & secs_mask;
 
 	    /*
@@ -1074,14 +1090,6 @@ We're using 48000000 so use 6000000.
 	    dwlx->secs = temp1 / COUNTFREQ;
 	    dwlx->nanosecs = ((uint8)1000000000 *
 		(temp1 % ((uint8)COUNTFREQ))) / (uint8)COUNTFREQ;
-    }
-
-    /*
-     * Some files have nanoseconds off by a factor of 100.  Fix them if
-     * requested.
-     */
-    if (pui->options & PIRAQX_100X_NANOSECS) {
-	    dwlx->nanosecs *= 100;
     }
 
     pui->unix_day = px_secs(dwlx)/86400;
