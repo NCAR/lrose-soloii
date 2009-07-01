@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/bin/env perl
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)
     = localtime (time);
