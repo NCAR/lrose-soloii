@@ -504,22 +504,46 @@ int main( int argc,
   font_name_fmt = "-adobe-courier-medium-r-normal--*-%d-*-*-m-*-iso8859-1";
   sprintf( font_name, font_name_fmt, 100 ); /* point size */
   small_fxd_font = gdk_font_load ( font_name );
+  if (! small_fxd_font) {
+      uii_printf("Unable to load font '%s'\n", font_name);
+      exit(1);
+  }
 
   sprintf( font_name, font_name_fmt, 120 ); /* point size */
   med_fxd_font = gdk_font_load ( font_name );
+  if (! med_fxd_font) {
+      uii_printf("Unable to load font '%s'\n", font_name);
+      exit(1);
+  }
 
   sprintf( font_name, font_name_fmt, 140 ); /* point size */
   big_fxd_font = gdk_font_load ( font_name );
+  if (! big_fxd_font) {
+      uii_printf("Unable to load font '%s'\n", font_name);
+      exit(1);
+  }
                  
   font_name_fmt = "-adobe-helvetica-medium-r-normal--*-%d-*-*-p-*-iso8859-1";
   sprintf( font_name, font_name_fmt, 100 ); /* point size */
   small_pro_font = gdk_font_load ( font_name );
+  if (! small_pro_font) {
+      uii_printf("Unable to load font '%s'\n", font_name);
+      exit(1);
+  }
 
   sprintf( font_name, font_name_fmt, 120 ); /* point size */
   med_pro_font = gdk_font_load ( font_name );
+  if (! med_pro_font) {
+      uii_printf("Unable to load font '%s'\n", font_name);
+      exit(1);
+  }
 
   sprintf( font_name, font_name_fmt, 140 ); /* point size */
   big_pro_font = gdk_font_load ( font_name );
+  if (! big_pro_font) {
+      uii_printf("Unable to load font '%s'\n", font_name);
+      exit(1);
+  }
 
 				/*
       GDK_VISUAL_DIRECT_COLOR,
