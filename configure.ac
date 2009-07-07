@@ -3,7 +3,7 @@
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(perusal/soloii.c, 1.15)
+AC_INIT(perusal/soloii.c, 1.16)
 
 #
 # Use our parent directory rather than /usr/local as the default prefix
@@ -117,12 +117,12 @@ if test -n "$FC"; then
    set dummy $FC
    shift
    WHICHFORTRAN="$1"
+elif eval "type gfortran"; then
+   WHICHFORTRAN="gfortran";
 elif eval "type g77"; then
    WHICHFORTRAN="g77"
 elif eval "type f77"; then
    WHICHFORTRAN="f77"
-elif eval "type gfortran"; then
-   WHICHFORTRAN="gfortran";
 else
    AC_MSG_ERROR("No FORTRAN compiler found!")
 fi
@@ -224,7 +224,12 @@ elif test "$ac_os_type" = "Linux"; then
      if test -n "$CFLAGS"; then
           CFLAGS="$CFLAGS -m32"
      else
-          CFLAGS="-m32 "
+          CFLAGS="-m32"
+     fi
+     if test -n "$FCFLAGS"; then
+          FCFLAGS="$FCFLAGS -m32"
+     else
+          FCFLAGS="-m32"
      fi
 fi
 
