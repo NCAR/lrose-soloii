@@ -540,6 +540,9 @@ static inline float4 px_rcvr_pulsewidth(PIRAQX *px) {
 	return(px_rev(px) == 1) ? px->rcvr_pulsewidth : px2->rcvr_pulsewidth;
 }
 
+/*
+ * Return our *array* of PRTs
+ */
 static inline float4* px_prt(PIRAQX *px) {
 	PIRAQX_REV2 *px2 = (PIRAQX_REV2*)px;
 	return(px_rev(px) == 1) ? px->prt : px2->prt;
