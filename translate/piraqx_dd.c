@@ -97,12 +97,15 @@ struct piraq_useful_items {
     double seconds_per_beam;
     double antenna_movement;	/* degrees per ray */
     double prev_noise;
+    
     float uniform_cell_spacing;
     float last_rcvr_pulsewidth;
+    float last_prt;
 
     unsigned long ref_time;
     unsigned long trip_time;
     unsigned long unix_day;
+    
     int vol_num;
     int sweep_num;
     int vol_count_flag;
@@ -1117,10 +1120,11 @@ We're using 48000000 so use 6000000.
     gri->PRF = px_prt(dwlx)[0] ? 1./px_prt(dwlx)[0] : EMPTY_FLAG;
 
     new_vol = pui->last_dataformat != px_dataformat(dwlx) ||
-	pui->last_gates != px_gates(dwlx) ||
-	pui->last_rcvr_pulsewidth != px_rcvr_pulsewidth(dwlx);
+        pui->last_gates != px_gates(dwlx) ||
+        pui->last_rcvr_pulsewidth != px_rcvr_pulsewidth(dwlx) ||
+        pui->last_prt != px_prt(dwlx)[0];
 
-    if( new_vol) {
+    if (new_vol) {
        gri->binary_format = DD_16_BITS;
        gri->missing_data_flag = EMPTY_FLAG;
        gri->source_format = PIRAQX_FMT;
@@ -1171,8 +1175,9 @@ We're using 48000000 so use 6000000.
        pui->last_dataformat = px_dataformat(dwlx);
        pui->last_gates = px_gates(dwlx);
        pui->last_rcvr_pulsewidth = px_rcvr_pulsewidth(dwlx);
+       pui->last_prt = px_prt(dwlx)[0];
        if(gri->wavelength > 0 && gri->PRF > 0)
-	 gri->nyquist_vel = gri->wavelength*gri->PRF*.25;
+           gri->nyquist_vel = gri->wavelength * gri->PRF * .25;
        pui->new_vol = pui->new_sweep = YES;
        piraqx_fields();
        if (acmrg) {

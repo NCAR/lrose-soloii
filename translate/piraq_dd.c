@@ -96,11 +96,14 @@ struct piraq_useful_items {
     double seconds_per_beam;
     double antenna_movement;	/* degrees per ray */
     double prev_noise;
+    
     float uniform_cell_spacing;
     float last_rcvr_pulsewidth;
+    float last_prt;
     
     unsigned long ref_time;
     unsigned long trip_time;
+    
     int vol_num;
     int sweep_num;
     int vol_count_flag;
@@ -2192,15 +2195,17 @@ piraq_map_hdr(aa, gotta_header)
     gri->PRF = hdr->prt ? 1./hdr->prt : EMPTY_FLAG;
 	
     new_vol = pui->last_dataformat != hdr->dataformat ||
-	pui->last_gates != hdr->gates ||
-	pui->last_rcvr_pulsewidth != hdr->rcvr_pulsewidth;
+        pui->last_gates != hdr->gates ||
+        pui->last_rcvr_pulsewidth != hdr->rcvr_pulsewidth ||
+        pui->last_prt != hdr->prt;
 
-    if( new_vol) {
+    if (new_vol) {
 	pui->last_dataformat = hdr->dataformat;
 	pui->last_gates = hdr->gates;
 	pui->last_rcvr_pulsewidth = hdr->rcvr_pulsewidth;
+	pui->last_prt = hdr->prt;
 	if(gri->wavelength > 0 && gri->PRF > 0)
-	      gri->nyquist_vel = gri->wavelength*gri->PRF*.25;
+	      gri->nyquist_vel = gri->wavelength * gri->PRF * .25;
 	pui->new_vol = pui->new_sweep = YES;
 	piraq_fields();
 	if (acmrg) {
