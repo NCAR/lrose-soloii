@@ -22,7 +22,7 @@
 # include <errno.h>
 # include <dirent.h>
 
-# ifdef LITTLEENDIAN
+# ifdef LITTLENDIAN
     int LittleEndian = 1;
 # else
     int LittleEndian = 0;
