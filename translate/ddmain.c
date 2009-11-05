@@ -15,19 +15,11 @@ static char vcid[] = "$Id$";
 #include <unistd.h>
 #include <stdlib.h>
 
-# ifdef linux
-# include <endian.h>
-
-# if BYTE_ORDER == LITTLE_ENDIAN
-int LittleEndian = 1;
+# ifdef LITTLENDIAN
+  int LittleEndian = 1;
 # else
-int LittleEndian = 0;
+  int LittleEndian = 0;
 # endif
-
-# else
-int LittleEndian = 0;
-# endif
- 
 
 # define         BATCH_MODE 0
 # define   INTERACTIVE_MODE 1

@@ -38,10 +38,10 @@ int Sparc_Arch=YES;
 int Sparc_Arch=NO;
 # endif
 
-# ifdef BIG_ENDIAN
-int LittleEndian=NO;
-# else
+# ifdef LITTLENDIAN
 int LittleEndian=YES;
+# else
+int LittleEndian=NO;
 # endif
 
 static char dname[8]={0,0,0,0,0,0,0,0};

@@ -64,7 +64,7 @@ static char vcid[] = "$Id$";
 # include <sys/ioccom.h>
 # endif
 
-# ifdef osx
+# if (defined(osx) || defined(__APPLE__))
 # include <sys/ioccom.h>
 # endif
 

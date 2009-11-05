@@ -107,19 +107,11 @@ int Sparc_Arch=YES;
 int Sparc_Arch=NO;
 # endif
 
-# ifdef linux
-# include <endian.h>
-
-# if BYTE_ORDER == LITTLE_ENDIAN
-int LittleEndian = 1;
+# ifdef LITTLENDIAN
+  int LittleEndian = 1;
 # else
-int LittleEndian = 0;
+  int LittleEndian = 0;
 # endif
-
-# else
-int LittleEndian = 0;
-# endif
-
 
 int fb_read();
 int dap_next_ray_loop();
