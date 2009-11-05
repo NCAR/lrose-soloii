@@ -22,17 +22,10 @@
 # include <errno.h>
 # include <dirent.h>
 
-# ifdef linux
-# include <endian.h>
-
-# if BYTE_ORDER == LITTLE_ENDIAN
-int LittleEndian = 1;
+# ifdef LITTLEENDIAN
+    int LittleEndian = 1;
 # else
-int LittleEndian = 0;
-# endif
-
-# else
-int LittleEndian = 0;
+    int LittleEndian = 0;
 # endif
 
 /* c------------------------------------------------------------------------ */
