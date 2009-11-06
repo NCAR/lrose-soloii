@@ -4,19 +4,15 @@ The current version of soloii and the xltrsii is soloii118.tar.gz for
 version 1.18. You might find newer versions in this directory which
 should be ok
 
-soloii requires the GTK+ headers and libraries! Also if you will be
+Soloii requires the GTK+ headers and libraries! Also if you will be
 reading or writing netCDF files make sure the netcdf libraries have
 been loaded.  New versions of Linux may not have GTK 1.2 installed
 by default.  This may require the install of packages (RPMs) that
 contain the 1.2 version of GTK.
 
-The build of Soloii is based on autoconf which produces a Bourne shell
-script "configure" from a "configure.ac" file and uses "Makefile.in"
-files in each of the directories to produce the final "Makefile" in
-each directory. The solo distribution is now independent of any
-external files. All code needed by solo is included in the
-distribution and is part of the solo directory tree.
-
+For OS X, use of Fink (http://pdb.finkproject.org) is suggested to provide
+easy access to necessary packages. Required packages are gcc42 (or later),
+gtk+, and glib.
 
 Installation
 ============
