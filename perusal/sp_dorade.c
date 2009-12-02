@@ -112,19 +112,22 @@ void solo_color_cells(frme)
     unsigned char *dd;
     unsigned long *cc;
     double d;
+    short binary_format;
+    char msg[256];
 
     wwptr = solo_return_wwptr(frme);
     ww = wwptr->lead_sweep->window_num;
     dgi = dd_window_dgi(ww, "");
+    binary_format = dgi->dds->parm[wwptr->parameter_num]->binary_format;
 
     if (batch_threshold_field) { /* batch thresholding to be applied */
-      thr_ndx = dd_ndx_name(dgi, batch_threshold_field->str);
-      if (thr_ndx >= 0) {
-	d =  dgi->dds->parm[thr_ndx]->parameter_scale;
-	scaled_thr_val = (int)(d * batch_threshold_value);
-	bad = dgi->dds->parm[wwptr->parameter_num]->bad_data;
-	tt = (short *)dgi->dds->qdat_ptrs[thr_ndx];
-      }
+        thr_ndx = dd_ndx_name(dgi, batch_threshold_field->str);
+        if (thr_ndx >= 0) {
+            d =  dgi->dds->parm[thr_ndx]->parameter_scale;
+            scaled_thr_val = (int)(d * batch_threshold_value);
+            bad = dgi->dds->parm[wwptr->parameter_num]->bad_data;
+            tt = (short *)dgi->dds->qdat_ptrs[thr_ndx];
+        }
     }
 
     cc = wwptr->cell_colors;	/* where the colors will ultimately reside */
@@ -135,30 +138,43 @@ void solo_color_cells(frme)
     dd = (unsigned char *)dgi->dds->qdat_ptrs[wwptr->parameter_num];
     ng = wwptr->number_cells;
 
-    if(dgi->dds->parm[wwptr->parameter_num]->binary_format == DD_16_BITS) {
-      ss = (short *)dd;
-      if (thr_ndx >= 0) {
-	for(ii=0; ii < ng; ii++) {
-	  cn = *(clut+ii);	/* which real cell number? */
-	  sval = *(ss+cn);
-	  if (tt[cn] < scaled_thr_val)
-	    { sval = bad; }
-	  *cc++ = *(dlut +sval);
-	}
-      }
-      else {
-	for(ii=0; ii < ng; ii++) {
-	  cn = *(clut+ii);	/* which real cell number? */
-	  *cc++ = *(dlut +(*(ss+cn)));
-	}
-      }
-    }
-
-    else if(dgi->dds->parm[wwptr->parameter_num]->binary_format == DD_8_BITS) {
-      for(ii=0; ii < ng; ii++) {
-	cn = *(clut+ii);	/* which real cell number? */
-	*cc++ = *(dlut +(*(dd+cn)));
-      }
+    switch (binary_format) {
+    case DD_8_BITS:
+        for(ii=0; ii < ng; ii++) {
+            cn = *(clut+ii);    /* which real cell number? */
+            *cc++ = *(dlut +(*(dd+cn)));
+        }
+        break;
+    case DD_16_BITS:
+        ss = (short *)dd;
+        if (thr_ndx >= 0) {
+            for(ii=0; ii < ng; ii++) {
+                cn = *(clut+ii);  /* which real cell number? */
+                sval = *(ss+cn);
+                if (tt[cn] < scaled_thr_val) { 
+                    sval = bad;
+                }
+                *cc++ = *(dlut +sval);
+            }
+        }
+        else {
+            for(ii=0; ii < ng; ii++) {
+                cn = *(clut+ii);  /* which real cell number? */
+                *cc++ = *(dlut +(*(ss+cn)));
+            }
+        }
+        break;
+    /*
+     * Desperation message, which unfortunately prints for every ray.
+     * However, this is better than just plotting a constant field with
+     * no indication as to why it happens...
+     */
+    default:
+        sprintf(msg, 
+                "DORADE binary format %d unsupported. %s will display as a constant field!\n",
+                binary_format,
+                dgi->dds->parm[wwptr->parameter_num]->parameter_name);
+        solo_message(msg);
     }
 }
 /* c------------------------------------------------------------------------ */
