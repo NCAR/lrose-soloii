@@ -61,7 +61,7 @@ PROGS = soloii
 all: $(PROGS)
 
 soloii: $(OBJS)
-	$(CC) -o soloii $(CFLAGS) $(OBJS) $(S2_LIBS) $(LIBS)
+	$(CC) -o soloii $(CFLAGS) $(OBJS) $(LDOPTIONS) $(S2_LIBS) $(LIBS)
 
 sii:
 	(cd ../translate; make libs2.a)
