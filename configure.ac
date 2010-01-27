@@ -37,11 +37,11 @@ if eval "type uname"; then
       AC_MSG_RESULT(IT'S $ac_os_type)
    else		  
       AC_MSG_RESULT(found NO match for OS names!)
-dnl      exit 1
+#      exit 1
    fi
 else
     echo "CAN'T DETERMINE OS TYPE!"
-dnl    exit 1
+#    exit 1
 fi
 
 dnl Checks for programs.
@@ -101,7 +101,7 @@ AC_MSG_CHECKING("for libnetcdf.a ")
 NETCDFLIBDIR=
 for ac_xdir in /usr/lib /lib /local/lib /usr/local/lib /usr/lib/netcdf /lib/netcdf /local/lib/netcdf /usr/local/lib/netcdf /usr/lib/netcdf-3
 do
-dnl echo "testing $ac_xdir/libnetcdf.a"
+
 if test -r $ac_xdir/libnetcdf.a; then
    NETCDFLIBDIR=$ac_xdir
    AC_MSG_RESULT(found in $ac_xdir )
@@ -219,18 +219,30 @@ elif test "$ac_os_type" = "HPUX"; then
      fi
 
 elif test "$ac_os_type" = "Linux"; then
-     CFLAGS="-g"
-      LIBS="$LIBS -lncurses"
-     if test -n "$CFLAGS"; then
-          CFLAGS="$CFLAGS -m32"
-     else
-          CFLAGS="-m32"
+     if test -z "$CFLAGS"; then
+          CFLAGS=" "
      fi
-     if test -n "$FCFLAGS"; then
-          FCFLAGS="$FCFLAGS -m32"
-     else
-          FCFLAGS="-m32"
+     # Put on the -m32 flag to force building a 32-bit binary!
+     CFLAGS="$CFLAGS -g -m32"
+     LIBS="$LIBS -lncurses"
+     
+     if test -z "$FCFLAGS"; then
+          FCFLAGS=" "
      fi
+     FCFLAGS="$FCFLAGS -m32"
+
+elif test "$ac_os_type" = "Darwin"; then
+     if test -z "$CFLAGS"; then
+          CFLAGS=" "
+     fi
+     # Put on the -m32 flag to force building a 32-bit binary!
+     CFLAGS="$CFLAGS -g -m32"
+     
+     if test -z "$FCFLAGS"; then
+          FCFLAGS=" "
+     fi
+     FCFLAGS="$FCFLAGS -m32"
+     
 fi
 
 ac_sh_test=`type sh`
