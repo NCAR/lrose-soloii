@@ -12,6 +12,7 @@ MFVERSION="$Id$"
            FCFLAGS = @FCFLAGS@
          X_CFLAGS = @X_CFLAGS@
       AC_CPPFLAGS = @CPPFLAGS@
+             DEFS = @DEFS@
        LOCAL_DEFS = @LOCAL_DEFS@
              LIBS = @LIBS@
             FLIBS = @FLIBS@
@@ -21,7 +22,7 @@ MFVERSION="$Id$"
                AR = ar rsv
                RM = rm -f
 
-CPPFLAGS = $(AC_CPPFLAGS) $(X_CFLAGS) $(LOCAL_DEFS) $(LOCAL_INCLUDES) $(EXTRA_DEFINES)
+CPPFLAGS = $(AC_CPPFLAGS) $(X_CFLAGS) $(DEFS) $(LOCAL_DEFS) $(LOCAL_INCLUDES) $(EXTRA_DEFINES)
 PROGS=""
 PROGLIBS=""
 SUBDIRS=""

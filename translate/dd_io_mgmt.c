@@ -54,7 +54,10 @@ static char vcid[] = "$Id$";
 # include <signal.h>
 # include <sys/types.h>
 # include <sys/file.h>
-# include <sys/mtio.h>
+
+# ifdef HAVE_SYS_MTIO_H
+#   include <sys/mtio.h>
+# endif /* ifdef HAVE_SYS_MTIO_H */
 # include <stdio.h>
 # include <unistd.h>
 # include <ctype.h>
@@ -984,6 +987,7 @@ int dd_really_skip_recs(iri, direction, skip_count)
     dd_reset_ios(iri, 0);
     iri->top->skip_state = skip_count;
 
+#ifdef HAVE_SYS_MTIO_H
     if(iri->io_type == PHYSICAL_TAPE) {
 	op.mt_count = skip_count;
 	op.mt_op = direction == FORWARD ? MTFSR : MTBSR;
@@ -996,7 +1000,9 @@ int dd_really_skip_recs(iri, direction, skip_count)
 	    iri->top->skip_state = ii;
 	}
     }
-    else if(iri->io_type == FB_IO) {
+    else 
+#endif /* ifdef HAVE_SYS_MTIO_H */
+    if(iri->io_type == FB_IO) {
 	/* record headers and trailers should be 4 bytes
 	 */
        for (ii=0; ii < skip_count; ii++) {
@@ -1220,6 +1226,7 @@ void dd_rewind_dev(iri)
 
     dd_reset_ios(iri, 1);
 
+#ifdef HAVE_SYS_MTIO_H
     if(iri->io_type == PHYSICAL_TAPE) {
 	op.mt_op = MTREW;
 	op.mt_count = 1;	/* Only rewind once */
@@ -1229,7 +1236,9 @@ void dd_rewind_dev(iri)
 	    perror(mess);
 	}
     }
-    else {
+    else
+#endif /* ifdef HAVE_SYS_MTIO_H */
+    {
 	mark = fseek(iri->strm, 0L, SEEK_SET);
 	iri->current_offset = ftell (iri->strm);
     }
@@ -1248,6 +1257,7 @@ void dd_skip_files(iri, direction, skip_count)
     dd_reset_ios(iri, 0);
     iri->top->skip_state = skip_count;
 
+#ifdef HAVE_SYS_MTIO_H
     if(iri->io_type == PHYSICAL_TAPE) {
 	op.mt_count = skip_count;
 	op.mt_op = direction == FORWARD ? MTFSF : MTBSF;
@@ -1259,7 +1269,9 @@ void dd_skip_files(iri, direction, skip_count)
 	    perror(mess);
 	}
      }
-    else if(iri->io_type == FB_IO) {
+    else 
+#endif /* ifdef HAVE_SYS_MTIO_H */ 
+    if(iri->io_type == FB_IO) {
 	/* record headers and trailers should be 4 bytes
 	 */
 	if(direction == FORWARD) {

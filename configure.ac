@@ -44,6 +44,9 @@ else
 #    exit 1
 fi
 
+dnl Check for sys/mtio.h
+AC_CHECK_HEADERS(sys/mtio.h)
+
 dnl Checks for programs.
 #c-----------------------------------------------------
 AC_PROG_CC

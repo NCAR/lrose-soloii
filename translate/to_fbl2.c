@@ -9,7 +9,11 @@ static char vcid[] = "$Id$";
 # include <stdlib.h>
 # include <string.h>
 # include <sys/types.h>
-# include <sys/mtio.h>
+
+# ifdef HAVE_SYS_MTIO_H
+#   include <sys/mtio.h>
+# endif /* ifdef HAVE_SYS_MTIO_H */
+
 # include <sys/ioctl.h>
 /*
  * stand alone program to copy a tape file
@@ -149,6 +153,7 @@ main(argc, argv)
 	exit(1);
     }
 
+#ifdef HAVE_SYS_MTIO_H
     if( io_type != FB_IO ) {
       if( skipf_count ) {
 	printf( "Skipping %d files\n", skipf_count );
@@ -171,6 +176,7 @@ main(argc, argv)
 	skip_count = 0;
       }
     }
+#endif /* ifdef HAVE_SYS_MTIO_H */
 
     printf("Copying ");
     if(num_recs > 0 )
@@ -215,6 +221,7 @@ main(argc, argv)
 	    else if(out_io_type == FB_IO) {
 		n = fb_write(out,buf,m);
 	    }
+#ifdef HAVE_SYS_MTIO_H
 	    else {
 		n = write(out,buf,m);
 		weof_count = 0;
@@ -241,6 +248,7 @@ main(argc, argv)
 			    perror("to_fb:mtskpf");
 		      break;
 		  }
+#endif /* ifdef HAVE_SYS_MTIO_H */
 	} /* end of loop through one file */
 
 				/* see whether we write an EOF */
@@ -253,6 +261,7 @@ main(argc, argv)
 	else if(out_io_type == FB_IO) {
 	   n = fb_write(out,buf,(long)0); /* eof on disk */
 	}
+#ifdef HAVE_SYS_MTIO_H
 	else {
 	   weof_count++;
 	   op.mt_op = MTWEOF;
@@ -262,6 +271,7 @@ main(argc, argv)
 		perror ("to_fb:Mag tape WEOF");
 	     }
 	}
+#endif /* ifdef HAVE_SYS_MTIO_H */
 	tsize += size;
 	printf("at %8.3f MB Copied ", tsize * 1.e-6 );
 	printf("%7.3f MB or ", size*1.e-6);
@@ -274,6 +284,7 @@ main(argc, argv)
     }
     if( !force2_weofs || out_io_type == FB_IO || null_dev || dd_output )
       { exit(0); }
+#ifdef HAVE_SYS_MTIO_H
     printf( "Writing second EOF\n" );
     op.mt_op = MTWEOF;		/* write second eof */
     op.mt_count = 1;
@@ -281,6 +292,7 @@ main(argc, argv)
       {
 	perror ("to_fb:Mag tape WEOF");
       }
+#endif /* ifdef HAVE_SYS_MTIO_H */
     exit(0);
 }
 /* c------------------------------------------------------------------------ */

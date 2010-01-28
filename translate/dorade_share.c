@@ -76,7 +76,10 @@ static char vcid[] = "$Id$";
 # include <function_decl.h>
 # include <dgi_func_decl.h>
 
-# include <sys/mtio.h>
+# ifdef HAVE_SYS_MTIO_H
+#   include <sys/mtio.h>
+# endif /* ifdef HAVE_SYS_MTIO_H */
+
 # include <sys/ioctl.h>
 
 # include "run_sum.h"
@@ -1404,7 +1407,8 @@ int gp_write(fid, buf, size, io_type)
     else if(io_type == BINARY_IO) { /* pure binary output */
 	/* since size == 0 this is a noop */
 	return(size);
-    }    
+    }
+#ifdef HAVE_SYS_MTIO_H
     else {			/* assume tape io */
 	if(size != 0)
 	      return(size);
@@ -1416,6 +1420,7 @@ int gp_write(fid, buf, size, io_type)
 	}
 	n = 0;
     }
+#endif /* ifdef HAVE_SYS_MTIO_H */
     return(n);
 }
 /* c------------------------------------------------------------------------ */
