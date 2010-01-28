@@ -3,7 +3,7 @@
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT(perusal/soloii.c, 1.16)
+AC_INIT(perusal/soloii.c, 1.19)
 
 #
 # Use our parent directory rather than /usr/local as the default prefix
