@@ -1396,7 +1396,9 @@ int gp_write(fid, buf, size, io_type)
     /* general purpose write
      */
     int n;
+#ifdef HAVE_SYS_MTIO_H
     struct mtop op;
+#endif /* HAVE_SYS_MTIO_H */
 
     if(io_type == FB_IO ) { /* fortran binary */
 	n = fb_write( fid, buf, size );

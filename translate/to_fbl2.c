@@ -44,7 +44,9 @@ main(argc, argv)
     int weof_count = 0, force2_weofs = 0, skipf_count = 0;
     long recl;
     double size = 0, tsize = 0;
+#ifdef HAVE_SYS_MTIO_H
     struct mtop op;
+#endif /* ifdef HAVE_SYS_MTIO_H */
     char * null_name = "/dev/null", *aa, *source_dev, *out_dev;
 
     buf[0] = 0;

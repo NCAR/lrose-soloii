@@ -244,7 +244,9 @@ dd_really_skip_recs(iri, direction, skip_count)
 {
     int ii, jj, nn, mark, kount=0;
     long ll, rlen, keep_offset;
+#ifdef HAVE_SYS_MTIO_H
     struct mtop op;
+#endif /* ifdef HAVE_SYS_MTIO_H */
     char mess[256];
 
     dd_reset_ios(iri, 0);
@@ -347,7 +349,9 @@ dd_rewind_dev(iri)
 {
     int ii, jj, mark, ok=YES;
     long ll, rlen;
+#ifdef HAVE_SYS_MTIO_H
     struct mtop op;
+#endif /* ifdef HAVE_SYS_MTIO_H */
     char mess[256];
 
 
@@ -376,7 +380,9 @@ dd_unwind_dev(iri)
 {
     int ii, jj, mark, ok=YES;
     long ll, rlen;
+#ifdef HAVE_SYS_MTIO_H
     struct mtop op;
+#endif /* ifdef HAVE_SYS_MTIO_H */
     char mess[256];
 
     dd_reset_ios(iri, 0);
@@ -398,7 +404,9 @@ dd_skip_files(iri, direction, skip_count)
 {
     int ii, jj, mark, ok=YES;
     long ll, rlen;
+#ifdef HAVE_SYS_MTIO_H
     struct mtop op;
+#endif /* ifdef HAVE_SYS_MTIO_H */
     char mess[256];
 
     dd_reset_ios(iri, 0);
