@@ -65,6 +65,8 @@ version 1.19:
   o bump maximum gate count we handle from 1500 to 8192
   o disable tape I/O on systems without /usr/include/sys/mtio.h (e.g.,
     Mac Snow Leopard)
+  o add "-m32" flag to compilation and linking for builds on OS X, to
+    force making 32-bit executables
     
 version 1.18: Introduce first-cut support for Mac OS X.  Soloii has been
 tested briefly (on a Leopard x86 system), and will display and perform
