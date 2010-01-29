@@ -39,15 +39,16 @@ widgets.
 Notes for 64-bit OSes
 =====================
 
-Soloii can be built and run on a 64-bit Linux machine, although it will 
-explicitly build a 32-bit binary.  For the build to be successful, 32-bit 
-versions of the libraries used by soloii must be available.
+Soloii can be built and run on a 64-bit Linux or OS X machine, although it 
+will explicitly build a 32-bit binary.  
 
-For Fedora/Red Hat 64-bit systems, it is safe to install both the 64-bit 
-(x86_64) versions and the 32-bit (i386) versions of libraries at the same 
-time.  The minimum set of *specifically i386* packages required for build 
-on Fedora or Red Hat systems includes: gtk+-devel, glibc-devel, glib-devel, 
-libXi-devel, libXext-devel, libX11-devel, netcdf-devel.
+For the build to be successful on Linux systems, 32-bit versions of the 
+libraries used by soloii must be available.  For Fedora/Red Hat 64-bit 
+systems, it is safe to install both the 64-bit (x86_64) versions and the 
+32-bit (i386) versions of libraries at the same time.  The minimum set of 
+*specifically i386* packages required for build on Fedora or Red Hat systems 
+includes: gtk+-devel, glibc-devel, glib-devel, libXi-devel, libXext-devel, 
+libX11-devel, netcdf-devel.
 
 I have not built soloii on Debian/Ubuntu 64-bit systems, but I
 believe that the ia32-libs package would be required, as well as
