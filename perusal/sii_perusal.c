@@ -155,6 +155,9 @@ int displayq(click_frme, command)
     void sp_landmark_offsets ();
     void sp_align_center ();
 
+#ifdef DEBUG_FUNCTIONS
+    fprintf(stderr, "-->> Entering displayq\n");
+#endif
 
     if(solo_halt_flag()) {
 	solo_clear_halt_flag();
@@ -689,6 +692,9 @@ int sp_data_loop(flink0)
     guint frame_sync_nums[SOLO_MAX_WINDOWS];
 
 
+#ifdef DEBUG_FUNCTIONS
+    fprintf(stderr, "-->> Entering sp_data_loop\n");
+#endif
 
     wwptr = solo_return_wwptr(lead_frame);
     ang_fill = wwptr->view->angular_fill_pct * .01;
@@ -846,6 +852,9 @@ int solo_worksheet()
     struct solo_perusal_info *spi, *solo_return_winfo_ptr();
     char mess[256];
 
+#ifdef DEBUG_FUNCTIONS
+    fprintf(stderr, "-->> Entering solo_worksheet\n");
+#endif
 
     spi = solo_return_winfo_ptr();
     current_frame_count = sii_return_frame_count ();
@@ -1010,6 +1019,9 @@ int solo_nab_next_file(frme, file_action, version, sweep_skip, replot)
     char scan_mode[8];
     int swpfi_time_sync = NO;
 
+#ifdef DEBUG_FUNCTIONS
+    fprintf(stderr, "-->> Entering solo_nab_next_file\n");
+#endif
 
     wwptr = solo_return_wwptr(frme);
     sweep_skip = 1;
