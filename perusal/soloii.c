@@ -494,7 +494,7 @@ int main( int argc,
   gtk_init (&argc, &argv);
   gdk_rgb_init ();
 
-  dd_intset();			/* catch Control-C */
+  /* dd_intset(); */		/* catch Control-C  - why?? */
 
   screen_width_mm = gdk_screen_width_mm();
   screen_height_mm = gdk_screen_height_mm();
