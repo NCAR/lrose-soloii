@@ -40,6 +40,7 @@ static char vcid[] = "$Id$";
 # include <dgi_func_decl.h>
 # include <stdlib.h>
 # include "FieldRadar.h"
+
 # ifndef notyet
 #   include <piraq/piraqx.h>
 # endif
@@ -53,6 +54,20 @@ static char vcid[] = "$Id$";
 static struct dd_input_sweepfiles_v3 *dis_v3=NULL;
 extern int LittleEndian;
 
+/*
+ * static vars for reading dynamic rotation angle table
+ * to keep reads separate from normal reads
+ */
+
+static int _buf_bytes_left = MAX_READ;
+static int _file_byte_count = 0;
+static char *_in_next_block = NULL;
+static char *_in_buf = NULL;
+static long _disk_offset_read_start = 0;
+static int _note_printed = 0;
+
+/* prototypes */
+
 int dd_absorb_rotang_info();
 int dd_absorb_seds();
 void ddswp_stuff_ray();
@@ -60,8 +75,9 @@ void ddswp_stuff_sweep();
 void dd_update_ray_info();
 void dd_update_sweep_info();
 int ddswp_new_sweep_v3();
-
-
+int dd_create_dynamic_rotang_info(DGI_PTR dgi);
+int dd_read_ray_for_dynamic_angle_table(DGI_PTR dgi, int rayNum);
+void dd_print_angle_table(const struct rot_ang_table *rat, FILE *out);
 
 /* c------------------------------------------------------------------------ */
 
@@ -69,6 +85,7 @@ int dd_absorb_header_info(dgi)
     DGI_PTR dgi;
 {
     int ii, jj, mm, nn, pn, bc=0, loop_count=0, gottaSwap=NO, broken=NO;
+    int iret = 0;
     short ns;
     int gotta_cfac = NO, gotta_celv = NO;
     char *aa, *at, *bb, str[256], *str_terminate(), *getenv(), radar_name[16];
@@ -122,12 +139,24 @@ int dd_absorb_header_info(dgi)
 	if(strncmp(dgi->in_next_block, "SSWB", 4) == 0 ) {
 	   if(gottaSwap) {
 	      if(LittleEndian) {
-		 ddin_crack_sswbLE
-		   (dgi->in_next_block, (char *)dds->sswb, (int)0);
+                if (sizeof(struct super_SWIB) > 196) {
+                  /* need swap routine which handles 8-byte alignment */
+                  ddin_crack_sswbLE_aligned8
+                    (dgi->in_next_block, (char *)dds->sswb, (int)0);
+                } else {
+                  ddin_crack_sswbLE
+                    (dgi->in_next_block, (char *)dds->sswb, (int)0);
+                }
 	      }
 	      else {
-		 ddin_crack_sswb
-		   (dgi->in_next_block, (char *)dds->sswb, (int)0);
+                if (sizeof(struct super_SWIB) > 196) {
+                  /* need swap routine which handles 8-byte alignment */
+                  ddin_crack_sswb_aligned8
+                    (dgi->in_next_block, (char *)dds->sswb, (int)0);
+                } else {
+                  ddin_crack_sswb
+                    (dgi->in_next_block, (char *)dds->sswb, (int)0);
+                }
 	      }
 	   }
 	   else {
@@ -361,8 +390,16 @@ int dd_absorb_header_info(dgi)
 	dds->celvc->dist_cells[ii] += dds->cfac->range_delay_corr;
     }
     dd_set_uniform_cells(dgi->dds);
-    dd_absorb_rotang_info(dgi, gottaSwap);
+    iret = dd_absorb_rotang_info(dgi, gottaSwap);
     dd_absorb_seds(dgi, gottaSwap);
+    
+    /* if no rotation angle table was found in the file,
+     * create one dynamically by reading the rays */
+
+    if (iret != 0) {
+      dd_create_dynamic_rotang_info(dgi);
+    }
+
     return(0);
 }
 /* c------------------------------------------------------------------------ */
@@ -685,7 +722,7 @@ int dd_absorb_rotang_info(dgi, gottaSwap)
     DGI_PTR dgi;
     int gottaSwap;
 {
-    int i, jj, n;
+  int i, jj, n, len;
     struct rot_ang_table *rat;
     char *c, *swap_buf;
     long disk_offset;
@@ -700,15 +737,27 @@ int dd_absorb_rotang_info(dgi, gottaSwap)
 	if(dds->sswb->key_table[i].type == KEYED_BY_ROT_ANG)
 	      break;
     }
-    n = lseek(dgi->in_swp_fid, (long)dds->sswb->key_table[i].offset, 0L);
-    if(dgi->source_rat) {
-	free(dgi->source_rat);
+    if (i >= MAX_KEYS) {
+      return -1;
     }
-    c = (char *)malloc(dds->sswb->key_table[i].size);
+    n = lseek(dgi->in_swp_fid, (long)dds->sswb->key_table[i].offset, 0L);
+    len = dds->sswb->key_table[i].size;
+    if(dgi->source_rat) {
+      free(dgi->source_rat);
+    }
+    c = (char *)malloc(len);
     rat = dgi->source_rat = (struct rot_ang_table *)c;
+    memset(rat, 0, len);
     if(gottaSwap) {
-       swap_buf = (char *)malloc(dds->sswb->key_table[i].size);
-       n = read(dgi->in_swp_fid, swap_buf, dds->sswb->key_table[i].size);
+       swap_buf = (char *)malloc(len);
+       n = read(dgi->in_swp_fid, swap_buf, len);
+       if (n != len) {
+         fprintf(stderr, "ERROR - dd_absorb_rotang_info\n");
+         fprintf(stderr, "  Cannot read in rotation angle table\n");
+         perror("");
+         free(swap_buf);
+         return -1;
+       }
        ddin_crack_rktb(swap_buf, rat, (int)0);
        jj = rat->angle_table_offset;
        swack_long(swap_buf + jj, (char *)rat + jj, rat->ndx_que_size);
@@ -717,7 +766,14 @@ int dd_absorb_rotang_info(dgi, gottaSwap)
        free(swap_buf);
     }
     else {
-       n = read(dgi->in_swp_fid, c, dds->sswb->key_table[i].size);
+       n = read(dgi->in_swp_fid, c, len);
+       if (n != len) {
+         fprintf(stderr, "ERROR - dd_absorb_rotang_info\n");
+         fprintf(stderr, "  Cannot read in rotation angle table\n");
+         perror("");
+         free(swap_buf);
+         return -1;
+       }
     }
     /* now put it back
      */
@@ -779,6 +835,7 @@ int dd_absorb_seds(dgi, gottaSwap)
     disk_offset = lseek(dgi->in_swp_fid, (long)disk_offset, 0L);
     return(0);
 }
+
 /* c------------------------------------------------------------------------ */
 
 struct dd_input_sweepfiles_v3 *
@@ -1313,4 +1370,374 @@ void ddswp_stuff_sweep(dgi)
 /* c------------------------------------------------------------------------ */
 
 
+/* c------------------------------------------------------------------------ */
+
+/*
+ * create the dynamic angle table by reading once through the rays
+ */
+
+int dd_create_dynamic_rotang_info(DGI_PTR dgi)
+{
+  
+  int nrays;
+  int angle_ndx_size = 480;
+  int ii, mm, size;
+  int a_offset;
+  long *ang_index;
+  struct rot_ang_table *rat;
+  struct rot_table_entry *entry;
+
+  long start_offset;
+  
+  /* any rays? */
+
+  nrays = dgi->source_num_rays;
+  if (nrays == 0) {
+    return -1;
+  }
+
+  if (!_note_printed) {
+    fprintf(stderr, "NOTE - dd_create_dynamic_rotang_info\n");
+    fprintf(stderr, "  No rotation table found\n");
+    fprintf(stderr, "  Creating dynamic table on-the-fly instead\n");
+    fprintf(stderr, "  This warning will only be printed once\n");
+    _note_printed = 1;
+  }
+
+  /* save the current values for disk offset etc */
+  
+  start_offset = lseek(dgi->in_swp_fid, 0L, SEEK_CUR);
+
+  /* allocate read buffer, set up related variables */
+  
+  if (!_in_buf) {
+    _in_buf = (char *) malloc(MAX_READ);
+  }
+  memset(_in_buf, 0, MAX_READ);
+  _buf_bytes_left = 0;
+  _file_byte_count = 0;
+  _in_next_block = _in_buf;
+  _disk_offset_read_start = start_offset;
+
+  /* rewind to start of file */
+
+  lseek(dgi->in_swp_fid, 0L, SEEK_SET);
+  
+  /* free up rotation angle table */
+  
+  if(dgi->source_rat) {
+    free(dgi->source_rat);
+  }
+  
+  /* compute size of rat */
+  
+  size = sizeof(struct rot_ang_table);
+  size = ((size -1)/8 +1) * 8; /* start tables on an 8 byte boundary */
+  mm = size;
+  size += (angle_ndx_size * sizeof(long) +
+           nrays * sizeof(struct rot_table_entry));
+
+  /* alloc rat */
+  
+  dgi->source_rat = (struct rot_ang_table *) malloc(size);
+  rat = dgi->source_rat;
+  if (rat == NULL) {
+    fprintf(stderr, "Malloc error - quitting\n");
+    exit(1);
+  }
+  memset(rat, 0, size);
+  
+  /* fill out main table */
+  
+  memcpy(rat->name_struct, "RKTB", 4);
+  rat->sizeof_struct = size;
+  rat->angle2ndx = (float)angle_ndx_size/360.0;
+  rat->ndx_que_size = angle_ndx_size;
+  rat->first_key_offset = mm + angle_ndx_size * sizeof(long);
+  rat->angle_table_offset = mm;
+  rat->num_rays = nrays;
+
+  /* read through rays, filling in the rotation angle entries */
+  
+  for (ii = 0; ii < nrays; ii++) {
+    if (dd_read_ray_for_dynamic_angle_table(dgi, ii) < 1 ) {
+      /* restore to starting state */
+      lseek(dgi->in_swp_fid, start_offset, SEEK_SET);
+      return -1;
+    }
+  }
+  
+  /* now compute the angle indexes */
+
+  a_offset = rat->angle_table_offset;
+  ang_index = (long *) ((char *) rat + a_offset);
+  for (ii = 0; ii < angle_ndx_size; ii++) {
+    ang_index[ii] = -1;
+  }
+  entry = (struct rot_table_entry *)
+    ((char *) rat + rat->first_key_offset);
+  for (ii = 0; ii < nrays; ii++, entry++) {
+    double rotAngle = entry->rotation_angle;
+    int jj = (int) (rotAngle * rat->angle2ndx);
+    if (jj < 0 || jj > angle_ndx_size - 1) {
+      jj = 0;
+    }
+    ang_index[jj] = ii;
+  }
+  
+#ifdef DEBUG_VERBOSE
+  fprintf(stderr, "######## Rotation table computed on the fly ######\n");
+  dd_print_angle_table(rat, stderr);
+  fprintf(stderr, "##################################################\n");
+#endif
+
+  /* restore to starting state */
+
+  lseek(dgi->in_swp_fid, start_offset, SEEK_SET);
+
+  return 0;
+
+}
+
+/* c------------------------------------------------------------------------ */
+
+int dd_read_ray_for_dynamic_angle_table(DGI_PTR dgi, int rayNum)
+                                        
+{
+
+  /*
+   * Read in rays for computing the dynamic angle table on the fly
+   */
+  
+  int len, ryib_flag=NO, num_rdats=0, mark;
+  int num_cells, bc=0, pn, ncopy, stored_len;
+  int gottaSwap=NO, ds;
+  static int count=0, doodah=110, rec_count=0, loop_count = 0;
+  static int rec_trip=12, disk_offset= -1;
+  struct qparamdata_d *qdat;
+  struct generic_descriptor *gd;
+  DDS_PTR dds=dgi->dds;
+  DD_TIME *d_unstamp_time();
+  unsigned long gdsos;
+  
+  count++;
+  if( count >= doodah ) {
+    mark = MAX_REC_SIZE;
+  }
+
+  while(1) {
+
+    if( ++loop_count >= doodah ) {
+      mark = MAX_REC_SIZE;
+    }
+    gd = (struct generic_descriptor *)_in_next_block;
+    
+    if(_buf_bytes_left >= sizeof(struct generic_descriptor)) {
+      gdsos = (unsigned long)gd->sizeof_struct;
+      if(gdsos > MAX_REC_SIZE) {
+        gottaSwap = YES;
+        swack4(&gd->sizeof_struct, &gdsos);
+      }
+    }
+    else { gdsos = 0; }
+    
+    if( num_rdats == dgi->source_num_parms ) {
+      break;
+    }
+
+    /* refresh the read buffer as needed */
+
+    if(_buf_bytes_left <= 0 ||
+       sizeof(struct generic_descriptor) > _buf_bytes_left ||
+       gdsos > _buf_bytes_left ) {
+
+      /* move to top of buffer and refill it */
+
+      rec_count++;
+      if(rec_count >= rec_trip) {
+        mark = 0;
+      }
+      if(_buf_bytes_left > 0 )
+        memcpy(_in_buf, _in_next_block
+               , _buf_bytes_left);
+      else if( _buf_bytes_left < 0 ) {
+        if(!dd_solo_flag()) { return -1; }
+      }
+
+      _in_next_block = _in_buf;
+      disk_offset = lseek(dgi->in_swp_fid, 0L, 1L); 
+      _disk_offset_read_start = disk_offset - _buf_bytes_left;
+
+      if((len=read(dgi->in_swp_fid, _in_buf+_buf_bytes_left
+                   , MAX_READ -_buf_bytes_left )) < 1 ) {
+        printf("Trying to read past end of data...stat= %d loop: %d\n"
+               , len, loop_count );
+        if(!dd_solo_flag()) { return -1; }
+      } else if((_buf_bytes_left+=len) < gdsos ) {
+        printf("File appears to be truncated...stat= %d loop: %d\n"
+               , len, loop_count );
+        return -1;
+      }
+      
+      gd = (struct generic_descriptor *)_in_next_block;
+      gdsos = (unsigned long)gd->sizeof_struct;
+      
+      if(gdsos > MAX_REC_SIZE) {
+        gottaSwap = YES;
+        swack4(&gd->sizeof_struct, &gdsos);
+      }
+
+    } /* done refreshing read buffer */
+    
+    if(gdsos < sizeof(struct generic_descriptor) || gdsos > MAX_REC_SIZE) {
+      /* This is probably a garbaged file */
+      fprintf(stderr,
+              "Sweep file containing time %s is garbage! loop: %d\n"
+              , dts_print(d_unstamp_time(dgi->dds->dts)), loop_count);
+      return -1;
+    }
+    
+    if(strncmp(_in_next_block,"RDAT",4) == 0 ||
+       strncmp(_in_next_block,"QDAT",4) == 0) {
+      
+      /* field data block */
+
+      qdat = (struct qparamdata_d *)_in_next_block;
+      pn = num_rdats++;
+      ncopy = *_in_next_block == 'R'
+        ? sizeof(struct paramdata_d) : dds->parm[pn]->offset_to_data;
+      ds = dd_datum_size((int)dds->parm[pn]->binary_format);
+      if(gottaSwap) {
+        ddin_crack_qdat(_in_next_block, dds->qdat[pn], (int)0);
+      }
+      else {
+        memcpy((char *)dds->qdat[pn], _in_next_block, ncopy);
+      }
+      stored_len = dds->qdat[pn]->pdata_length;
+      
+      /* add to length of ray data in rotation table */
+
+      struct rot_ang_table *drat = dgi->source_rat;
+      int doffset = drat->first_key_offset +
+        rayNum * sizeof(struct rot_table_entry);
+      struct rot_table_entry *entry = (struct rot_table_entry *)
+        ((char *) drat + doffset);
+      entry->size += stored_len;
+      
+      bc += gdsos;
+
+    } else if (strncmp(_in_next_block,"RYIB",4)==0 && !ryib_flag) {
+
+      /* ray header block */
+      
+      if(gottaSwap) {
+        ddin_crack_ryib(_in_next_block, dds->ryib, (int)0);
+      }
+      else {
+        memcpy((char *)dds->ryib, _in_next_block
+               , sizeof(struct ray_i));
+      }
+      ryib_flag = YES;
+      bc += gdsos;
+      num_cells = dds->celv->number_cells;
+
+      /* fill out rotation entry */
+      char *ray_offset = _in_next_block;
+      struct rot_ang_table *drat = dgi->source_rat;
+      int doffset = drat->first_key_offset +
+        rayNum * sizeof(struct rot_table_entry);
+      struct rot_table_entry *entry = (struct rot_table_entry *)
+        ((char *) drat + doffset);
+      entry->rotation_angle = dd_rotation_angle(dgi);
+      entry->offset = (ray_offset - _in_buf) +
+        _disk_offset_read_start;
+      entry->size = dds->ryib->ray_info_length;
+
+    } else if(strncmp(_in_next_block,"ASIB",4)==0) {
+
+      /* platform block */
+
+      if(gottaSwap) {
+        ddin_crack_asib(_in_next_block, dds->asib, (int)0);
+      } else {
+        memcpy((char *)dds->asib, _in_next_block
+               , sizeof(struct platform_i));
+      }
+      bc += gdsos;
+
+      /* add to length of ray data in rotation table
+       * also update rotation angle for moving platforms */
+
+      struct rot_ang_table *drat = dgi->source_rat;
+      int doffset = drat->first_key_offset +
+        rayNum * sizeof(struct rot_table_entry);
+      struct rot_table_entry *entry = (struct rot_table_entry *)
+        ((char *) drat + doffset);
+      entry->rotation_angle = dd_rotation_angle(dgi);
+      entry->size += dds->asib->platform_info_length;
+      
+    } else {
+      /* ignore this bock */
+      mark = 0;
+      bc += gdsos;
+    }
+    
+    _buf_bytes_left -= gdsos;
+    _file_byte_count += gdsos;
+    _in_next_block += gdsos;
+
+  } /* while */
+
+  return bc;
+
+}
+
+/* c------------------------------------------------------------------------ */
+
+void dd_print_angle_table(const struct rot_ang_table *rat, FILE *out)
+{
+
+  int ii;
+
+  fprintf(out, "============== Rotation angle table ===================\n");
+  fprintf(out, "\n");
+
+  fprintf(out,
+          "  name_struct: %.4s\n"
+          "  sizeof_struct: %d\n"
+          "  angle2ndx: %.3f\n"
+          "  ndx_que_size: %d\n"
+          "  first_key_offset: %d\n"
+          "  angle_table_offset: %d\n"
+          "  num_rays: %d\n",
+          rat->name_struct,
+          rat->sizeof_struct,
+          rat->angle2ndx,
+          rat->ndx_que_size,
+          rat->first_key_offset,
+          rat->angle_table_offset,
+          rat->num_rays);
+      
+  const struct rot_table_entry *rte = (const struct rot_table_entry *)
+    ((const char *)rat + rat->first_key_offset);
+
+  fprintf(out, "\n");
+  fprintf(out, "--- Ray angle table ---\n");
+  for(ii=0; ii < rat->num_rays; ii++, rte++) {
+    fprintf(out, "    RayNum, angle, diskOffset, nBytes: %4d %7.2f %8d %7d\n",
+            ii, rte->rotation_angle,
+            rte->offset, rte->size);
+  }
+  
+  fprintf(out, "--- Angle index table ---\n");
+  const long *indexes = (long *)
+    ((const char *)rat + rat->angle_table_offset);
+  for (ii = 0; ii < rat->ndx_que_size; ii++) {
+    fprintf(out, "    Index[%d]: %d\n", ii, indexes[ii]);
+  }
+  
+  fprintf(out, "\n");
+  fprintf(out, "=======================================================\n");
+
+}
 

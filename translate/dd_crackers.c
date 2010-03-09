@@ -778,7 +778,9 @@ void ddin_crack_rktb (srs, dst, limit)
 }
 /* c------------------------------------------------------------------------ */
 
-void ddin_crack_sswbLE (srs, dst, limit)
+/* LE swap for super swib aligned on 8-byte boundaries - as for SPARC */
+
+void ddin_crack_sswbLE_aligned8 (srs, dst, limit)
   char *srs, *dst;
   int limit;
 {
@@ -810,7 +812,9 @@ void ddin_crack_sswbLE (srs, dst, limit)
 }
 /* c------------------------------------------------------------------------ */
 
-void ddin_crack_sswb (srs, dst, limit)
+/* swap for super swib aligned on 8-byte boundaries - as for SPARC */
+
+void ddin_crack_sswb_aligned8 (srs, dst, limit)
   char *srs, *dst;
   int limit;
 {
@@ -840,6 +844,73 @@ void ddin_crack_sswb (srs, dst, limit)
    crackers(srs, dst, item_count, ndx_count, crk_super_SWIB
 	    , offs_ndx, sparc_ndx, limit);
 }
+
+/* LE swap for super swib not aligned on 8-byte boundaries - as for INTEL */
+
+void ddin_crack_sswbLE (srs, dst, limit)
+  char *srs, *dst;
+  int limit;
+{
+   int sizeof_struct=196;
+   int item_count=17;
+
+   static int crk_super_SWIB [][7] = {
+      {    0,    1,    1,    4,    4,    1,    0},
+      {    4,    3,    4,    1,    8,    8,    4},
+      {    8,    3,    4,    1,    1,    1,    8},
+      {   12,    3,    4,    1,    1,    1,   12},
+      {   16,    3,    4,    1,    1,    1,   16},
+      {   20,    3,    4,    1,    1,    1,   20},
+      {   24,    3,    4,    1,    1,    1,   24},
+      {   28,    3,    4,    1,    1,    1,   28},
+      {   32,    3,    4,    1,    1,    1,   32},
+      {   36,    1,    1,    8,    8,    1,   36},
+      {   44,    5,    8,    1,    2,    2,   44},
+      {   52,    5,    8,    1,    1,    1,   52},
+      {   60,    3,    4,    1,   34,    5,   60},
+      {   64,    3,    4,    1,    1,    1,   64},
+      {   68,    3,    4,    1,    1,    1,   68},
+      {   72,    3,    4,    7,    7,    1,   72},
+      {  100,    3,    4,   24,   24,    1,  100},
+   };
+
+   crackers(srs, dst, item_count, ndx_count, crk_super_SWIB
+	    , sparc_ndx, offs_ndx, limit);
+}
+
+/* swap for super swib not aligned on 8-byte boundaries - as for INTEL */
+
+void ddin_crack_sswb (srs, dst, limit)
+  char *srs, *dst;
+  int limit;
+{
+   int sizeof_struct=196;
+   int item_count=17;
+
+   static int crk_super_SWIB [][7] = {
+      {    0,    1,    1,    4,    4,    1,    0},
+      {    4,    3,    4,    1,    8,    8,    4},
+      {    8,    3,    4,    1,    1,    1,    8},
+      {   12,    3,    4,    1,    1,    1,   12},
+      {   16,    3,    4,    1,    1,    1,   16},
+      {   20,    3,    4,    1,    1,    1,   20},
+      {   24,    3,    4,    1,    1,    1,   24},
+      {   28,    3,    4,    1,    1,    1,   28},
+      {   32,    3,    4,    1,    1,    1,   32},
+      {   36,    1,    1,    8,    8,    1,   36},
+      {   44,    5,    8,    1,    2,    2,   44},
+      {   52,    5,    8,    1,    1,    1,   52},
+      {   60,    3,    4,    1,   34,    5,   60},
+      {   64,    3,    4,    1,    1,    1,   64},
+      {   68,    3,    4,    1,    1,    1,   68},
+      {   72,    3,    4,    7,    7,    1,   72},
+      {  100,    3,    4,   24,   24,    1,  100},
+   };
+
+   crackers(srs, dst, item_count, ndx_count, crk_super_SWIB
+	    , offs_ndx, sparc_ndx, limit);
+}
+
 /* c------------------------------------------------------------------------ */
 
 void eld_crack_cspd (srs, dst, limit)
