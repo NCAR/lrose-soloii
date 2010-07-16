@@ -145,6 +145,7 @@ struct piraq_useful_items {
     int rhdr_count;
     int check_ugly;
     int time_glitch_count;
+    float new_sweep_at_az;
 
     struct piraq_ray_que *ray_que;
     struct piraq_swp_que *swp_que;
@@ -228,6 +229,7 @@ struct piraq_swp_que {
 # define              RABID_DOW 0x800000
 # define      PIRAQX_TRUST_TIME 0x1000000
 # define   PIRAQX_100X_NANOSECS 0x2000000
+# define        NEW_SWEEP_AT_AZ 0x4000000
 
 extern int LittleEndian;
 
@@ -453,6 +455,7 @@ piraqx_ini()
 
     pui->check_ugly = NO;
     pui->prev_noise = 10.e22;
+    pui->new_sweep_at_az = -999.;
 
 
     for(ii=0; ii < SWEEP_QUE_SIZE; ii++) {
@@ -519,6 +522,10 @@ piraqx_ini()
     if(aa=get_tagged_string("RENAME")) {
 	piraq_name_aliases(aa, &top_ren);
     }
+    if(aa=get_tagged_string("NEW_SWEEP_AT_AZ")) { 
+        pui->new_sweep_at_az = atof(aa); 
+    }
+
     if((aa=get_tagged_string("OPTIONS"))) {
 	if(strstr(aa, "RABID"))
 	  {
@@ -548,7 +555,7 @@ piraqx_ini()
 	if(strstr(aa, "PIRAQX_TRUST_TIME"))
 	  { pui->options |= PIRAQX_TRUST_TIME; }
 	if(strstr(aa, "PIRAQX_100X_NANOSECS"))
-	  { pui->options |= PIRAQX_100X_NANOSECS; }
+      { pui->options |= PIRAQX_100X_NANOSECS; }
     }
 
     nn = dd_min_rays_per_sweep();
@@ -866,6 +873,20 @@ piraqx_next_ray()
     if(piraqx_isa_new_sweep())
 	{ pui->new_sweep = YES; }
 
+    /* 
+     * If requested, start a new PPI or SUR sweep whenever the
+     * azimuth crosses new_sweep_at_az.
+     */
+    if (pui->new_sweep_at_az >= 0.0) {
+        int scanmode = pui->swp_que->scan_mode;
+        float prevaz = pui->swp_que->last->swpang;
+        float thisaz = pui->swp_que->swpang;
+
+        if ((scanmode == PPI || scanmode == SUR) &&
+            in_sector(pui->new_sweep_at_az, prevaz, thisaz)) {
+            pui->new_sweep = YES;
+        }
+    }
 
     /* new sweep? */
 

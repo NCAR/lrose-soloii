@@ -940,6 +940,11 @@ TIME_CORRECTION additive time correction as a floating point seconds. <p>
 TAPE_DIR constructs a list of all the files with the suffix ".tape" and passes
 through them.<p>
 
+NEW_SWEEP_AT_AZ, if set, will cause a new sweep to be started whenever the scan
+mode is PPI or SUR and the azimuth crosses the given angle. This can help with
+datasets that have no scan delineation. When used, NEW_SWEEP_AT_AZ is typically
+set to 0.0.<p>
+
 <A HREF="#OPTS">OPTIONS</A> flags for this format are:
 <p>
 DOW_FLAG flags the presence and use of scan and volume counters for
