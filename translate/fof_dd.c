@@ -4123,7 +4123,7 @@ void fof_redo_srsfs(rq)
 
     for(nn=0,ii=0,finalf=fui->finalf; finalf; finalf = finalf->next, ii++) {
 	/*
-	 * first see if the data field alread exists
+	 * first see if the data field already exists
 	 */
 	if(dataf=fof_duplicate_field(finalf->field_name)) {
 	    finalf->dataf = dataf;
@@ -4145,9 +4145,17 @@ void fof_redo_srsfs(rq)
 	    finalf->long_field_name = finalf->dataf->long_field_name;
 	}
 	else {
+        printf("\nCannot produce requested field %s!\n", finalf->field_name);
+        /* 
+         * Just bail out now, because it isn't clear what all needs to be
+         * cleaned up at this point. (8/2010 cb)
+         */
+        exit(1);
+#if 0
 	    fui->cannot_generate_fields = YES;
 	    mark = 0;
 	    return;
+#endif
 	}
 	gri->num_fields_present++;
 	gri->actual_num_bins[ii] = gri->num_bins;
