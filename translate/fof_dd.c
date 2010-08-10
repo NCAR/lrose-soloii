@@ -4147,6 +4147,7 @@ void fof_redo_srsfs(rq)
 	else {
 	    fui->cannot_generate_fields = YES;
 	    mark = 0;
+	    return;
 	}
 	gri->num_fields_present++;
 	gri->actual_num_bins[ii] = gri->num_bins;
