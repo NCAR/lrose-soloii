@@ -255,15 +255,15 @@ plots.  <P>
 
 You might also find it helpful to use the <b>GNU emacs</b> directory
 editor (<b>dired</b>) for selectively <A NAME = "DSW">deleting sweep
-files</a>.  On many systems you type <CODE>emacs</CODE> preferably
+files</a>.  On many systems you type <tt>emacs</tt> preferably
 from the directory where you want to do the deletion. Then type
-<CODE>&lt;CTRL&gt;x</CODE> and then a <CODE>"d"</CODE> and you will be
+<tt>&lt;CTRL&gt;x</tt> and then a <tt>"d"</tt> and you will be
 prompted for the directory name.  If you are already in the directory
-you can just type <CODE>&lt;return&gt;</CODE>. Once you have a list of
-files you can move around with the arrows and type a <CODE>"d"</CODE>
+you can just type <tt>&lt;return&gt;</tt>. Once you have a list of
+files you can move around with the arrows and type a <tt>"d"</tt>
 at each file you wish to delete.  When you want to delete the files
-you have flagged, type an <CODE>"x"</CODE> and you will get a list of
-the files emacs is going to delete. Type <CODE>"yes"</CODE> to
+you have flagged, type an <tt>"x"</tt> and you will get a list of
+the files emacs is going to delete. Type <tt>"yes"</tt> to
 confirm.  <P>
 
 <BR>
@@ -283,7 +283,7 @@ variables <u>must</u> have an argument.  So a variable such as
 <B>BATCH_MODE</B> needs to be set with the following command:<br>
 
 <pre>
-		<code>setenv BATCH_MODE ""</code>
+		setenv BATCH_MODE ""
 </pre>
 <P>
 
@@ -292,7 +292,7 @@ tabs, all ordered triplets in environment variables such as
 <I>"800 < 2000"</I> in <br>
 
 <pre>
-		<code>setenv PRF_LIMITS "800 < 2000"</code>
+		setenv PRF_LIMITS "800 < 2000"
 </pre>
 
 should be seperated by spaces or tabs. The "<" has no significance
@@ -353,7 +353,7 @@ radar to cutoff the data above and below the two limits.  For aircraft
 data, this can cut UF files in half and for DORADE, the average sweep
 compresses to one-third its non-compressed size.<P>
 
-<dt><A NAME="AZSC"><b>AZ_SECTORS</b></a></dt>
+<dt><b><a NAME="AZSC">AZ_SECTORS</a></b></dt>
 	<dd><tt>setenv AZ_SECTORS "22.0 < 33.0  66.0 < 77.0"</tt><BR><br>
 
 Ignores data outside the two sets of azimuth limits.<P>
@@ -386,7 +386,7 @@ translation process. The first two are for use with aircraft (P3 and ELDORA)
 data.<br><br>
 
 <dl>
-<dt><code>"VE < VG VE < VU"</code></dt>
+<dt><tt>"VE < VG VE < VU"</tt></dt>
 
 <dd> The left hand side of the ordered pair indicates the source field
 id. The right hand side indicates the destination field id and a
@@ -395,14 +395,14 @@ the aircraft motion from the velocity and force the result velocity
 Nyquist interval to be centered on 0 while VU implies to remove any
 aircraft motion and try to unfold it.<P>
 
-<dt><code> "VR < VH"</code></dt>
+<dt><tt> "VR < VH"</tt></dt>
 
 <dd> The left hand side of the ordered pair indicates the source field
 id. VH implies just to remove the component of aircraft motion from
 the velocity. This is meant to be used for ELDORA's new unfolded
 velocities.  <P>
 
-<dt><code>"VE < VT" </code></dt>
+<dt><tt>"VE < VT" </tt></dt>
 
 <dd> Generates a field called VT from VE that is thresholded on the
 NCP. The NCP field and threshold value is specifield with an
@@ -412,47 +412,47 @@ absence of this variable forces the default to 999.
 flagged bad): 
 
 <pre>
-<code>        setenv NCP_THRESHOLD_VAL "NCP .333"  </code></pre>
+        setenv NCP_THRESHOLD_VAL "NCP .333"  </pre>
 <p>
 
-<dt><code> "VE < VW" </code></dt>
+<dt><tt> "VE < VW" </tt></dt>
 
 <dd> Generates a field called VW from VE that is thresholded on the
 Spectral Width and is specified with an environment variable
 (in the following example, everything above 6.0 is flagged bad):<br>
 
 <pre>
-<code>        setenv SW_THRESHOLD_VAL "SW 6.0" </code></pre>
+        setenv SW_THRESHOLD_VAL "SW 6.0" </pre>
 <p>
 
 </dl><p>
 
 It is also possible to threshold on power using the environment variable:<br>
-<pre><code>     setenv PWR_THRESHOLD_VAL "DBZ -12.34" </code></pre>
+<pre>     setenv PWR_THRESHOLD_VAL "DBZ -12.34" </pre>
 It can apply to three cases:<br>
 
 <dl>
-<dt><code>"VE < VP" </code></dt>
+<dt><tt>"VE < VP" </tt></dt>
 
 <dd> generates a field, VP, by bad-flagging values in VE with dBZ below
 -12.34 <P>
 
-<dt><code>"DBZ < DP" </code></dt>
+<dt><tt>"DBZ < DP" </tt></dt>
 
 <dd> generates a field DP by bad-flagging values in DBZ below -12.34
 <P>
 
-<dt><code>"DBZ < DT" </code></dt>
+<dt><tt>"DBZ < DT" </tt></dt>
 
 <dd> generates a field DT by bad flagging values in DBZ ABOVE -12.34
 <P>
 </dl>
 
 
-<dt><A NAME="DDEV"><B>DORADE_DEV</B></dt>
+<dt><b><a NAME="DDEV">DORADE_DEV</a></b></dt>
 	<dd><tt>setenv DORADE_DEV "/scr/mead/data"</tt><BR><br>
 
-If the string "<code>/dev</code>" occurs anywhere in this
+If the string "<tt>/dev</tt>" occurs anywhere in this
 specification, the software assumes you will be writing to tape(s); if
 not, the software assumes you are specifying a destination directory
 for DORADE data different from the <A HREF="#DDIR">DORADE_DIR</A>
@@ -463,7 +463,7 @@ with <A HREF="#MDTS">MAX_DORADE_TAPE_SIZE</A> allows a user to specify
 output to more than one physical device and the approximate amount of
 data in gigabytes that can be written to a physical device.  <P>
 
-<dt><A NAME="DDIR"><b>DORADE_DIR</b></A></dt>
+<dt><b><a NAME="DDIR">DORADE_DIR</a></b></dt>
 	<dd><tt>setenv DORADE_DIR "/scr/mead/nexrad"</tt><BR><br>
 
 The destination directory for sweep files and catalog information and,
@@ -502,14 +502,14 @@ require that the source data device be positioned at the beginning of
 a file.  The following formats are recognized; specific notes about
 the formats follow.
 
-<pre><code>	<A HREF="#DDFMT">DORADE_FORMAT</a>
+<pre>	<A HREF="#DDFMT">DORADE_FORMAT</a>
 	<A HREF="#FMT88D">WSR_88D_FORMAT</a>
 	<A HREF="#UFFMT">UF_FORMAT</a>
 	<A HREF="#ELDFMT">ELDORA_FORMAT</a>
 	<A HREF="#FOFFMT">FOF_FORMAT</a>
 	<A HREF="#NCFMT">NETCDF_FORMAT</a>
 	<A HREF="#SWPFMT">SWEEPFILES_FORMAT</a>
-</pre></code>
+</pre>
 	
 <dl>
 <dt><tt><a NAME="DDFMT">DORADE_FORMAT</a></tt></dt>
@@ -751,23 +751,23 @@ delineation in the absence of the scan and volume counters in later revs.
 MIN_AZ_DIFF (default = .3) is used
 to detect a turnaround in the SIMPLE_SWEEPS option by comparing
 the last two anglular differences to this value. 
-<pre><code>az_turnaround =
+<pre>az_turnaround =
  ( fabs(ddaz) > min_az_diff && fabs(daz) > min_az_diff &&
  (ddaz + daz) * pui->az_diff_sum < 0 )
  || short_sum_az_diffs * pui->az_diff_sum < 0;
-</pre></code>
+</pre>
 
 It's also used to detect a possible transitioning to the next RHI
 by comparing it to the short_avg_az_diff so as not to trigger a new
 sweep flag
-<pre><code>if(fabs(short_avg_az_diff) > min_az_diff) { /* MIN_AZ_DIFF */
+<pre>if(fabs(short_avg_az_diff) > min_az_diff) { /* MIN_AZ_DIFF */
     /* moving in azimuth hopefully to the next rhi */
     return(NO);
 }
-</pre></code>
+</pre>
 to detect the beginning of a PPI;
 
-<pre><code>if(fabs(short_avg_az_diff) > min_az_diff
+<pre>if(fabs(short_avg_az_diff) > min_az_diff
    && fabs(short_avg_el_diff) < ppi_el_tol ) {
     /*
      * using MIN_AZ_DIFF and PPI_EL_TOL
@@ -778,9 +778,9 @@ to detect the beginning of a PPI;
     pui->lag_rays = lag_rays;
     return(YES);
 }
-</pre></code>
+</pre>
 and to detect a slowing of azimuthal motion indicating a transition
-<pre><code>if(fabs(avgDaz) < .5 * min_az_diff) { /* MIN_AZ_DIFF */
+<pre>if(fabs(avgDaz) < .5 * min_az_diff) { /* MIN_AZ_DIFF */
     /*
      * slowing down in azimuth
      */
@@ -788,17 +788,17 @@ and to detect a slowing of azimuthal motion indicating a transition
     printf( "t2:" );
     return(NO);
 }
-</pre></code>
+</pre>
 	
 MIN_EL_DIFF (default = .2) is used to detect the start of the next RHI
 after an RHI
-<pre><code>if(fabs(short_avg_el) > min_el_diff) { /* MIN_EL_DIFF */
+<pre>if(fabs(short_avg_el) > min_el_diff) { /* MIN_EL_DIFF */
     /* antenna moving vertically */
     return(YES);
 }
-</pre></code>
+</pre>
 It's also used to detect if the antenna has stopped moving vertically.
-<pre><code>if((fabs(pui->el_diff_run_sum) < min_el_diff)) { 
+<pre>if((fabs(pui->el_diff_run_sum) < min_el_diff)) { 
     /*
      * we are examining the sum of the differences between
      * ths last NUM_EL_DIFFS_AVGD rays not the whole sweep
@@ -809,10 +809,10 @@ It's also used to detect if the antenna has stopped moving vertically.
     pui->transition_count++;
     return(NO);
 }
-</pre></code>
+</pre>
 
 to detect along with the RHI_AZ_TOL the beginning of an RHI
-<pre><code>if( fabs(short_avg_el_diff) > min_el_diff
+<pre>if( fabs(short_avg_el_diff) > min_el_diff
     && fabs(short_avg_az_diff) < rhi_az_tol ) {
     /*
      * MIN_EL_DIFF and RHI_AZ_TOL
@@ -823,25 +823,25 @@ to detect along with the RHI_AZ_TOL the beginning of an RHI
     pui->lag_rays = lag_rays;
     return(YES);
 }
-</pre></code>
+</pre>
 
 MIN_FXD_DIFF (default = .15) is used to rule out the transition
 to a new volume.
-<pre><code>if(fabs(pui->swpang_diff_sum) < min_fxdang_diff) {
+<pre>if(fabs(pui->swpang_diff_sum) < min_fxdang_diff) {
     return(NO);
 }
-</pre></code>
+</pre>
 or to detect a new volume
-<pre><code>if(fabs(diff = angdiff(sq->last->swpang, gri->fixed)) >
+<pre>if(fabs(diff = angdiff(sq->last->swpang, gri->fixed)) >
     min_fxdang_diff) {
     if(diff * pui->swpang_diff_sum < 0) {
         /* the antenna has reversed its normal increment */
         return(YES);
     }
 }
-</pre></code>
+</pre>
 or along with the PPI_EL_TOL to detect new sweep
-<pre><code>if( fabs(short_sum_el_diffs) < ppi_el_tol ) { /* PPI_EL_TOL */
+<pre>if( fabs(short_sum_el_diffs) < ppi_el_tol ) { /* PPI_EL_TOL */
     /*
      * antenna is stable for several beams but too far away
      * from the current fixed angle (MIN_FXD_DIFF)
@@ -851,12 +851,12 @@ or along with the PPI_EL_TOL to detect new sweep
         return(YES);
     }
 }
-</pre></code>
+</pre>
 
 
 PPI_EL_TOL (default = .77) in addition to the above is used to flag a
 transition 
-<pre><code>if( fabs(pui->el_diff_run_sum) > ppi_el_tol ) { /* PPI_EL_TOL */
+<pre>if( fabs(pui->el_diff_run_sum) > ppi_el_tol ) { /* PPI_EL_TOL */
     /*
      * moving away from cont. elev.
      */
@@ -864,11 +864,11 @@ transition
     printf( "t1:" );
     return(NO);
 }
-</pre></code>
+</pre>
 RHI_AZ_TOL (default = 1.5) see above.<p>
 MAX_RHI_DIFF (default = 9.0) is used to detect the start of a PPI
 after an RHI
-<pre><code>if( fabs(pui->x_az_diff_sum) > max_rhi_diff ) { /* MAX_RHI_DIFF */
+<pre>if( fabs(pui->x_az_diff_sum) > max_rhi_diff ) { /* MAX_RHI_DIFF */
     /*
      * change in az since transition began > next reasonable rhi 
      * end of RHIs
@@ -876,7 +876,7 @@ after an RHI
     gri->scan_mode = PPI;
     return(NO);
 }
-</pre></code>NUM_AZ_DIFFS_AVGD (default = 5) is used to detect a slow down in
+</pre>NUM_AZ_DIFFS_AVGD (default = 5) is used to detect a slow down in
 azimuth motion, <p>
 NUM_EL_DIFFS_AVGD (default = 5) <p> 
 NUM_SHORT_AVG (default = 5) <p>
@@ -909,9 +909,9 @@ IGNORE_TRANSITIONS specifies omitting beams where the transition flag
 is on.<p>
 HZO_IMPROVE_FLAG sets a fudge factor for the range to the first gate
 for horizontal only IMPROVE data (currently set to 6.0).
-<pre><code>if( hdr->dataformat == DATA_SIMPLEPP && pui->options & HZO_IMPROVE_FLAG )
+<pre>if( hdr->dataformat == DATA_SIMPLEPP && pui->options & HZO_IMPROVE_FLAG )
     { gri->range_b1 = 150 - Improve_range0_offset * gri->bin_spacing; }
-</code></pre>
+</pre>
 <p>
 <p>
 <p>
@@ -994,7 +994,7 @@ rewrites the input sweepfiles.<p>
 
 </dl>
 
-<dt><b>IO_TYPE </b></dt>
+<dt><b>IO_TYPE</b></dt>
 	<dd><tt>setenv IO_TYPE "FB_IO"</tt><BR><br>
 
 This variable specifies that input files are FORTRAN-BINARY files. So
@@ -1002,7 +1002,7 @@ far this
 is applicable only to the MECTEX UF radar data where the UF files do not
 conform completely to the FORTRAN-BINARY convention.<P>
 
-<dt><A NAME="MDTS"><B>MAX_DORADE_TAPE_SIZE</b></a></dt>
+<dt><b><a NAME="MDTS">MAX_DORADE_TAPE_SIZE</a></b></dt>
 	<dd><tt>setenv MAX_DORADE_TAPE_SIZE 4.2</tt><BR><br>
 
 Specifies the approximate maximum number of gigbytes of DORADE output
@@ -1059,16 +1059,16 @@ but you can't do too much except make a pass through the data without
 it.  The following outputs are recognized; specific notes about the
 formats follow.<p>
 
-<pre><code>	<A HREF="#SWPS">SWEEP_FILES</a>
+<pre>	<A HREF="#SWPS">SWEEP_FILES</a>
         <A HREF="#DDAT">DORADE_DATA</a>
 	<A HREF="#DUFD">UF_DATA</a>
 	<A HREF="#NCOUT">NETCDF_DATA</a>
 	<A HREF="#GECH">GECHO_DATA</a>
-</pre></code>
+</pre>
 	
 
 <dl>
-<dt><code><A NAME="SWPS">SWEEP_FILES</A> </code></dt>
+<dt><tt><A NAME="SWPS">SWEEP_FILES</A> </tt></dt>
 
 <dd> Sweep files are simply the DORADE data broken up into one sweep
 per disk file. All of the applicable DORADE headers are included in
@@ -1076,7 +1076,7 @@ the file plus some additional information such as a rotation angle
 versus ray table. The files are the basis for functioning in
 <b>SOLO</b>. <p> 
 
-<dt><code><A NAME="DDAT">DORADE_DATA</A> </code></dt>
+<dt><tt><A NAME="DDAT">DORADE_DATA</A> </tt></dt>
 
 <dd> Data in pure DORADE format are produced by accumulating a volume
 of sweep files on the disk and then writing them to tape or disk. It
@@ -1114,14 +1114,14 @@ each radar during DORADE output.<p>
 
 DORADE_IO_TYPE " BINARY_IO PHYSICAL_TAPE".<p>
 
-DORADE_DEV If the string "<code>/dev</code>" occurs anywhere in this
+DORADE_DEV If the string "<tt>/dev</tt>" occurs anywhere in this
 specification, the software assumes you will be writing to tape(s); if
 not, the software assumes you are specifying a destination directory
 for DORADE data different from the <A HREF="#DDIR">DORADE_DIR</A>
 directory. The name of the file will be manufactured by the
 translator program. <p>
 
-<dt><code><A NAME="DUFD">UF_DATA</A> </code></dt>
+<dt><tt><A NAME="DUFD">UF_DATA</A> </tt></dt>
 
 <dd> The UF data are produced on a ray-by-ray basis as each ray of
 source data is read in.  In the absence of the <A
@@ -1152,24 +1152,24 @@ radar name, the second is a separator and the third is the device name
 all separated by white space.
 
 
-<dt><code>NO_UFEOFS </code></dt>
+<dt><tt>NO_UFEOFS </tt></dt>
 
 <dd> Suppresses the writing of EOFs for UF output. This can be helpful
 if data are filtered down to one or two sweeps per volume.<p>
 
-<dt><code><A NAME="NCOUT">NETCDF_DATA</A> </code></dt>
+<dt><tt><A NAME="NCOUT">NETCDF_DATA</A> </tt></dt>
 
 <dd> A flexible OS independent format developed by UCAR's 
 <a HREF="http://www.unidata.ucar.edu/packages/netcdf/">UNIDATA</a>
 program. See <A HREF="#NCDIR">NETCDF_DIR</A> and <A
 HREF="#NCFLD">NETCDF_FIELDS</A>. <p>
 
-<dt><code> NO_CATALOG</code></dt>
+<dt><tt> NO_CATALOG</tt></dt>
 
 <dd> Suppress the production of a catalog of the source data being
 processed. The catalog is a verbose ASCII text file.<p>
 
-<dt><code><A NAME="GECH">GECHO_DATA</A> </code></dt>
+<dt><tt><A NAME="GECH">GECHO_DATA</A> </tt></dt>
 
 <dd> Produces a special-purpose file of text information that results
 from an attempt to calculate and record reflectivity and velocity
@@ -1353,7 +1353,7 @@ program will stop at the latest stop time. Be sure to
 reinclude the date when the times cross midnight. YEARS are
 represented as YEAR-1900 or the 4-digit year.<P>
 
-<dt><A NAME="UFDEV"><B>UF_DEV</B></A></dt>
+<dt><b><a NAME="UFDEV">UF_DEV</a></b></dt>
 	<dd><tt>setenv UF_DEV "TF > /dev/nrsx0  TA > /dev/nrsx1"</tt><BR><br>
 
 In producing UF, data for each radar selected is written to a separate
@@ -1362,7 +1362,6 @@ the program assumes you are specifying a separate physical device for
 each radar.<P>
 
 
-<dt><A NAME="UFDIR"><B>UF_DIRECTORY</B></A></dt>
 	<dd><tt>setenv UF_DIRECTORY "/scr/mead/uf_dir"</tt><BR><br>
 
 Causes UF files to be written to this directory instead of the
