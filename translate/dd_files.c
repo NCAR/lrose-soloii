@@ -623,8 +623,11 @@ int ddir_files_v3(dir_num, dir)
      * put all the ddfns for this directory back on the spairs queue
      */
     for(rn=0; rn < ddir->num_radars; rn++) {
-	ddir->rni[rn]->top_ddfn->last->next = ddfn_spairs;
-	ddfn_spairs = ddir->rni[rn]->top_ddfn;
+        for (ddfn = ddir->rni[rn]->top_ddfn; ddfn; ddfn = ddfn->next) {
+            ddfn_push_spair(ddfn);
+            if (ddfn == ddir->rni[rn]->top_ddfn->last)
+                break;
+        }
     }
     ddir->num_radars = 0;
     /*
