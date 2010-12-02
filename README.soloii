@@ -1,4 +1,4 @@
-This README is for version 1.19 of soloii and xltrsii.
+This README is for version 1.20 of soloii and xltrsii.
 
 Soloii requires GTK+ headers and libraries! Also, to read or write netCDF 
 files, make sure the netcdf libraries have been installed.
@@ -60,6 +60,9 @@ names from those above).  Possibility of having 64-bit and
 
 Change Log
 ==========
+version 1.20 (2010/12/2):
+  o small cleanup which may fix problems when loading saved configuration files
+  
 version 1.19: 
   o actually tell people that we cannot display floating-point DORADE data,
     rather than just silently drawing a bunch of gray
