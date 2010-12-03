@@ -623,10 +623,15 @@ int ddir_files_v3(dir_num, dir)
      * put all the ddfns for this directory back on the spairs queue
      */
     for(rn=0; rn < ddir->num_radars; rn++) {
-        for (ddfn = ddir->rni[rn]->top_ddfn; ddfn; ddfn = ddfn->next) {
+        /* 
+         * Save a pointer to the last dd_file_name_v3 before we give away
+         * top_ddfn.
+         */
+        struct dd_file_name_v3 *last = ddir->rni[rn]->top_ddfn->last;
+        struct dd_file_name_v3 *next = 0;
+        for (ddfn = ddir->rni[rn]->top_ddfn; ddfn; ddfn = next) {
+            next = (ddfn == last) ? 0 : ddfn->next;
             ddfn_push_spair(ddfn);
-            if (ddfn == ddir->rni[rn]->top_ddfn->last)
-                break;
         }
     }
     ddir->num_radars = 0;
