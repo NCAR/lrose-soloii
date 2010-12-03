@@ -200,7 +200,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	      if (old_sos)
 		{ memcpy (&ssfi0, c, sizeof (ssfi0)); }
 	      else
-		{ memcpy(wwptr->sweep, c, gdsos); }
+		{ memcpy(wwptr->sweep, c, sizeof(*wwptr->sweep)); }
 	    }
 	    if (old_sos) {
 	       memcpy (wwptr->sweep, &ssfi0, sizeof (ssfi0));
@@ -228,7 +228,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	      if (old_sos)
 		{ memcpy (&sptl0, c, sizeof (sptl0)); }
 	      else
-		{ memcpy(wwptr->lock, c, gdsos); }
+		{ memcpy(wwptr->lock, c, sizeof(*wwptr->lock)); }
 	    }
 	    if (old_sos) {
 	      for (jj = frame_count; jj < SOLO_MAX_WINDOWS; jj++)
@@ -252,7 +252,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	      if (old_sos)
 		{ memcpy (&spmi0, c, sizeof (spmi0)); }
 	      else
-		{ memcpy(wwptr->parameter, c, gdsos); }
+		{ memcpy(wwptr->parameter, c, sizeof(*wwptr->parameter)); }
 	    }
 	    if (old_sos) {
 	       memcpy (wwptr->parameter, &spmi0, sizeof (spmi0));
@@ -287,7 +287,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	    }
 	    else {
 	      if (new_config)
-		{ memcpy(wwptr->view, c, gdsos); }
+		{ memcpy(wwptr->view, c, sizeof(*wwptr->view)); }
 	      else
 		{ memcpy (&swvi0, c, sizeof (swvi0)); }
 	    }
@@ -368,7 +368,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	      if (old_sos)
 		{ memcpy (&slmk0, c, sizeof (slmk0)); }
 	      else
-		{ memcpy(wwptr->landmark_info, c, gdsos); }
+		{ memcpy(wwptr->landmark_info, c, sizeof(*wwptr->landmark_info)); }
 	    }
 	    if (old_sos) {
 	       memcpy (wwptr->landmark_info, &slmk0, sizeof (slmk0));
@@ -393,7 +393,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	      if (old_sos)
 		{  memcpy (&sctr0, c, sizeof (sctr0)); }
 	      else
-		{ memcpy(wwptr->frame_ctr_info, c, gdsos); }
+		{ memcpy(wwptr->frame_ctr_info, c, sizeof(*wwptr->frame_ctr_info)); }
 	    }
 	    if (old_sos) {
 	       memcpy (wwptr->frame_ctr_info, &sctr0, sizeof (sctr0));
@@ -411,7 +411,7 @@ int solo_absorb_window_info (char *dir, char *fname, int ignore_swpfi_info)
 	       (c, wwptr->examine_info, (int)0);
 	    }
 	    else {
-	       memcpy(wwptr->examine_info, c, gdsos);
+	       memcpy(wwptr->examine_info, c, sizeof(*wwptr->examine_info));
 	    }
 	    wwptr->examine_info->sizeof_struct =
 		  sizeof(struct solo_examine_info);
