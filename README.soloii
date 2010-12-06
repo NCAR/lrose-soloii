@@ -60,8 +60,9 @@ names from those above).  Possibility of having 64-bit and
 
 Change Log
 ==========
-version 1.20 (2010/12/2):
-  o small cleanup which may fix problems when loading saved configuration files
+version 1.20 (2010/12/6):
+  o fixed memory overruns which were causing problems when changing display
+    configuration, e.g., when loading saved configuration files
   
 version 1.19: 
   o actually tell people that we cannot display floating-point DORADE data,
