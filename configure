@@ -267,8 +267,8 @@ SHELL=${CONFIG_SHELL-/bin/sh}
 # Identity of this package.
 PACKAGE_NAME='perusal/soloii.c'
 PACKAGE_TARNAME='perusal-soloii-c'
-PACKAGE_VERSION='1.19'
-PACKAGE_STRING='perusal/soloii.c 1.19'
+PACKAGE_VERSION='1.20'
+PACKAGE_STRING='perusal/soloii.c 1.20'
 PACKAGE_BUGREPORT=''
 
 # Factoring default headers for most tests.

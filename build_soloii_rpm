@@ -9,7 +9,7 @@ spec_skel = """
 #  This is a spec file for the $package package
 %define _topdir $topdir
 %define name $package
-%define release 0
+%define release $release
 %define version $version
 %define buildroot %{_topdir}/%{name}-%{version}-root
 
@@ -51,18 +51,18 @@ def safe_link(curfile, new_link):
     if not os.path.islink(new_link):
 	os.symlink(curfile, new_link)
 
-def create_spec(build_dir,  package, version):
+def create_spec(build_dir,  package, version, release=0):
 
     filename = 'SPECS/%s.spec' % package
     spec = open(filename, 'w')
     s = Template(spec_skel)
-    spec.write(s.substitute(topdir=build_dir, package=package, version=version) )
+    spec.write(s.substitute(topdir=build_dir, package=package, version=version,release=release) )
     spec.close()
     return filename
 
 
-def build_rpm(source_dir, build_dir,  package_name, version):
-    print 'source_dir = ', source_dir, 'version = ', version, 'package = ', package_name
+def build_rpm(source_dir, build_dir,  package_name, version, release=0):
+    print 'source_dir = ', source_dir, 'version = ', package_name, 'version = ', version, 'release =', release
     safe_mkdir(build_dir)
     # create the necessary directories
     for d in ('BUILD', 'RPMS', 'SOURCES', 'SPECS', 'SRPMS'):
@@ -79,27 +79,30 @@ def build_rpm(source_dir, build_dir,  package_name, version):
 
 
     os.chdir(build_dir)
-    spec_file = create_spec(build_dir, package_name, version)
+    spec_file = create_spec(build_dir, package_name, version, release)
 #    os.system("rpmbuild -v -bb --clean %s " % spec_file)
     os.system("rpmbuild -v -bb  %s " % spec_file)
 
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 4:
-	print("usage %s source_dir build_directory version" % sys.argv[0])
+    if len(sys.argv) < 4 or len(sys.argv) >5:
+	print("usage %s source_dir build_directory version [release]" % sys.argv[0])
 	sys.exit(1)
     source_dir = os.path.realpath(sys.argv[1])
     build_dir = os.path.realpath(sys.argv[2])
     version_str = sys.argv[3]
+    release_str = '0'
+    if len(sys.argv) == 5:
+	release_str = sys.argv[4]
     package_name = 'soloii'
-    if build_dir[0] != '/':
-	print("%s must start with '/'" % build_dir)
-	sys.exit(1)
-	
-
     # the RPM tools don't like trailing slashes!
     while build_dir[-1] == '/':
 	build_dir = build_dir[:-1]
+    if build_dir[0] != '/':
+	print("build_dir '%s' must start with '/'" % build_dir)
+	sys.exit(1)
+	
 
-    build_rpm(source_dir, build_dir,  package_name, version_str)
+
+    build_rpm(source_dir, build_dir,  package_name, version_str,release_str)
