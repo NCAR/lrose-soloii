@@ -12,7 +12,7 @@ Installation
 
 The Soloii distribution needs to be gunzipped and untarred into a
 directory such as "/rdss" (for example).  Untarring the soloii
-distribution will build a directory tree starting with the "soloii-1.19"
+distribution will build a directory tree starting with the "soloii-1.20"
 directory. To configure the Makefiles in all directories, you should
 invoke the configure script in the soloii directory.  So to build soloii, 
 installing files under <prefix>/bin and <prefix>/lib, the commands are 
