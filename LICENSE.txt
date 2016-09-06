@@ -1,5 +1,5 @@
-LROSE BSD LICENSE
-=================
+SOLOII BSD LICENSE
+==================
 
 Copyright (c) 1990 - 2016, University Corporation for Atmospheric
 Research (UCAR), Boulder, Colorado, USA.  All rights reserved. 
