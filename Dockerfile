@@ -35,6 +35,7 @@ ENV PKG_CONFIG_PATH /usr/lib/pkgconfig
 #
 # build & install soloii
 #
+
 ENV SOLO_DIR /tmp/lrose-soloii
 RUN mkdir $SOLO_DIR
 COPY . $SOLO_DIR
@@ -49,3 +50,9 @@ RUN yum -y install $PACKAGES_KEEP $PACKAGES $PACKAGES_i386 \
 
 # RUN mkdir /app
 # WORKDIR /app
+
+COPY docker/entrypoint.sh /usr/bin/soloii-entrypoint
+
+ENTRYPOINT ["/usr/bin/soloii-entrypoint"]
+
+CMD ["-h"]
