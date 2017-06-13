@@ -1,17 +1,7 @@
-FROM centos:5.11
-MAINTAINER ej@ucar.edu
+FROM ncareol/centos:5.11-0
+MAINTAINER Erik Johnson <ej@ucar.edu>
 
-#
-# update CentOS-Base to reference vault.centos.org:
-#
-COPY docker/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo
-
-RUN rm -f /etc/yum.repos.d/libselinux.repo
-
-#
-# install EPEL, for netcdf
-#
-RUN yum -y --enablerepo=extras install epel-release
+COPY docker/iptables /etc/sysconfig/iptables
 
 #
 # https://github.com/NCAR/lrose-soloii
