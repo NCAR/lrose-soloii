@@ -1,0 +1,140 @@
+{
+  "description": "Packer config for building lrose-soloii VirtualBox image, adapted from https://github.com/chef/bento/blob/master/centos-5.11-x86_64.json",
+
+  "builders": [
+    {
+      "boot_command": [
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/{{user `ks_path`}}<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": "{{user `disk_size`}}",
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "guest_os_type": "RedHat_64",
+      "hard_drive_interface": "sata",
+      "headless": "{{ user `headless` }}",
+      "http_directory": "http",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_url": "{{user `iso_url`}}",
+      "output_directory": "{{user `output_directory_base`}}/packer.{{user `vm_name`}}.virtualbox.{{isotime \"20060102\"}}",
+      "shutdown_command": "echo 'vagrant' | sudo -S /sbin/halt -h -p",
+      "ssh_password": "vagrant",
+      "ssh_port": 22,
+      "ssh_username": "vagrant",
+      "ssh_wait_timeout": "10000s",
+      "type": "virtualbox-iso",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "{{ user `memory` }}"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "{{ user `cpus` }}"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--paravirtprovider",
+          "none"
+        ]
+      ],
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "{{ user `template` }}"
+    }
+  ],
+  "post-processors": [
+    {
+      "output": "{{user `output_directory_base`}}/{{user `vm_name`}}.{{.Provider}}.{{isotime \"20060102\"}}.box",
+      "type": "vagrant"
+    }
+  ],
+  "provisioners": [
+    {
+      "destination": "/tmp/bento-metadata.json",
+      "source": "{{user `metadata`}}",
+      "type": "file"
+    },
+    {
+      "type": "shell",
+      "inline": ["mkdir /tmp/lrose-soloii"]
+    },
+    {
+      "type": "file",
+      "source": "../",
+      "destination": "/tmp/lrose-soloii"
+    },
+    {
+      "type": "file",
+      "source": "etc/yum.repos.d/CentOS-Base.repo",
+      "destination": "/tmp/"
+    },
+    {
+      "type": "shell",
+      "inline": ["sudo mv /tmp/CentOS-Base.repo /etc/yum.repos.d/"]
+    },
+    {
+      "type": "file",
+      "source": "etc/sysconfig/iptables",
+      "destination": "/tmp/"
+    },
+    {
+      "type": "shell",
+      "inline": ["sudo mv /tmp/iptables /etc/sysconfig/iptables"]
+    },
+    {
+      "type": "file",
+      "source": "etc/gdm/custom.conf",
+      "destination": "/tmp/custom.conf"
+    },
+    {
+      "environment_vars": [
+        "HOME_DIR=/home/vagrant",
+        "http_proxy={{user `http_proxy`}}",
+        "https_proxy={{user `https_proxy`}}",
+        "no_proxy={{user `no_proxy`}}"
+      ],
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E sh -eux '{{.Path}}'",
+      "scripts": [
+        "scripts/metadata.sh",
+        "scripts/sshd.sh",
+        "scripts/networking.sh",
+        "scripts/vagrant.sh",
+        "scripts/virtualbox.sh",
+        "scripts/lrose-soloii.sh",
+        "scripts/desktop.sh",
+        "scripts/cleanup.sh",
+        "scripts/minimize.sh"
+      ],
+      "type": "shell"
+    }
+  ],
+  "variables": {
+    "output_directory_base": ".",
+    "box_basename": "lrose-soloii-centos-5.11",
+    "build_timestamp": "{{isotime \"20060102150405\"}}",
+    "cpus": "2",
+    "disk_size": "40960",
+    "git_revision": "__unknown_git_revision__",
+    "headless": "",
+    "http_proxy": "{{env `http_proxy`}}",
+    "https_proxy": "{{env `https_proxy`}}",
+    "iso_url": "/net/vagrant/iso/CentOS-5.11-x86_64-bin-DVD-1of2.iso",
+    "iso_checksum": "b6eb0565b636513b90663ff01c6ec4da5058baff0d7d4007d187be997dd985f8",
+    "iso_checksum_type": "sha256",
+    "iso_name": "CentOS-5.11-x86_64-bin-DVD-1of2.iso",
+    "ks_path": "ks-centos-5.11.cfg",
+    "memory": "512",
+    "metadata": "floppy/dummy_metadata.json",
+    "name": "centos-5.11",
+    "no_proxy": "{{env `no_proxy`}}",
+    "template": "lrose-soloii-centos-5.11-x86_64",
+    "version": "2.1.TIMESTAMP",
+    "vm_name": "lsrose-soloii.centos-5.11"
+  }
+}
+
