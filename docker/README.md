@@ -39,4 +39,4 @@ docker push ncareol/lrose-soloii:1.20-002
 docker push ncareol/lrose-soloii:latest
 ```
 
-Update `docker/CHANGELOG.md` to document the features or changes provided by the new version. Similarly, document these changes in the **Tags** section of the **Description** on **Docker Hub**, <https://hub.docker.com/r/ncareol/lrose-soloii/>.
+Update [`CHANGELOG.md`](CHANGELOG.md) to document the features or changes provided by the new version. Similarly, document these changes in the **Tags** section of the **Description** on **Docker Hub**, <https://hub.docker.com/r/ncareol/lrose-soloii/>.
