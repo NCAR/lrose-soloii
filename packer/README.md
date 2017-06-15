@@ -45,7 +45,7 @@ Virtual machine settings can be modified by double-clicking on a parameter, **e.
 
 ### Shared folders
 
-To share data between the host and virtual machine, **VirtualBox**'s Shared Folders can be used. To add a Shared Folder to a virtual machine:
+To share data between the host and virtual machine, **VirtualBox**'s [**Shared Folders**](https://www.virtualbox.org/manual/ch04.html#sharedfolders) can be used. To add a Shared Folder to a virtual machine:
 
 1. open **VirtualBox**'s **Manager** window
 2. select the virtual machine from the menu on the left
@@ -54,7 +54,7 @@ To share data between the host and virtual machine, **VirtualBox**'s Shared Fold
 5. click the folder icon w/ the **plus (+)** sign on it
 6. select **Other** from the **Folder Path** dropdown menu
 7. use the file browser to select the host directory that you want to share w/ the virtual machine
-8. optionally, enter a **Folder Name** is you want to override the one that is automatically provided
+8. optionally, enter a **Folder Name** if you want to override the one that is automatically provided
 9. select the **Auto-mount** checkbox
 10. select the **Make Permanent** checkbox
 11. click **OK**
