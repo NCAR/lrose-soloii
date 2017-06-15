@@ -62,3 +62,7 @@ To share data between the host and virtual machine, **VirtualBox**'s Shared Fold
 If the virtual machine is running, it will then need to be rebooted.
 
 The shared folder will then be accessible @ the path `/media/sf_<folder-name>`.
+
+### soloii
+
+**soloii** can be started by double-clicking the **lrose-soloii** icon on the desktop.
