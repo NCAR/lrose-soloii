@@ -35,11 +35,11 @@ The virtual machine is built to autologin into the GNOME desktop environment as 
 
 To run the virtual machine, the `.ova` file must be imported by **VirtualBox**. This can be done by:
 
-- selecting the **File** menu
-- selecting **Import Appliance**
-- clicking the folder icon
-- using the file browser to select the `.ova`
-- clicking the **Import** button
+1. selecting the **File** menu
+2. selecting **Import Appliance**
+3. clicking the folder icon
+4. using the file browser to select the `.ova`
+5. clicking the **Import** button
 
 Virtual machine settings can be modified by double-clicking on a parameter, **e.g.** *Name*, *CPU*, *RAM*, and entering a new parameter before clicking **Import**, and can be modified later, we well.
 
@@ -47,17 +47,17 @@ Virtual machine settings can be modified by double-clicking on a parameter, **e.
 
 To share data between the host and virtual machine, **VirtualBox**'s Shared Folders can be used. To add a Shared Folder to a virtual machine:
 
-- open **VirtualBox**'s **Manager** window
-- select the virtual machine from the menu on the left
-- click **Settings**
-- select **Shared Folders** from the menu along the top
-- click the folder icon w/ the **plus (+)** sign on it
-- select **Other** from the **Folder Path** dropdown menu
-- use the file browser to select the host directory that you want to share w/ the virtual machine
-- optionally, enter a **Folder Name** is you want to override the one that is automatically provided
-- select the **Auto-mount** checkbox
-- select the **Make Permanent** checkbox
-- click **OK**
+1. open **VirtualBox**'s **Manager** window
+2. select the virtual machine from the menu on the left
+3. click **Settings**
+4. select **Shared Folders** from the menu along the top
+5. click the folder icon w/ the **plus (+)** sign on it
+6. select **Other** from the **Folder Path** dropdown menu
+7. use the file browser to select the host directory that you want to share w/ the virtual machine
+8. optionally, enter a **Folder Name** is you want to override the one that is automatically provided
+9. select the **Auto-mount** checkbox
+10. select the **Make Permanent** checkbox
+11. click **OK**
 
 If the virtual machine is running, it will then need to be rebooted.
 
