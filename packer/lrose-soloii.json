@@ -148,7 +148,7 @@
     "no_proxy": "{{env `no_proxy`}}",
     "template": "lrose-soloii-centos-5.11-x86_64-{{isotime \"20060102\"}}",
     "version": "2.1.TIMESTAMP",
-    "vm_name": "lsrose-soloii.centos-5.11"
+    "vm_name": "lrose-soloii.centos-5.11"
   }
 }
 
