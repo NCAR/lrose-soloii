@@ -15,6 +15,8 @@ export PKG_CONFIG_PATH=/usr/lib/pkgconfig
 
 export SOLO_DIR=/tmp/lrose-soloii
 
+sed -i -e 's/iso8859-1/iso8859-2/' $SOLO_DIR/perusal/soloii.c
+
 yum -y install $PACKAGES_KEEP $PACKAGES $PACKAGES_i386 \
     && cd $SOLO_DIR \
     && ./configure --prefix=/usr \
