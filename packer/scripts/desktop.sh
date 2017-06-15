@@ -32,12 +32,10 @@ sudo -u lrose gconftool-2 --set /apps/gnome-terminal/profiles/Default/cursor_bli
 #
 # stage soloii desktop icon
 #
-
 sudo -u lrose mkdir /home/lrose/Desktop
-
 sudo -u lrose mv /tmp/lrose-soloii.desktop /home/lrose/Desktop/lrose-soloii.desktop
 
 #
 # add lrose user to vboxsf group, for accessing shared folders
 #
-sudo /usr/sbin/usermod -aG vboxsf lrose
+/usr/sbin/usermod -aG vboxsf lrose
