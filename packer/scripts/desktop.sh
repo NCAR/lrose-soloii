@@ -36,6 +36,12 @@ sudo -u lrose mkdir /home/lrose/Desktop
 sudo -u lrose mv /tmp/lrose-soloii.desktop /home/lrose/Desktop/lrose-soloii.desktop
 
 #
+# autostart soloii
+#
+sudo -u lrose mkdir -p /home/lrose/.config/autostart
+sudo -u lrose ln -s /home/lrose/Desktop/lrose-soloii.desktop /home/lrose/.config/autostart
+
+#
 # add lrose user to vboxsf group, for accessing shared folders
 #
 /usr/sbin/usermod -aG vboxsf lrose
