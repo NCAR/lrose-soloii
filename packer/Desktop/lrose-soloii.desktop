@@ -1,0 +1,10 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Exec=soloii
+Name=lrose-soloii
+Comment=start lrose-soloii
+Icon=/usr/share/icons/gnome/scalable/status/stock_weather-showers.svg
