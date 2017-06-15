@@ -74,6 +74,21 @@
     },
     {
       "type": "file",
+      "source": "var/cache/yum/base/mirrorlist.txt",
+      "destination": "/tmp/base-mirrorlist.txt"
+    },
+    {
+      "type": "file",
+      "source": "var/cache/yum/updates/mirrorlist.txt",
+      "destination": "/tmp/updates-mirrorlist.txt"
+    },
+    {
+      "type": "file",
+      "source": "var/cache/yum/extras/mirrorlist.txt",
+      "destination": "/tmp/extras-mirrorlist.txt"
+    },
+    {
+      "type": "file",
       "source": "etc/sysconfig/iptables",
       "destination": "/tmp/"
     },
@@ -103,6 +118,7 @@
         "scripts/sshd.sh",
         "scripts/networking.sh",
         "scripts/virtualbox.sh",
+        "scripts/yum-repos.sh",
         "scripts/lrose-soloii.sh",
         "scripts/desktop.sh",
         "scripts/cleanup.sh",
