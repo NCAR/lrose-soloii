@@ -9,7 +9,23 @@ lrose_host_data_dir=$1
 
 lrose_dockerhost=$(docker info | grep Name | sed -e 's/Name: //')
 
-lrose_host_ip=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')
+#
+# use architecture-specific method to determine ip
+#
+
+get_ip_address () {
+  lrose_uname=$(uname)
+  if [[ $lrose_uname = 'Darwin' ]]; then
+    echo $(ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $2}' |head -1)
+  elsif [[ $lrose_uname = 'Linux' ]]; then
+    echo $(hostname -I)
+  else
+    echo TODO
+    exit 1
+  fi
+}
+
+lrose_host_ip=$(get_ip_address)
 
 xhost + $lrose_dockerhost
 
