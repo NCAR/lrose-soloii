@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+docker -v > /dev/null
+docker_exit_code=$?
+
+if [[ $docker_exit_code != 0 ]]; then
+  echo 'It appears that docker is not installed or in PATH'
+  echo 'Please install docker or add it to PATH'
+  exit $docker_exit_code
+fi
+
 if [[ "$@" = '' ]] ; then
   echo 'Please specify a data directory for soloii'
   exit 1
