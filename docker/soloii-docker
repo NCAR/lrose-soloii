@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+if [[ "$@" = '' ]] ; then
+  echo 'Please specify a data directory for soloii'
+  exit 1
+fi
+
+lrose_host_data_dir=$1
+
+lrose_dockerhost=$(docker info | grep Name | sed -e 's/Name: //')
+
+lrose_host_ip=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')
+
+xhost + $lrose_dockerhost
+
+docker run \
+  -e DISPLAY=$lrose_host_ip:0 \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v $lrose_host_data_dir:/data \
+  ncareol/lrose-soloii /data
