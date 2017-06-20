@@ -1,6 +1,9 @@
 # ncareol/lrose-soloii CHANGELOG
 
 
+- [`1.20-004`](https://github.com/NCAR/lrose-soloii/commit/1b25230)
+  - display 'starting' dialog and `-h` hint when starting `soloii`
+
 - [`1.20-003`](https://github.com/NCAR/lrose-soloii/commit/16a999f)
   - remove `CMD -h` so that image can be run without arguments and still invoke `soloii`
 
