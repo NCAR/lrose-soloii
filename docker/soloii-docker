@@ -18,28 +18,31 @@ lrose_host_data_dir=$1
 
 lrose_dockerhost=$(docker info | grep Name | sed -e 's/Name: //')
 
-#
-# use architecture-specific method to determine ip
-#
+xhost + $lrose_dockerhost
 
-get_ip_address () {
+#
+# architecture-specific method to set `docker run` options
+#
+lrose_docker_run_options () {
   lrose_uname=$(uname)
   if [[ $lrose_uname = 'Darwin' ]]; then
-    echo $(ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $2}' |head -1)
+    lrose_host_ip=$(ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $2}' |head -1)
+    #
+    # set DISPLAY to host-ip:0
+    #
+    echo "-e DISPLAY=$lrose_host_ip:0"
   elif [[ $lrose_uname = 'Linux' ]]; then
-    echo $(hostname -i)
+    #
+    # pass through DISPLAY, but specify X11 socket as shared volume
+    #
+    echo "-e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix"
   else
     echo TODO
     exit 1
   fi
 }
 
-lrose_host_ip=$(get_ip_address)
-
-xhost + $lrose_dockerhost
-
 docker run \
-  -e DISPLAY=$lrose_host_ip:0 \
-  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  $(lrose_docker_run_options) \
   -v $lrose_host_data_dir:/data \
   ncareol/lrose-soloii /data
