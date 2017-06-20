@@ -44,5 +44,3 @@ RUN yum -y install $PACKAGES_KEEP $PACKAGES $PACKAGES_i386 \
 COPY docker/entrypoint.sh /usr/bin/soloii-entrypoint
 
 ENTRYPOINT ["/usr/bin/soloii-entrypoint"]
-
-CMD ["-h"]
