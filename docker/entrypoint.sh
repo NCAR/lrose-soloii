@@ -29,4 +29,7 @@ elif [[ "$@" != '' ]] ; then
   fi
 fi
 
+echo "Starting soloii..."
+echo "Run w/ -h or --help to see help information"
+
 soloii
