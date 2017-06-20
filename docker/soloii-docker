@@ -16,7 +16,7 @@ fi
 
 lrose_host_data_dir=$1
 
-lrose_dockerhost=$(docker info | grep Name | sed -e 's/Name: //')
+lrose_dockerhost=$(docker info | egrep ^Name: | sed -e 's/Name: //')
 
 xhost + $lrose_dockerhost
 
