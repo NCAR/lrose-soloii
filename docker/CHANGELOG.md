@@ -1,5 +1,9 @@
 # ncareol/lrose-soloii CHANGELOG
 
+
+- [`1.20-003`](https://github.com/NCAR/lrose-soloii/commit/16a999f)
+  - remove `CMD -h` so that image can be run without arguments and still invoke `soloii`
+
 - [`1.20-002`](https://github.com/NCAR/lrose-soloii/commit/f6691ff)
   - use [`ncareol/centos:5.11-0`](https://hub.docker.com/r/ncareol/centos/) as base image
   - add firewall to block all incoming connections, via `iptables`
