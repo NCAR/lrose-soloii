@@ -27,7 +27,7 @@ get_ip_address () {
   if [[ $lrose_uname = 'Darwin' ]]; then
     echo $(ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $2}' |head -1)
   elif [[ $lrose_uname = 'Linux' ]]; then
-    echo $(hostname -I)
+    echo $(hostname -i)
   else
     echo TODO
     exit 1
