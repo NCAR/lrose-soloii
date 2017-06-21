@@ -1,6 +1,9 @@
 # ncareol/lrose-soloii CHANGELOG
 
 
+- [`1.20-005`](https://github.com/NCAR/lrose-soloii/commit/b015893)
+  - install `fonts-ISO8859-2` to avoid 'Unable to load font %s' error when running image on **Linux**
+
 - [`1.20-004`](https://github.com/NCAR/lrose-soloii/commit/1b25230)
   - display 'starting' dialog and `-h` hint when starting `soloii`
 
