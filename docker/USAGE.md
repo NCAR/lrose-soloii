@@ -77,3 +77,19 @@ For more information:
 
 - [Docker for Mac and GUI applications](https://fredrikaverpil.github.io/2016/07/31/docker-for-mac-and-gui-applications/)
 - [Docker Containers on the Desktop](https://blog.jessfraz.com/post/docker-containers-on-the-desktop/)
+
+### Troubleshooting
+
+#### Linux
+
+##### "Unable to load font %s"
+
+On **CentOS**, **RHEL**-derived **Linux**, install `ISO8859-1` packages:
+
+```sh
+sudo yum install xorg-x11-fonts-ISO8859-1-*
+```
+
+##### Ubuntu, Debian and its derivatives
+
+**TODO**
