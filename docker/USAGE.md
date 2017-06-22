@@ -1,10 +1,8 @@
-# lrose-soloii
-
-## Docker Usage
+# lrose-soloii Docker Usage
 
 The `ncareol/lrose-soloii` **Docker** image is hosted on **Docker Hub**: <https://hub.docker.com/r/ncareol/lrose-soloii/>.
 
-### Entrypoint
+## Entrypoint
 
 This image provides an [`entrypoint`](https://docs.docker.com/engine/reference/builder/#entrypoint) that can accept a directory as an argument.
 
@@ -23,7 +21,7 @@ Passing a directory as an argument will cause the container to `cd` to that dire
 docker run ncareol/lrose-soloii /data
 ```
 
-### X11
+## X11
 
 For **X11** on **macOS**:
 
@@ -53,7 +51,7 @@ Determine the IP address of the **macOS** host machine:
 ip=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')
 ```
 
-### Run
+## Run
 
 Provide `docker run` w/ the following:
 
@@ -78,11 +76,11 @@ For more information:
 - [Docker for Mac and GUI applications](https://fredrikaverpil.github.io/2016/07/31/docker-for-mac-and-gui-applications/)
 - [Docker Containers on the Desktop](https://blog.jessfraz.com/post/docker-containers-on-the-desktop/)
 
-### Troubleshooting
+## Troubleshooting
 
-#### Linux
+### Linux
 
-##### "Unable to load font %s"
+#### "Unable to load font %s"
 
 If `soloii` fails to start and returns an error w/ message *"Unable to load font %s"*, this can be resolved by installing the required fonts on the host.
 

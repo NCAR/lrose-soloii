@@ -1,6 +1,4 @@
-# lrose-soloii
-
-## Docker Usage on Windows
+# lrose-soloii Docker Usage on Windows
 
 Install an **X11** server, such as
 

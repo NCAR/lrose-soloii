@@ -1,20 +1,18 @@
-# lrose-soloii
-
-## Docker
+# lrose-soloii Docker
 
 This directory, `docker/`, contains documentation and files required for building the `ncareol/lrose-soloii` **Docker** image, hosted @ <http://hub.docker.com/r/ncareol/lrose-soloii>.
 
-### Usage
+## Usage
 
 For Usage information and instructions, see [`USAGE.md`](USAGE.md)
 
-### Build
+## Build
 
 ```
 docker build .
 ```
 
-### Tag
+## Tag
 
 Take the image ID from the build script, and assign it to a versioned tag and, optionally, the `latest` tag. *E.g.*
 
@@ -30,7 +28,7 @@ The current tag convention is to use the software's version number, followed by 
 - `1.20`: the image is built w/ version `1.20` of the `lrose-soloii` software
 - `-002`: the image is the second **Docker** image released for version `1.20` of `lrose-soloii`
 
-### Release
+## Release
 
 Push the tagged images to **Docker Hub**:
 
