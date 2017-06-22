@@ -4,7 +4,10 @@ This directory, `docker/`, contains documentation and files required for buildin
 
 ## Usage
 
-For Usage information and instructions, see [`USAGE.md`](USAGE.md)
+For **Usage** information and instructions
+
+- see [`USAGE.md`](USAGE.md) for general usage on **Unix** platforms, *ie.* **Linux** and **macOS**
+- for **Windows**, see [`WINDOWS.md`](WINDOWS.md)
 
 ## Development
 
