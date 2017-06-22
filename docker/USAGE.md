@@ -84,6 +84,8 @@ For more information:
 
 ##### "Unable to load font %s"
 
+If `soloii` fails to start and returns an error w/ message *"Unable to load font %s"*, this can be resolved by installing the required fonts on the host.
+
 On **CentOS**, **RHEL**-derived **Linux**, install `ISO8859-1` packages:
 
 ```sh
