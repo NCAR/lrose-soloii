@@ -11,7 +11,7 @@ This image provides an [`entrypoint`](https://docs.docker.com/engine/reference/b
 Running the image w/ `-h` or `--help` as argument will display help instructions:
 
 ```
-docker run ncareol/lrose-soloii:1.20-002 -h
+docker run ncareol/lrose-soloii -h
 
 start soloii
 INPUT (OPTIONAL): directory path from which to invoke soloii
@@ -20,7 +20,7 @@ INPUT (OPTIONAL): directory path from which to invoke soloii
 Passing a directory as an argument will cause the container to `cd` to that directory and then start `soloii`. *E.g.*
 
 ```sh
-docker run ncareol/lrose-soloii:1.20-002 /data
+docker run ncareol/lrose-soloii /data
 ```
 
 ### X11
@@ -60,7 +60,7 @@ Provide `docker run` w/ the following:
 - set the `DISPLAY` for **X11** w/ `-e`
 - mount the X11 socket as a volume w/ `-v`
 - mount a data volume w/ another `-v`
-- specify the Docker image, *e.g.* `ncareol/lrose-soloii:1.20-002`
+- specify the Docker image, `ncareol/lrose-soloii`
 - optionally, specify a path to a data directory within the container, *e.g.* `/data`
 
 *E.g.*:
@@ -70,7 +70,7 @@ docker run \
   -e DISPLAY=$ip:0 \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   -v /Users/ej/rsf:/data \
-  ncareol/lrose-soloii:1.20-002 /data
+  ncareol/lrose-soloii /data
 ```
 
 For more information:
