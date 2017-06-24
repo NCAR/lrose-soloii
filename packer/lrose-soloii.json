@@ -49,8 +49,8 @@
     },
     {
       "type": "file",
-      "source": "etc/gdm/custom.conf",
-      "destination": "/tmp/"
+      "source": "etc/gdm/custom-{{user `lrose_username`}}.conf",
+      "destination": "/tmp/custom.conf"
     },
     {
       "type": "file",
