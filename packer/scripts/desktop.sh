@@ -3,45 +3,38 @@
 #
 # desktop
 #
-yum -y install xorg-x11-server-Xorg
-yum -y groupinstall 'GNOME Desktop Environment'
-yum -y install gdm
+# yum groupinstall -y "GNOME Desktop" "Graphical Administration Tools"
+# yum groupinstall -y "GNOME Desktop"
+
+#
+# minimal?
+#
+yum -y groupinstall "X Window System"
+# yum -y install gnome-shell gnome-terminal
+yum -y install gnome-classic-session gnome-terminal nautilus-open-terminal control-center liberation-mono-fonts
 
 #
 # set runlevel to 5, to boot to GDM
 #
-sed --in-place -e 's/id:3:initdefault/id:5:initdefault/' /etc/inittab
-
+systemctl set-default graphical.target
 #
-# configure GDM to automatically log in user vagrant
+# configure GDM to automatically log in user USERNAME
 #
 mv /tmp/custom.conf /etc/gdm/
 
 #
-# disable lockscreen and screensaver
+# add LROSE_USERNAME user to vboxsf group, for accessing shared folders
 #
-sudo -u lrose gconftool-2 --set /schemas/desktop/gnome/lockdown/disable_lock_screen --type boolean true
-sudo -u lrose gconftool-2 --set /schemas/apps/gnome-screensaver/lock_enabled --type boolean false
-sudo -u lrose gconftool-2 --set /schemas/apps/gnome-screensaver/idle_activation_enabled --type boolean false
+/usr/sbin/usermod -aG vboxsf $LROSE_USERNAME
 
 #
-# disable cursor blinking
+# start gnome-terminal on desktop login
 #
-sudo -u lrose gconftool-2 --set /apps/gnome-terminal/profiles/Default/cursor_blink --type boolean false
+sudo -u $LROSE_USERNAME mkdir -p /home/$LROSE_USERNAME/.config/autostart
+# sudo -u $USERNAME ln -s /usr/share/applications/gnome-terminal.desktop /home/vagrant/.config/autostart
 
 #
-# stage soloii desktop icon
+# stage script to initialize gsettings
 #
-sudo -u lrose mkdir /home/lrose/Desktop
-sudo -u lrose mv /tmp/lrose-soloii.desktop /home/lrose/Desktop/lrose-soloii.desktop
-
-#
-# autostart soloii
-#
-sudo -u lrose mkdir -p /home/lrose/.config/autostart
-sudo -u lrose ln -s /home/lrose/Desktop/lrose-soloii.desktop /home/lrose/.config/autostart
-
-#
-# add lrose user to vboxsf group, for accessing shared folders
-#
-/usr/sbin/usermod -aG vboxsf lrose
+sudo -u $LROSE_USERNAME cp /tmp/gsettings.sh /home/$LROSE_USERNAME/
+sudo -u $LROSE_USERNAME cp /tmp/gsettings.desktop /home/$LROSE_USERNAME/.config/autostart

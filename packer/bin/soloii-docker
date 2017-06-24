@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+docker -v > /dev/null
+docker_exit_code=$?
+
+if [[ $docker_exit_code != 0 ]]; then
+  echo 'It appears that docker is not installed or in PATH'
+  echo 'Please install docker or add it to PATH'
+  exit $docker_exit_code
+fi
+
+# if [[ "$@" = '' ]] ; then
+#   echo 'Please specify a data directory for soloii'
+#   exit 1
+# fi
+
+lrose_host_data_dir=$1
+
+lrose_dockerhost=$(docker info | egrep ^Name: | sed -e 's/Name: //')
+
+xhost + $lrose_dockerhost
+
+#
+# architecture-specific method to set `docker run` options
+#
+lrose_docker_run_display_options () {
+  lrose_uname=$(uname)
+  if [[ $lrose_uname = 'Darwin' ]]; then
+    lrose_host_ip=$(ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $2}' |head -1)
+    #
+    # set DISPLAY to host-ip:0
+    #
+    echo "-e DISPLAY=$lrose_host_ip:0"
+  elif [[ $lrose_uname = 'Linux' ]]; then
+    #
+    # pass through DISPLAY, but specify X11 socket as shared volume
+    #
+    echo "-e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix"
+  else
+    echo TODO
+    exit 1
+  fi
+}
+
+lrose_container_dir='/vm'
+
+lrose_docker_run_volume_options () {
+  volume_defaults='-v /media:/media'
+  if [[ $lrose_host_data_dir = '' ]]; then
+    echo "$volume_defaults -v /:/$lrose_container_dir"
+  else
+    echo "$volume_defaults -v $lrose_host_data_dir:/$lrose_container_dir"
+  fi
+}
+
+docker run \
+  $(lrose_docker_run_display_options) \
+  $(lrose_docker_run_volume_options) \
+  ncareol/soloii $lrose_container_dir

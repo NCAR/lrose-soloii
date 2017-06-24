@@ -4,7 +4,7 @@
 Version=1.0
 Type=Application
 Terminal=false
-Exec=soloii
-Name=lrose-soloii
-Comment=start lrose-soloii
-Icon=/usr/share/icons/gnome/scalable/status/stock_weather-showers.svg
+Exec=soloii-docker
+Name=soloii
+Comment=start soloii
+Icon=/usr/share/icons/gnome/48x48/status/weather-showers.png

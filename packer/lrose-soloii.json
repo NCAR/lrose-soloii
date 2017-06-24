@@ -1,14 +1,13 @@
 {
-  "description": "Packer config for building lrose-soloii VirtualBox image, adapted from https://github.com/chef/bento/blob/master/centos-5.11-x86_64.json",
-
+  "description": "based on https://github.com/chef/bento/blob/master/centos-7.3-x86_64.json",
   "builders": [
     {
       "boot_command": [
-        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/{{user `ks_path`}}<enter><wait>"
+        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ks-centos7-{{user `lrose_username`}}.cfg<enter><wait>"
       ],
       "boot_wait": "10s",
       "disk_size": "{{user `disk_size`}}",
-      "format":"ova",
+      "format": "ova",
       "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
       "guest_os_type": "RedHat_64",
       "hard_drive_interface": "sata",
@@ -17,11 +16,11 @@
       "iso_checksum": "{{user `iso_checksum`}}",
       "iso_checksum_type": "{{user `iso_checksum_type`}}",
       "iso_url": "{{user `iso_url`}}",
-      "output_directory": "{{user `output_directory_base`}}/packer.{{user `vm_name`}}.virtualbox.{{isotime \"20060102\"}}",
-      "shutdown_command": "echo 'lrose' | sudo -S /sbin/halt -h -p",
-      "ssh_password": "lrose",
+      "output_directory": "{{user `output_directory_base`}}/packer.{{user `box_basename`}}.virtualbox.{{isotime \"20060102\"}}",
+      "shutdown_command": "echo '{{user `lrose_username`}}'|sudo -S shutdown -P now",
+      "ssh_password": "{{user `lrose_username`}}",
       "ssh_port": 22,
-      "ssh_username": "lrose",
+      "ssh_username": "{{user `lrose_username`}}",
       "ssh_wait_timeout": "10000s",
       "type": "virtualbox-iso",
       "vboxmanage": [
@@ -36,16 +35,10 @@
           "{{.Name}}",
           "--cpus",
           "{{ user `cpus` }}"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--paravirtprovider",
-          "none"
         ]
       ],
       "virtualbox_version_file": ".vbox_version",
-      "vm_name": "{{ user `template` }}"
+      "vm_name": "{{ user `box_basename` }}"
     }
   ],
   "provisioners": [
@@ -55,72 +48,53 @@
       "type": "file"
     },
     {
-      "type": "shell",
-      "inline": ["mkdir /tmp/lrose-soloii"]
-    },
-    {
-      "type": "file",
-      "source": "../",
-      "destination": "/tmp/lrose-soloii"
-    },
-    {
-      "type": "file",
-      "source": "etc/yum.repos.d/CentOS-Base.repo",
-      "destination": "/tmp/"
-    },
-    {
-      "type": "shell",
-      "inline": ["sudo mv /tmp/CentOS-Base.repo /etc/yum.repos.d/"]
-    },
-    {
-      "type": "file",
-      "source": "var/cache/yum/base/mirrorlist.txt",
-      "destination": "/tmp/base-mirrorlist.txt"
-    },
-    {
-      "type": "file",
-      "source": "var/cache/yum/updates/mirrorlist.txt",
-      "destination": "/tmp/updates-mirrorlist.txt"
-    },
-    {
-      "type": "file",
-      "source": "var/cache/yum/extras/mirrorlist.txt",
-      "destination": "/tmp/extras-mirrorlist.txt"
-    },
-    {
-      "type": "file",
-      "source": "etc/sysconfig/iptables",
-      "destination": "/tmp/"
-    },
-    {
-      "type": "shell",
-      "inline": ["sudo mv /tmp/iptables /etc/sysconfig/iptables"]
-    },
-    {
       "type": "file",
       "source": "etc/gdm/custom.conf",
-      "destination": "/tmp/custom.conf"
+      "destination": "/tmp/"
+    },
+    {
+      "type": "file",
+      "source": "gsettings.sh",
+      "destination": "/tmp/"
+    },
+    {
+      "type": "file",
+      "source": "gsettings.desktop",
+      "destination": "/tmp/"
+    },
+    {
+      "type": "file",
+      "source": "bin/soloii-docker",
+      "destination": "/tmp/"
     },
     {
       "type": "file",
       "source": "Desktop/lrose-soloii.desktop",
-      "destination": "/tmp/lrose-soloii.desktop"
-    },    {
+      "destination": "/tmp/"
+    },
+    {
+      "type": "file",
+      "source": "Desktop/README.txt",
+      "destination": "/tmp/"
+    },
+    {
       "environment_vars": [
-        "HOME_DIR=/home/lrose",
+        "HOME_DIR=/home/{{user `lrose_username`}}",
         "http_proxy={{user `http_proxy`}}",
         "https_proxy={{user `https_proxy`}}",
-        "no_proxy={{user `no_proxy`}}"
+        "no_proxy={{user `no_proxy`}}",
+        "LROSE_USERNAME={{user `lrose_username`}}"
       ],
-      "execute_command": "echo 'lrose' | {{.Vars}} sudo -S -E sh -eux '{{.Path}}'",
+      "execute_command": "echo '{{user `lrose_username`}}' | {{.Vars}} sudo -E -S sh -eux '{{.Path}}'",
       "scripts": [
         "scripts/metadata.sh",
+        "scripts/fix-slow-dns.sh",
+        "scripts/build-tools.sh",
         "scripts/sshd.sh",
-        "scripts/networking.sh",
         "scripts/virtualbox.sh",
-        "scripts/yum-repos.sh",
-        "scripts/lrose-soloii.sh",
         "scripts/desktop.sh",
+        "scripts/docker.sh",
+        "scripts/soloii-docker.sh",
         "scripts/cleanup.sh",
         "scripts/minimize.sh"
       ],
@@ -129,7 +103,8 @@
   ],
   "variables": {
     "output_directory_base": ".",
-    "box_basename": "lrose-soloii-centos-5.11",
+    "arch": "64",
+    "box_basename": "soloii-centos7-{{isotime \"20060102\"}}",
     "build_timestamp": "{{isotime \"20060102150405\"}}",
     "cpus": "2",
     "disk_size": "40960",
@@ -137,17 +112,15 @@
     "headless": "",
     "http_proxy": "{{env `http_proxy`}}",
     "https_proxy": "{{env `https_proxy`}}",
-    "iso_url": "/net/vagrant/iso/CentOS-5.11-x86_64-bin-DVD-1of2.iso",
-    "iso_checksum": "b6eb0565b636513b90663ff01c6ec4da5058baff0d7d4007d187be997dd985f8",
+    "iso_checksum": "c455ee948e872ad2194bdddd39045b83634e8613249182b88f549bb2319d97eb",
     "iso_checksum_type": "sha256",
-    "iso_name": "CentOS-5.11-x86_64-bin-DVD-1of2.iso",
-    "ks_path": "ks-centos-5.11.cfg",
+    "iso_url": "http://mirrors.ocf.berkeley.edu/centos/7/isos/x86_64/CentOS-7-x86_64-DVD-1611.iso",
     "memory": "512",
     "metadata": "floppy/dummy_metadata.json",
-    "name": "centos-5.11",
+    "name": "soloii",
     "no_proxy": "{{env `no_proxy`}}",
-    "template": "lrose-soloii-centos-5.11-x86_64-{{isotime \"20060102\"}}",
-    "version": "2.1.TIMESTAMP",
-    "vm_name": "lrose-soloii.centos-5.11"
+    "template": "soloii-centos7-{{isotime \"20060102\"}}",
+    "version": "2.0.TIMESTAMP",
+    "lrose_username": "lrose"
   }
 }

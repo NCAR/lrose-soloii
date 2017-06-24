@@ -2,7 +2,7 @@
 
 case "$PACKER_BUILDER_TYPE" in
 virtualbox-iso|virtualbox-ovf)
-    VER="`cat /home/lrose/.vbox_version`";
+    VER="`cat /home/$LROSE_USERNAME/.vbox_version`";
     ISO="VBoxGuestAdditions_$VER.iso";
     mkdir -p /tmp/vbox;
     mount -o loop $HOME_DIR/$ISO /tmp/vbox;
