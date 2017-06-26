@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=My gsettings
+GenericName=Initialize my gsettings
+Exec=/home/lrose/gsettings.sh
+Terminal=true
+Type=Application
+X-GNOME-Autostart-enabled=true

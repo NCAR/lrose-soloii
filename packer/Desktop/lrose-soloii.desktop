@@ -1,0 +1,10 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Type=Application
+Terminal=false
+Exec=soloii-docker
+Name=soloii
+Comment=start soloii
+Icon=/usr/share/icons/gnome/48x48/status/weather-showers.png
