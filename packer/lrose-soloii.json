@@ -60,7 +60,7 @@
     {
       "type": "file",
       "source": "gsettings-{{user `lrose_username`}}.desktop",
-      "destination": "/tmp/"
+      "destination": "/tmp/gsettings.desktop"
     },
     {
       "type": "file",
