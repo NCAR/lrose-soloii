@@ -16,6 +16,19 @@ fi
 
 lrose_host_data_dir=$1
 
+if [[ $lrose_host_data_dir == ~* ]]; then
+  #
+  # replace tilde w/ $HOME
+  #
+  lrose_host_data_dir=$(echo $lrose_host_data_dir | sed s/./$HOME/1)
+elif [[ $lrose_host_data_dir != /* ]]; then
+  #
+  # prefix relative path w/ pwd
+  #
+  lrose_host_data_dir=`pwd`/$lrose_host_data_dir
+fi
+
+
 lrose_dockerhost=$(docker info | egrep ^Name: | sed -e 's/Name: //')
 
 xhost + $lrose_dockerhost
