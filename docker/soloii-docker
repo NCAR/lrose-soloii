@@ -28,10 +28,7 @@ elif [[ $lrose_host_data_dir != /* ]]; then
   lrose_host_data_dir=`pwd`/$lrose_host_data_dir
 fi
 
-
-lrose_dockerhost=$(docker info | egrep ^Name: | sed -e 's/Name: //')
-
-xhost + $lrose_dockerhost
+lrose_docker_image='ncareol/lrose-soloii'
 
 #
 # architecture-specific method to set `docker run` options
@@ -56,6 +53,7 @@ lrose_docker_run_options () {
 }
 
 docker run \
+  -v $HOME/.Xauthority:/root/.Xauthority \
   $(lrose_docker_run_options) \
   -v $lrose_host_data_dir:/data \
-  ncareol/lrose-soloii /data
+  $lrose_docker_image /data
