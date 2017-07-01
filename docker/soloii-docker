@@ -47,7 +47,7 @@ lrose_docker_run_options () {
     #
     echo "-e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix"
   else
-    echo TODO
+    echo "This platform is not supported by `basename $0`"
     exit 1
   fi
 }
