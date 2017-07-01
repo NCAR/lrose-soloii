@@ -28,7 +28,7 @@ elif [[ $lrose_host_data_dir != /* ]]; then
   lrose_host_data_dir=`pwd`/$lrose_host_data_dir
 fi
 
-lrose_docker_image='ncareol/lrose-soloii'
+lrose_docker_image='ncareol/soloii'
 
 #
 # architecture-specific method to set `docker run` options
