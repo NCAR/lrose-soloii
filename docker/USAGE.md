@@ -33,6 +33,8 @@ Enable **X11** connections:
 
 - Under **Preferences** in **XQuartz**, in the **Security** tab, ensure that the *Authenticate connections* and *Allow connections from network clients* checkboxes are selected.
 
+![xquartz_preferences.png](xquartz_preferences.png)
+
 Determine the IP address of the **macOS** host machine:
 
 ```sh
