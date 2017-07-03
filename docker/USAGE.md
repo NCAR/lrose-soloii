@@ -33,18 +33,6 @@ Enable **X11** connections:
 
 - Under **Preferences** in **XQuartz**, in the **Security** tab, ensure that the *Authenticate connections* and *Allow connections from network clients* checkboxes are selected.
 
-Determine the ip address or hostname of your docker daemon:
-
-```
-dockerhost=$(docker info | grep Name | sed -e 's/Name: //')
-```
-
-Authorize X connections from Docker:
-
-```
-xhost + $dockerhost
-```
-
 Determine the IP address of the **macOS** host machine:
 
 ```sh
@@ -56,7 +44,7 @@ ip=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')
 Provide `docker run` w/ the following:
 
 - set the `DISPLAY` for **X11** w/ `-e`
-- mount the X11 socket as a volume w/ `-v`
+- mount the `~/.Xauthority` file as a volume w/ `-v`
 - mount a data volume w/ another `-v`
 - specify the Docker image, `ncareol/lrose-soloii`
 - optionally, specify a path to a data directory within the container, *e.g.* `/data`
@@ -65,6 +53,7 @@ Provide `docker run` w/ the following:
 
 ```sh
 docker run \
+  -v $HOME/.Xauthority:/root/.Xauthority \
   -e DISPLAY=$ip:0 \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   -v /Users/ej/rsf:/data \
