@@ -11,8 +11,8 @@ docker build .
 Take the image ID from the build script, and assign it to a versioned tag and, optionally, the `latest` tag. *E.g.*
 
 ```
-docker tag a180d022c742 ncareol/lrose-soloii:1.20-002
-docker tag a180d022c742 ncareol/lrose-soloii:latest
+docker tag a180d022c742 ncareol/soloii:1.20-002
+docker tag a180d022c742 ncareol/soloii:latest
 ```
 
 The current tag convention is to use the software's version number, followed by a hyphen and a release index that is specific to the lineage of the **Docker** image for this version of the software.
@@ -27,9 +27,9 @@ The current tag convention is to use the software's version number, followed by 
 Push the tagged images to **Docker Hub**:
 
 ```
-docker push ncareol/lrose-soloii:1.20-002
-docker push ncareol/lrose-soloii:latest
+docker push ncareol/soloii:1.20-002
+docker push ncareol/soloii:latest
 ```
 
-Update [`CHANGELOG.md`](CHANGELOG.md) to document the features or changes provided by the new version. Similarly, document these changes in the **Tags** section of the **Description** on **Docker Hub**, <https://hub.docker.com/r/ncareol/lrose-soloii/>.
+Update [`CHANGELOG.md`](CHANGELOG.md) to document the features or changes provided by the new version. Similarly, document these changes in the **Tags** section of the **Description** on **Docker Hub**, <https://hub.docker.com/r/ncareol/soloii/>.
 

@@ -28,5 +28,5 @@ xhost + <docker ip address>
 Back in the **Windows** shell, run `soloii` from **Docker**:
 
 ```sh
-docker run -e DISPLAY=<windows ip address>:0.0 -v \\path\to\data:/data ncareol/lrose-soloii /data
+docker run -e DISPLAY=<windows ip address>:0.0 -v \\path\to\data:/data ncareol/soloii /data
 ```

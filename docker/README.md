@@ -1,6 +1,6 @@
 # lrose-soloii Docker
 
-This directory, `docker/`, contains documentation and files required for building the `ncareol/lrose-soloii` **Docker** image, hosted @ <http://hub.docker.com/r/ncareol/lrose-soloii>.
+This directory, `docker/`, contains documentation and files required for building the `ncareol/soloii` **Docker** image, hosted @ <http://hub.docker.com/r/ncareol/soloii>.
 
 ## Usage
 
@@ -11,4 +11,4 @@ For **Usage** information and instructions
 
 ## Development
 
-For instructions on developing, building, tagging and releasing the `lrose-soloii` Docker image, see [`DEVELOP.md`](DEVELOP.md).
+For instructions on developing, building, tagging and releasing the `soloii` Docker image, see [`DEVELOP.md`](DEVELOP.md).

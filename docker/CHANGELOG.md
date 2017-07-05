@@ -1,4 +1,4 @@
-# ncareol/lrose-soloii CHANGELOG
+# ncareol/soloii CHANGELOG
 
 
 - [`1.20-005`](https://github.com/NCAR/lrose-soloii/commit/b015893)
