@@ -5,15 +5,29 @@
 #
 lrose_soloii_docker_version='0.0.0'
 
-
 #
-# soloii-docker: helper / wrapper script for invoking ncareol/soloii
-#   Docker image, setting up X11 and running soloii in specified directory
+# soloii-docker
+#
+# helper / wrapper script for invoking ncareol/soloii Docker image,
+# setting up X11 and running soloii in specified directory
 #
 
 #
 # CHANGELOG
+#
 # - 0.0.0: initial working functionality for macOS and Linux
+# - 0.0.1: -v / --version: echo version and exit
+#
+
+_echo_version () {
+  echo `basename $0` version $lrose_soloii_docker_version
+}
+
+if [[ "$1" == '-v' ]] || [[ "$1" == '--version' ]]; then
+  _echo_version
+  exit
+fi
+
 docker -v > /dev/null
 docker_exit_code=$?
 
@@ -66,7 +80,7 @@ lrose_docker_run_options () {
   fi
 }
 
-echo `basename $0` version $lrose_soloii_docker_version
+_echo_version
 
 docker run \
   -v $HOME/.Xauthority:/root/.Xauthority \
