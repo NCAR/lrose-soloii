@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+#
+# version number for soloii-docker script
+#
+lrose_soloii_docker_version='0.0.0'
+
 docker -v > /dev/null
 docker_exit_code=$?
 
@@ -51,6 +56,8 @@ lrose_docker_run_options () {
     exit 1
   fi
 }
+
+echo `basename $0` version $lrose_soloii_docker_version
 
 docker run \
   -v $HOME/.Xauthority:/root/.Xauthority \
