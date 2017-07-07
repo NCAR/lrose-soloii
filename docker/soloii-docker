@@ -56,6 +56,16 @@ elif [[ $lrose_host_data_dir != /* ]]; then
   lrose_host_data_dir=`pwd`/$lrose_host_data_dir
 fi
 
+#
+# verify that lrose_host_data_dir exists, else exit 1
+#
+
+if [[ ! -d $lrose_host_data_dir ]]; then
+  echo "ERROR: $lrose_host_data_dir is not a directory"
+  echo "Please specify a valid directory"
+  exit 1
+fi
+
 lrose_docker_image='ncareol/soloii'
 
 #
