@@ -5,6 +5,15 @@
 #
 lrose_soloii_docker_version='0.0.0'
 
+
+#
+# soloii-docker: helper / wrapper script for invoking ncareol/soloii
+#   Docker image, setting up X11 and running soloii in specified directory
+#
+
+#
+# CHANGELOG
+# - 0.0.0: initial working functionality for macOS and Linux
 docker -v > /dev/null
 docker_exit_code=$?
 
