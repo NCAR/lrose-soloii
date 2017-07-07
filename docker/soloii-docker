@@ -3,7 +3,7 @@
 #
 # version number for soloii-docker script
 #
-lrose_soloii_docker_version='0.0.0'
+lrose_soloii_docker_version='0.0.2'
 
 #
 # soloii-docker
@@ -17,6 +17,7 @@ lrose_soloii_docker_version='0.0.0'
 #
 # - 0.0.0: initial working functionality for macOS and Linux
 # - 0.0.1: -v / --version: echo version and exit
+# - 0.0.2: verify that input is a directory
 #
 
 _echo_version () {
