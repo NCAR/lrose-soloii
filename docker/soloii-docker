@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+
+#
+# version number for soloii-docker script
+#
+lrose_soloii_docker_version='0.0.2'
+
+#
+# soloii-docker
+#
+# helper / wrapper script for invoking ncareol/soloii Docker image,
+# setting up X11 and running soloii in specified directory
+#
+
+#
+# CHANGELOG
+#
+# - 0.0.0: initial working functionality for macOS and Linux
+# - 0.0.1: -v / --version: echo version and exit
+# - 0.0.2: verify that input is a directory
+#
+
+_echo_version () {
+  echo `basename $0` version $lrose_soloii_docker_version
+}
+
+if [[ "$1" == '-v' ]] || [[ "$1" == '--version' ]]; then
+  _echo_version
+  exit
+fi
+
+docker -v > /dev/null
+docker_exit_code=$?
+
+if [[ $docker_exit_code != 0 ]]; then
+  echo 'It appears that docker is not installed or in PATH'
+  echo 'Please install docker or add it to PATH'
+  exit $docker_exit_code
+fi
+
+if [[ "$@" = '' ]] ; then
+  echo 'Please specify a data directory for soloii'
+  exit 1
+fi
+
+lrose_host_data_dir=$1
+
+if [[ $lrose_host_data_dir == ~* ]]; then
+  #
+  # replace tilde w/ $HOME
+  #
+  lrose_host_data_dir=$(echo $lrose_host_data_dir | sed s/./$HOME/1)
+elif [[ $lrose_host_data_dir != /* ]]; then
+  #
+  # prefix relative path w/ pwd
+  #
+  lrose_host_data_dir=`pwd`/$lrose_host_data_dir
+fi
+
+#
+# verify that lrose_host_data_dir exists, else exit 1
+#
+
+if [[ ! -d $lrose_host_data_dir ]]; then
+  echo "ERROR: $lrose_host_data_dir is not a directory"
+  echo "Please specify a valid directory"
+  exit 1
+fi
+
+lrose_docker_image='ncareol/soloii'
+
+#
+# architecture-specific method to set `docker run` options
+#
+lrose_docker_run_options () {
+  lrose_uname=$(uname)
+  if [[ $lrose_uname = 'Darwin' ]]; then
+    lrose_host_ip=$(ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $2}' |head -1)
+    #
+    # set DISPLAY to host-ip:0
+    #
+    echo "-e DISPLAY=$lrose_host_ip:0"
+  elif [[ $lrose_uname = 'Linux' ]]; then
+    #
+    # pass through DISPLAY, but specify X11 socket as shared volume
+    #
+    echo "-e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix"
+  else
+    echo "This platform is not supported by `basename $0`"
+    exit 1
+  fi
+}
+
+_echo_version
+
+docker run \
+  -v $HOME/.Xauthority:/root/.Xauthority \
+  $(lrose_docker_run_options) \
+  -v $lrose_host_data_dir:/data \
+  $lrose_docker_image /data
