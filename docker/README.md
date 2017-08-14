@@ -6,8 +6,8 @@ This directory, `docker/`, contains documentation and files required for buildin
 
 For **Usage** information and instructions
 
-- see [`USAGE.md`](USAGE.md) for general usage on **Unix** platforms, *ie.* **Linux** and **macOS**
-- for **Windows**, see [`WINDOWS.md`](WINDOWS.md)
+- see [**Docker** documentation in the `soloii` wiki](https://github.com/NCAR/lrose-soloii/wiki/Docker) for general usage on **Unix** platforms, *ie.* **Linux** and **macOS**
+- for **Windows**, see [**Docker on Windows** documentation in the `soloii` wiki](https://github.com/NCAR/lrose-soloii/wiki/Docker-on-Windows)
 
 ## Development
 

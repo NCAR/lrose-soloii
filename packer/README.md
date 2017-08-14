@@ -4,7 +4,7 @@ This directory, `packer/` contains files and documentation for building and usin
 
 For instructions on building the `soloii` Virtual Appliance, see [`BUILD.md`](BUILD.md).
 
-For instructions on using the `soloii` Virtual Appliance, see [`USAGE.md`](USAGE.md).
+For instructions on using the `soloii` Virtual Appliance, see [documentation in the `soloii` wiki](https://github.com/NCAR/lrose-soloii/wiki/Virtual-Appliance).
 
 Virtual Appliance `.ova` files are hosted at <http://lrose.eol.ucar.edu/soloii/>
 
