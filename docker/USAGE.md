@@ -62,7 +62,35 @@ docker run \
   ncareol/soloii /data
 ```
 
-For more information:
+If more than one **X11** server has been running, such as running both **socat** and **XQuartz**, then **XQuartz** may not be running on display number `0`. This can be determined by running `xauth list`:
+
+```
+xauth list
+
+myhost/unix:0  MIT-MAGIC-COOKIE-1 ...
+myhost/unix:1  MIT-MAGIC-COOKIE-1  ...
+myhost.mydomain.edu:1  MIT-MAGIC-COOKIE-1  ...
+```
+
+If there are entries other than `:0`, the display number for one of those entries may need to be used.
+
+**XQuartz**' display number can be more explicitly determined by running a more verbose series of commands:
+
+```sh
+ps -e | grep 'Xquartz :\d'|grep -v xinit
+
+ 2104 ??         0:00.00 /opt/X11/bin/Xquartz :1 -listen tcp -iglx -auth /Users/myuser/.serverauth.1955
+```
+
+where the entry immediately after `XQuartz` specifies the display number in this example as `1`.
+
+Based on the above examples w/ `:1`, `DISPLAY` would be set w/ `1` as the display number via:
+
+```sh
+  -e DISPLAY=$ip:1
+```
+
+### Further information
 
 - [Docker for Mac and GUI applications](https://fredrikaverpil.github.io/2016/07/31/docker-for-mac-and-gui-applications/)
 - [Docker Containers on the Desktop](https://blog.jessfraz.com/post/docker-containers-on-the-desktop/)

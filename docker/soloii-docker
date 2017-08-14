@@ -18,6 +18,7 @@ lrose_soloii_docker_version='0.0.2'
 # - 0.0.0: initial working functionality for macOS and Linux
 # - 0.0.1: -v / --version: echo version and exit
 # - 0.0.2: verify that input is a directory
+# - 0.1.0: Darwin: handle case where XQuartz isn't bound to :0
 #
 
 _echo_version () {
@@ -76,10 +77,20 @@ lrose_docker_run_options () {
   lrose_uname=$(uname)
   if [[ $lrose_uname = 'Darwin' ]]; then
     lrose_host_ip=$(ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $2}' |head -1)
+
     #
-    # set DISPLAY to host-ip:0
+    # handle case where XQuartz is not running on :0
     #
-    echo "-e DISPLAY=$lrose_host_ip:0"
+    lrose_display_number=`ps -e | grep 'Xquartz :\d' | grep -v bin\/xinit | awk '{ print substr($5,2); }'`
+    #
+    # if not set or empty, default to 0
+    #
+    [ -z "$lrose_display_number" ] && lrose_display_number='0'
+
+    #
+    # set DISPLAY to host-ip:display-number
+    #
+    echo "-e DISPLAY=$lrose_host_ip:$lrose_display_number"
   elif [[ $lrose_uname = 'Linux' ]]; then
     #
     # pass through DISPLAY, but specify X11 socket as shared volume
