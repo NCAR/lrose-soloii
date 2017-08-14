@@ -18,7 +18,7 @@ lrose_soloii_docker_version='0.0.2'
 # - 0.0.0: initial working functionality for macOS and Linux
 # - 0.0.1: -v / --version: echo version and exit
 # - 0.0.2: verify that input is a directory
-# - 0.1.0: Darwin: handle case where Xquartz isn't bound to :0
+# - 0.1.0: Darwin: handle case where XQuartz isn't bound to :0
 #
 
 _echo_version () {
@@ -79,7 +79,7 @@ lrose_docker_run_options () {
     lrose_host_ip=$(ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $2}' |head -1)
 
     #
-    # handle case where Xquartz is not running on :0
+    # handle case where XQuartz is not running on :0
     #
     lrose_display_number=`ps -e | grep 'Xquartz :\d' | grep -v bin\/xinit | awk '{ print substr($5,2); }'`
     #
