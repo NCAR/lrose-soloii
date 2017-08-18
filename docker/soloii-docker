@@ -3,7 +3,7 @@
 #
 # version number for soloii-docker script
 #
-lrose_soloii_docker_version='0.0.2'
+lrose_soloii_docker_version='0.1.0'
 
 #
 # soloii-docker
