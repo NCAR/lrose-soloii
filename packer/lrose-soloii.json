@@ -89,6 +89,7 @@
       "scripts": [
         "scripts/metadata.sh",
         "scripts/fix-slow-dns.sh",
+        "scripts/update.sh",
         "scripts/build-tools.sh",
         "scripts/sshd.sh",
         "scripts/virtualbox.sh",
