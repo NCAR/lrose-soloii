@@ -6,6 +6,10 @@ To run soloii:
 
 - Double-click the soloii icon on the Desktop
 
+  - WHEN RUNNING SOLOII VIA THE DESKTOP ICON:
+    THE VIRTUAL MACHINE'S FILESYSTEM IS AVAILABLE UNDER /vm
+    IN SOLOII'S FILE BROWSER
+
 - Or run soloii-docker from the command line, w/ an optional argument of a path to a directory containing SWP files.
 
 To share data between the host and virtual machine, VirtualBox's Shared Folders can be used. To add a Shared Folder to a virtual machine:
