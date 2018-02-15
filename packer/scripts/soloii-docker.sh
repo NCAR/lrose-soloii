@@ -8,8 +8,7 @@ systemctl start docker
 ASUSER="sudo -u $LROSE_USERNAME"
 
 #
-# TODO
-# - docker pull (?)
+# - docker pull
 # - install ISO8859 scripts
 # - add helper script
 # - add desktop icon
@@ -24,6 +23,8 @@ $ASUSER mkdir /home/$LROSE_USERNAME/bin
 $ASUSER cp /tmp/soloii-docker /home/$LROSE_USERNAME/bin
 
 $ASUSER chmod +x /home/$LROSE_USERNAME/bin/soloii-docker
+
+$ASUSER ln -s /home/$LROSE_USERNAME/bin/soloii-docker /home/$LROSE_USERNAME/bin/soloii
 
 docker pull ncareol/soloii
 
