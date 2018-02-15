@@ -15,7 +15,7 @@ ASUSER="sudo -u $LROSE_USERNAME"
 # - add desktop icon
 #
 
-yum  -y install xorg-x11-fonts-ISO8859-1-75dpi xorg-x11-fonts-ISO8859-1-100dpi
+yum  -y install xorg-x11-fonts-ISO8859-1-75dpi xorg-x11-fonts-ISO8859-1-100dpi gedit
 
 sudo -u $LROSE_USERNAME mkdir /home/$LROSE_USERNAME/Desktop
 sudo -u $LROSE_USERNAME mv /tmp/lrose-soloii.desktop /home/$LROSE_USERNAME/Desktop/lrose-soloii.desktop
