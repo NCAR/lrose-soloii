@@ -30,10 +30,9 @@ lrose_container_dir='/vm'
 lrose_docker_run_volume_options () {
   volume_defaults='-v /media:/media'
   if [[ $lrose_host_data_dir = '' ]]; then
-    echo "$volume_defaults -v /:/$lrose_container_dir"
-  else
-    echo "$volume_defaults -v $lrose_host_data_dir:/$lrose_container_dir"
+    lrose_host_data_dir='/'
   fi
+  echo "$volume_defaults -v $lrose_host_data_dir:/$lrose_container_dir"
 }
 
 docker run \
