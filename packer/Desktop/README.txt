@@ -30,3 +30,12 @@ To share data between the host and virtual machine, VirtualBox's Shared Folders 
 The Shared Folder will then be accessible @ the path /media/sf_<folder-name>.
 
 The Virtual Machine window can be resized by clicking and dragging on the corners and edges of the VM window.
+
+If expanding the Virtual Machine window, it is recommended that video memory be increased or maxed out in the virtual machine's configuration:
+
+0. Stop the virtual machine if it is running
+1. Open VirtualBox's Manager window
+2. Select the virtual machine from the menu on the left
+3. Click Settings
+4. Select Display
+5. Under the Screen tab, increase the Video Memory or max it out to 128MB
