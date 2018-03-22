@@ -3,7 +3,7 @@
 #
 # version number for soloii-docker script
 #
-lrose_soloii_docker_version='0.1.0'
+lrose_soloii_docker_version='0.2.0'
 
 #
 # soloii-docker
@@ -19,7 +19,9 @@ lrose_soloii_docker_version='0.1.0'
 # - 0.0.1: -v / --version: echo version and exit
 # - 0.0.2: verify that input is a directory
 # - 0.1.0: Darwin: handle case where XQuartz isn't bound to :0
-#
+# - 0.2.0:
+#     optional second argument as soloii version
+#     use as tag for Docker image
 
 _echo_version () {
   echo `basename $0` version $lrose_soloii_docker_version
