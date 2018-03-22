@@ -3,7 +3,7 @@
 #
 # version number for soloii-docker script
 #
-lrose_soloii_docker_version='0.2.0'
+lrose_soloii_docker_version='0.2.1'
 
 #
 # soloii-docker
@@ -22,13 +22,29 @@ lrose_soloii_docker_version='0.2.0'
 # - 0.2.0:
 #     optional second argument as soloii version
 #     use as tag for Docker image
+# - 0.2.1: add, improve help output
+#
 
 _echo_version () {
   echo `basename $0` version $lrose_soloii_docker_version
 }
 
+_echo_help () {
+  _echo_version
+  echo "  first input, required: directory path from which to invoke soloii"
+  echo "  second input, optional: version of soloii to run"
+  echo "  e.g."
+  echo "    "`basename $0` .
+  echo "    "`basename $0` . 1.18
+}
+
 if [[ "$1" == '-v' ]] || [[ "$1" == '--version' ]]; then
   _echo_version
+  exit
+fi
+
+if [[ "$1" == '-h' ]] || [[ "$1" == '--help' ]]; then
+  _echo_help
   exit
 fi
 
@@ -43,6 +59,7 @@ fi
 
 if [[ "$@" = '' ]] ; then
   echo 'Please specify a data directory for soloii'
+  echo 'Run w/ -h or --help to see help information'
   exit 1
 fi
 
