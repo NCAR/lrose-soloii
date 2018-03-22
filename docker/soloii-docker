@@ -71,6 +71,13 @@ fi
 lrose_docker_image='ncareol/soloii'
 
 #
+# use second argument as soloii version, set as Docker tag
+#
+if [ ! -z "$2" ]; then
+  lrose_docker_image=$lrose_docker_image:$2
+fi
+
+#
 # architecture-specific method to set `docker run` options
 #
 lrose_docker_run_options () {
