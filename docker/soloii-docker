@@ -75,6 +75,9 @@ lrose_docker_image='ncareol/soloii'
 #
 if [ ! -z "$2" ]; then
   lrose_docker_image=$lrose_docker_image:$2
+  echo "soloii version: $2"
+else
+  echo "soloii version: 1.20"
 fi
 
 #
