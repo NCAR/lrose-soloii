@@ -40,7 +40,6 @@ _echo_help () {
   echo "  For further details on running soloii w/ Docker:"
   echo "  https://github.com/NCAR/lrose-soloii/wiki/Docker"
   echo
-
 }
 
 if [[ "$1" == '-v' ]] || [[ "$1" == '--version' ]]; then
