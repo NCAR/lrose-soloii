@@ -36,6 +36,11 @@ _echo_help () {
   echo "  e.g."
   echo "    "`basename $0` .
   echo "    "`basename $0` . 1.18
+  echo
+  echo "  For further details on running soloii w/ Docker:"
+  echo "  https://github.com/NCAR/lrose-soloii/wiki/Docker"
+  echo
+
 }
 
 if [[ "$1" == '-v' ]] || [[ "$1" == '--version' ]]; then
