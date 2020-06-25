@@ -10,8 +10,6 @@ This is version 1.20
 
 ## DOI
 
-https://doi.org/10.5065/apfn-y595
-
 The DOI for lrose-soloii is:
 
 * [https://doi.org/10.5065/apfn-y595](https://doi.org/10.5065/apfn-y595)
