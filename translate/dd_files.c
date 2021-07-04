@@ -615,6 +615,8 @@ int ddir_files_v3(dir_num, dir)
 	printf( "Cannot open directory %s\n", dir );
 	return(-1);
     }
+    fprintf(stderr, "soloii - reading files from dir: %s\n", dir);
+
     strcpy(ddir->directory, dir);
     ddir->num_hits = 1;
     ddir->rescan_urgent = NO;
@@ -643,11 +645,13 @@ int ddir_files_v3(dir_num, dir)
 	if(dp == NULL ) {
 	    break;
 	}
+        fprintf(stderr, "soloii - checking file: %s\n", dp->d_name);
 
 	if(strncmp(dp->d_name, "swp.", 4) == 0) { /* only want sweep files */
 	    if(strstr(dp->d_name, ".tmp")) { /* not a complete file */
-		continue;
+              continue;
 	    }
+            fprintf(stderr, "soloii - accepting file: %s\n", dp->d_name);
 	    count++;
 	    file_count++;
 	    ddfn = ddfn_pop_spair();
