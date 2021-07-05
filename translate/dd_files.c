@@ -599,6 +599,7 @@ int ddir_files_v3(dir_num, dir)
     int ii, rn, mark, file_count=0;
     struct ddir_info_v3 *ddir, *return_ddir();
     struct dd_radar_name_info_v3 *rni;
+    char currentDir[4096];
 
     counth++;
     if(!(ddir = return_ddir(dir_num)))
@@ -611,6 +612,9 @@ int ddir_files_v3(dir_num, dir)
 	}
     }
 
+    getcwd(currentDir, 4095);
+    fprintf(stderr, "soloii - currentDir: %s\n", currentDir);
+    
     if(!(dir_ptr = opendir( dir ))) {
 	printf( "Cannot open directory %s\n", dir );
 	return(-1);
