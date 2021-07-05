@@ -614,7 +614,10 @@ int ddir_files_v3(dir_num, dir)
 
     getcwd(currentDir, 4095);
     fprintf(stderr, "soloii - currentDir: %s\n", currentDir);
-    
+    if(strcmp(dir, "./") == 0) { /* this dir */
+      dir = currentDir;
+    }
+
     if(!(dir_ptr = opendir( dir ))) {
 	printf( "Cannot open directory %s\n", dir );
 	return(-1);
@@ -646,12 +649,14 @@ int ddir_files_v3(dir_num, dir)
      */
     for(;;) {
 	dp=readdir(dir_ptr);
+        fprintf(stderr, "soloii - dp: %x\n", dp);
 	if(dp == NULL ) {
 	    break;
 	}
         fprintf(stderr, "soloii - checking file: %s\n", dp->d_name);
 
 	if(strncmp(dp->d_name, "swp.", 4) == 0) { /* only want sweep files */
+            fprintf(stderr, "looks like sweep file: %s\n", dp->d_name);
 	    if(strstr(dp->d_name, ".tmp")) { /* not a complete file */
               continue;
 	    }
@@ -716,7 +721,7 @@ int ddir_files_v3(dir_num, dir)
 	     * send off to insert/sort
 	     */
 	    ddfn_sort_insert(rni, ddfn);
-	}
+	} /* if(strncmp(dp->d_name, "swp.", 4) == 0) */
     }
     closedir(dir_ptr);
     return(file_count);
