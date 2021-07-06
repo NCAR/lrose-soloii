@@ -226,7 +226,7 @@ elif test "$ac_os_type" = "Linux"; then
           CFLAGS=" "
      fi
      # Put on the -m32 flag to force building a 32-bit binary!
-     CFLAGS="$CFLAGS -g -m32"
+     CFLAGS="$CFLAGS -g -m32 -D_FILE_OFFSET_BITS=64"
      LIBS="$LIBS -lncurses"
      
      if test -z "$FCFLAGS"; then
