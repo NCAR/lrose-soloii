@@ -472,6 +472,7 @@ void click_data_cb (GtkWidget *text, gpointer data )
 int main( int argc,
           char *argv[] )	/* c...main */
 {
+
   GtkStyle *defstyle;
   GtkStyle *style;
   gint event_flags = GDK_LEAVE_NOTIFY_MASK;
@@ -480,7 +481,21 @@ int main( int argc,
   gchar swi_dir[256], fname[256], str[256];
   GdkFont *font;
 
-				/* c...code */
+  /* c...code */
+
+  // check for usage
+
+  if (argc > 1) {
+    if (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0) {
+      fprintf(stderr, "Usage: solo3\n");
+      fprintf(stderr, "  cd to directory containing DORADE files\n");
+      fprintf(stderr, "  run `solo3` with no args\n");
+      fprintf(stderr, "OR run with -f arg to specify sweep files\n");
+      fprintf(stderr, "  e.g. solo3 -f /tmp/data/swp*\n");
+      fprintf(stderr, "  the dir will be set to that containing the files\n");
+      return 0;
+    }
+  }
 
   colors_hash = g_hash_table_new (g_str_hash, g_str_equal);
   colors_tree = g_tree_new ((GCompareFunc)strcmp);
@@ -634,7 +649,7 @@ int main( int argc,
       { aa = NULL; }
   }
 
-  if (!aa && (aa = sii_get_swpfi_dir (NULL))) {
+  if (!aa && (aa = sii_get_swpfi_dir (NULL, argc, argv))) {
     sii_default_startup (aa);
     config_cb (0, (gpointer)22 ); /* 2x2 */
     g_string_assign (gs_initial_dir_name, aa);

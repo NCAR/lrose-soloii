@@ -2242,17 +2242,38 @@ void solo_def_params(dgi, list, num_parms)
 }
 /* c---------------------------------------------------------------------- */
 
-gchar *sii_get_swpfi_dir (gchar *dir)
+gchar *sii_get_swpfi_dir (gchar *dir, int argc, char **argv)
 {
    gint nn;
+   int ii;
+   static char fpath[4096];
+   char *fname = 0;
+
+   if (argc > 1) {
+     for (ii = 1; ii < argc; ii++) {
+       strcpy(fpath, argv[ii]);
+       fname = strstr(fpath, "swp."); /* only want sweep files */
+       if (fname != NULL) {
+         /* terminate the dir with a NULL */
+         *fname = '\0';
+         dir = fpath;
+         break;
+       }
+     } /* ii */
+   }
 
    if (!dir) {
      dir = getenv ("DORADE_DIR");
    }
-   if (!dir)
-     { dir = "./"; }
+   if (!dir) {
+     dir = "./"; 
+   }
 
-   nn = mddir_file_list_v3(0, dir);
+   if (argc > 1) {
+     nn = mddir_file_list_from_command_line(0, dir, argc, argv);
+   } else {
+     nn = mddir_file_list_v3(0, dir);
+   }
    return (nn < 1) ? NULL : dir;
 }
 

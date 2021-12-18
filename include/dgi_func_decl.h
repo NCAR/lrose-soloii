@@ -90,6 +90,7 @@ char * 	eld_nimbus_fix_asib();
 void 	eld_gpro_fix_asib();
 
 int     mddir_file_list_v3();	/* dd_files.c */
+int     mddir_file_list_from_command_line();	/* dd_files.c */
 int     mddir_gen_swp_list_v3();
 int     mddir_gen_swp_str_list_v3();
 int     mddir_num_radars_v3();
